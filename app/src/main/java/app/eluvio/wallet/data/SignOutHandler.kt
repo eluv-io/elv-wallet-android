@@ -5,7 +5,7 @@ import android.content.Intent
 import android.widget.Toast
 import app.eluvio.wallet.MainActivity
 import app.eluvio.wallet.data.stores.TokenStore
-import app.eluvio.wallet.util.Toaster
+import app.eluvio.wallet.util.compose.Toaster
 import app.eluvio.wallet.util.logging.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers

@@ -43,7 +43,7 @@ import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.body_32
 import app.eluvio.wallet.theme.label_24
 import app.eluvio.wallet.theme.title_62
-import app.eluvio.wallet.util.rememberToaster
+import app.eluvio.wallet.util.compose.rememberToaster
 import app.eluvio.wallet.util.subscribeToState
 import com.ramcosta.composedestinations.annotation.Destination
 

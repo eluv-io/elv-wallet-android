@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rxjava3.subscribeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -58,13 +59,16 @@ import app.eluvio.wallet.screens.common.FocusGroupScope
 import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.common.requestInitialFocus
 import app.eluvio.wallet.theme.header_30
+import app.eluvio.wallet.util.compose.rememberToaster
 import app.eluvio.wallet.util.isKeyUpOf
 import app.eluvio.wallet.util.logging.Log
-import app.eluvio.wallet.util.rememberToaster
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.navigate
 import io.reactivex.rxjava3.processors.PublishProcessor
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 @MainGraph(start = true)
@@ -79,9 +83,34 @@ fun Dashboard() {
     val tabFocusRequesters = remember { List(Tabs.entries.size) { FocusRequester() } }
     var topBarFocused by remember { mutableStateOf(false) }
     val navigator = LocalNavigator.current
+
+    // This is a temp semi-fix to focus problems when navigating back to dashboard. This will just
+    // focus the tabs again. I still couldn't find a good way to focus on the tab content itself, if
+    // it was focused when we left.
+    val dashboardFocusRequester = remember { FocusRequester() }
+    val scope = rememberCoroutineScope()
+    var refocusJob by remember { mutableStateOf<Job?>(null) }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
+            .focusRequester(dashboardFocusRequester)
+            .onFocusChanged {
+                // Focus will oscillate between Active and Inactive quickly while changing focus
+                // between the Tab Row and the content, but never stay on Inactive for too long.
+                // However, when coming back from another screen, it'll settle on Inactive, which
+                // should never really happen, because this Column contains the entire screen, so
+                // *something* inside it needs to be focused. So we'll wait 10ms and force focus
+                // back if we lost it.
+                refocusJob?.cancel()
+                refocusJob = scope.launch {
+                    delay(10)
+                    // Still no focus after delay - we truly lost it
+                    if (!it.hasFocus) {
+                        dashboardFocusRequester.requestFocus()
+                    }
+                    refocusJob = null
+                }
+            }
             .onKeyEvent {
                 // Capture back presses
                 if (it.isKeyUpOf(Key.Back)) {

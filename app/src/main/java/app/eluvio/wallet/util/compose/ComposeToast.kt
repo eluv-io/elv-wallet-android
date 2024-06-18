@@ -1,4 +1,4 @@
-package app.eluvio.wallet.util
+package app.eluvio.wallet.util.compose
 
 import android.content.Context
 import android.widget.Toast

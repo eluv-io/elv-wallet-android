@@ -14,7 +14,7 @@ androidx-junit = "1.1.5"
 androidx-crypto = "1.0.0"
 compose-tv-foundation = "1.0.0-alpha10"
 compose-tv-material = "1.0.0-beta01"
-compose-destinations = "1.9.54"
+compose-destinations = "1.10.2"
 qrcode-kotlin-android = "3.3.0"
 retrofit = "2.9.0"
 hilt = "2.46.1"
@@ -36,7 +36,7 @@ reflections = "0.10.2"
 [libraries]
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
 androidx-compose-runtime = { module = "androidx.compose.runtime:runtime" }
-androidx-compose-ui = { module = "androidx.compose.ui:ui" }
+androidx-compose-ui = { module = "androidx.compose.ui:ui", version = "1.7.0-beta03" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }

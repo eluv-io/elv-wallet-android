@@ -9,9 +9,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.res.stringResource
@@ -23,6 +26,7 @@ import androidx.tv.foundation.PivotOffsets
 import androidx.tv.foundation.lazy.list.TvLazyColumn
 import androidx.tv.foundation.lazy.list.TvLazyRow
 import androidx.tv.foundation.lazy.list.items
+import androidx.tv.foundation.lazy.list.itemsIndexed
 import androidx.tv.foundation.lazy.list.rememberTvLazyListState
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
@@ -40,6 +44,8 @@ import app.eluvio.wallet.screens.destinations.NftDetailDestination
 import app.eluvio.wallet.screens.destinations.PropertyDetailDestination
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.carousel_36
+import app.eluvio.wallet.util.compose.focusRestorer
+import app.eluvio.wallet.util.compose.thenIf
 import app.eluvio.wallet.util.isKeyUpOf
 import app.eluvio.wallet.util.subscribeToState
 import com.ramcosta.composedestinations.annotation.Destination
@@ -110,9 +116,13 @@ private fun MyMediaGrid(state: MyMediaViewModel.State) {
 
 @Composable
 fun FeaturedMediaRow(featuredMedia: List<MediaEntity>, baseUrl: String?) {
-    TvLazyRow(horizontalArrangement = itemArrangement) {
+    val firstItemFocusRequester = remember { FocusRequester() }
+    TvLazyRow(
+        horizontalArrangement = itemArrangement,
+        modifier = Modifier.focusRestorer(firstItemFocusRequester)
+    ) {
         spacer(width = listSpacerSize)
-        items(featuredMedia) { media ->
+        itemsIndexed(featuredMedia) { index, media ->
             val url = if (media.posterImagePath != null && baseUrl != null) {
                 "$baseUrl${media.posterImagePath}"
             } else {
@@ -124,7 +134,9 @@ fun FeaturedMediaRow(featuredMedia: List<MediaEntity>, baseUrl: String?) {
                 shape = RoundedCornerShape(0.dp),
                 cardHeight = 300.dp,
                 aspectRatio = MediaEntity.ASPECT_RATIO_POSTER,
-            )
+                modifier = Modifier.thenIf(index == 0) {
+                    focusRequester(firstItemFocusRequester)
+                })
         }
         spacer(width = listSpacerSize)
     }
@@ -134,10 +146,18 @@ fun FeaturedMediaRow(featuredMedia: List<MediaEntity>, baseUrl: String?) {
 fun NftMediaRow(displayName: String, mediaItems: List<MediaEntity>) {
     RowHeader(displayName)
     Spacer(Modifier.height(15.dp))
-    TvLazyRow(horizontalArrangement = itemArrangement) {
+    val firstItemFocusRequester = remember { FocusRequester() }
+    TvLazyRow(
+        horizontalArrangement = itemArrangement,
+        modifier = Modifier.focusRestorer(firstItemFocusRequester)
+    ) {
         spacer(width = listSpacerSize)
-        items(mediaItems) { media ->
-            MediaItemCard(media)
+        itemsIndexed(mediaItems) { index, media ->
+            MediaItemCard(
+                media,
+                modifier = Modifier.thenIf(index == 0) {
+                    focusRequester(firstItemFocusRequester)
+                })
         }
         spacer(width = listSpacerSize)
     }
@@ -145,11 +165,15 @@ fun NftMediaRow(displayName: String, mediaItems: List<MediaEntity>) {
 
 @Composable
 private fun MyItemsRow(myItems: List<AllMediaProvider.Media>) {
+    val firstItemFocusRequester = remember { FocusRequester() }
     RowHeader(text = "Items")
     Spacer(Modifier.height(15.dp))
-    TvLazyRow(horizontalArrangement = itemArrangement) {
+    TvLazyRow(
+        horizontalArrangement = itemArrangement,
+        modifier = Modifier.focusRestorer(firstItemFocusRequester)
+    ) {
         spacer(width = listSpacerSize)
-        items(myItems) { item ->
+        itemsIndexed(myItems) { index, item ->
             val navigator = LocalNavigator.current
             MediaCard(
                 media = item,
@@ -160,7 +184,11 @@ private fun MyItemsRow(myItems: List<AllMediaProvider.Media>) {
                         navigator(NftDetailDestination(item.contractAddress, item.tokenId).asPush())
                     }
                 },
-                modifier = Modifier.width(200.dp)
+                modifier = Modifier
+                    .width(200.dp)
+                    .thenIf(index == 0) {
+                        focusRequester(firstItemFocusRequester)
+                    }
             )
         }
         spacer(width = listSpacerSize)

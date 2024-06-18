@@ -13,11 +13,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.tv.foundation.lazy.list.TvLazyRow
-import androidx.tv.foundation.lazy.list.items
+import androidx.tv.foundation.lazy.list.itemsIndexed
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import app.eluvio.wallet.data.entities.RedeemableOfferEntity
@@ -35,6 +37,8 @@ import app.eluvio.wallet.theme.carousel_36
 import app.eluvio.wallet.theme.label_24
 import app.eluvio.wallet.theme.onRedeemTagSurface
 import app.eluvio.wallet.theme.redeemTagSurface
+import app.eluvio.wallet.util.compose.focusRestorer
+import app.eluvio.wallet.util.compose.thenIf
 
 private val CARD_HEIGHT = 170.dp
 
@@ -60,16 +64,27 @@ fun CarouselRow(item: DynamicPageLayoutState.Row.Carousel) {
     }
 
     Spacer(modifier = Modifier.height(16.dp))
-    TvLazyRow(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+    val firstItemFocusRequester = remember { FocusRequester() }
+    TvLazyRow(
+        horizontalArrangement = Arrangement.spacedBy(20.dp),
+        modifier = Modifier.focusRestorer(firstItemFocusRequester)
+    ) {
         spacer(width = 28.dp)
-        items(item.items) { item ->
+        itemsIndexed(item.items) { index, item ->
             when (item) {
                 is DynamicPageLayoutState.CarouselItem.Media -> MediaItemCard(
                     item.entity,
-                    cardHeight = CARD_HEIGHT
+                    cardHeight = CARD_HEIGHT,
+                    modifier = Modifier.thenIf(index == 0) {
+                        focusRequester(firstItemFocusRequester)
+                    }
                 )
 
-                is DynamicPageLayoutState.CarouselItem.RedeemableOffer -> OfferCard(item)
+                is DynamicPageLayoutState.CarouselItem.RedeemableOffer -> OfferCard(
+                    item,
+                    modifier = Modifier.thenIf(index == 0) {
+                        focusRequester(firstItemFocusRequester)
+                    })
             }
         }
         spacer(width = 28.dp)
@@ -78,7 +93,10 @@ fun CarouselRow(item: DynamicPageLayoutState.Row.Carousel) {
 }
 
 @Composable
-private fun OfferCard(item: DynamicPageLayoutState.CarouselItem.RedeemableOffer) {
+private fun OfferCard(
+    item: DynamicPageLayoutState.CarouselItem.RedeemableOffer,
+    modifier: Modifier = Modifier
+) {
     val navigator = LocalNavigator.current
     // It's possible to layer this Text on top of the card (with explicit zIndex modifiers, see:
     // https://issuetracker.google.com/issues/291642442), but then it won't scale right when
@@ -148,7 +166,7 @@ private fun OfferCard(item: DynamicPageLayoutState.CarouselItem.RedeemableOffer)
                 ).asPush()
             )
         },
-        modifier = Modifier.size(CARD_HEIGHT),
+        modifier = modifier.size(CARD_HEIGHT),
         focusedOverlay = {
             offerTitle()
             rewardOverlay()

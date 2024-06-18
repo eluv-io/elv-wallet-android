@@ -14,6 +14,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,7 +25,7 @@ import androidx.tv.foundation.PivotOffsets
 import androidx.tv.foundation.lazy.grid.TvGridCells
 import androidx.tv.foundation.lazy.grid.TvGridItemSpan
 import androidx.tv.foundation.lazy.grid.TvLazyVerticalGrid
-import androidx.tv.foundation.lazy.grid.items
+import androidx.tv.foundation.lazy.grid.itemsIndexed
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import app.eluvio.wallet.R
@@ -35,6 +37,8 @@ import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.ShimmerImage
 import app.eluvio.wallet.screens.destinations.PropertyDetailDestination
 import app.eluvio.wallet.theme.EluvioThemePreview
+import app.eluvio.wallet.util.compose.focusRestorer
+import app.eluvio.wallet.util.compose.thenIf
 import app.eluvio.wallet.util.subscribeToState
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlin.math.roundToInt
@@ -50,7 +54,6 @@ fun Discover() {
 
 @Composable
 private fun Discover(state: DiscoverViewModel.State) {
-
     BoxWithConstraints(
         contentAlignment = Alignment.Center,
         modifier = Modifier.fillMaxSize()
@@ -88,18 +91,24 @@ private fun BoxWithConstraintsScope.DiscoverGrid(
             return@derivedStateOf (availableWidth / cardWidth).roundToInt()
         }
     }
+    val firstItemFocusRequester = remember { FocusRequester() }
     TvLazyVerticalGrid(
         columns = TvGridCells.Fixed(columnCount),
         horizontalArrangement = Arrangement.spacedBy(cardSpacing),
         verticalArrangement = Arrangement.spacedBy(cardSpacing),
         contentPadding = PaddingValues(horizontal = horizontalPadding),
         pivotOffsets = PivotOffsets(0.1f),
+        modifier = Modifier.focusRestorer(firstItemFocusRequester)
     ) {
         item(span = { TvGridItemSpan(maxLineSpan) }) {
             Spacer(Modifier.height(10.dp))
         }
-        items(state.properties) { property ->
-            Surface(onClick = { onPropertyClicked(property) }) {
+        itemsIndexed(state.properties) { index, property ->
+            Surface(
+                onClick = { onPropertyClicked(property) },
+                modifier = Modifier.thenIf(index == 0) {
+                    focusRequester(firstItemFocusRequester)
+                }) {
                 ShimmerImage(
                     model = "${state.baseUrl}/${property.image}",
                     contentDescription = property.name

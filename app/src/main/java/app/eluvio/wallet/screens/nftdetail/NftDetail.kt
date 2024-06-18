@@ -41,6 +41,7 @@ import androidx.tv.foundation.PivotOffsets
 import androidx.tv.foundation.lazy.list.TvLazyColumn
 import androidx.tv.foundation.lazy.list.TvLazyRow
 import androidx.tv.foundation.lazy.list.items
+import androidx.tv.foundation.lazy.list.itemsIndexed
 import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.MaterialTheme
@@ -68,8 +69,10 @@ import app.eluvio.wallet.theme.label_24
 import app.eluvio.wallet.theme.onRedeemTagSurface
 import app.eluvio.wallet.theme.redeemTagSurface
 import app.eluvio.wallet.theme.title_62
+import app.eluvio.wallet.util.compose.focusRestorer
+import app.eluvio.wallet.util.compose.rememberToaster
+import app.eluvio.wallet.util.compose.thenIf
 import app.eluvio.wallet.util.findActivity
-import app.eluvio.wallet.util.rememberToaster
 import app.eluvio.wallet.util.subscribeToState
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
@@ -286,10 +289,17 @@ private fun FeaturedMediaAndOffersRow(state: NftDetailViewModel.State) {
 private fun MediaItemsRow(media: List<MediaEntity>) {
     val items = media.filter { !it.shouldBeHidden() }
     if (items.isNotEmpty()) {
-        TvLazyRow(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+        val firstItemFocusRequester = remember { FocusRequester() }
+        TvLazyRow(
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            modifier = Modifier.focusRestorer(firstItemFocusRequester)
+        ) {
             spacer(width = 28.dp)
-            items(items) { media ->
-                MediaItemCard(media, cardHeight = CARD_HEIGHT)
+            itemsIndexed(items) { index, media ->
+                MediaItemCard(
+                    media,
+                    cardHeight = CARD_HEIGHT,
+                    modifier = Modifier.thenIf(index == 0) { focusRequester(firstItemFocusRequester) })
             }
             spacer(width = 28.dp)
         }

@@ -147,3 +147,7 @@ secrets {
     propertiesFileName = "secrets/secrets.properties"
     defaultPropertiesFileName = "secrets.default.properties"
 }
+
+tasks.register("printVersion") {
+    println("v${android.defaultConfig.versionName}_${android.defaultConfig.versionCode}")
+}

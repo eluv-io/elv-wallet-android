@@ -26,7 +26,9 @@ open class InMemoryTokenStore : TokenStore {
     override val refreshToken: ReadWritePref<String> = Pref()
     override val clusterToken: ReadWritePref<String> = Pref()
     override val fabricToken: ReadWritePref<String> = Pref()
+    override val fabricTokenExpiration: ReadWritePref<String> = Pref()
     override val walletAddress: ReadWritePref<String> = Pref()
+    override val userEmail: ReadWritePref<String> = Pref()
 
     private val lpPref = Pref<LoginProviders>()
     override var loginProvider: LoginProviders
@@ -45,7 +47,9 @@ open class InMemoryTokenStore : TokenStore {
             refreshToken to null,
             clusterToken to null,
             fabricToken to null,
+            fabricTokenExpiration to null,
             walletAddress to null,
+            userEmail to null,
             lpPref to null
         )
     }

@@ -61,7 +61,10 @@ class MetamaskActivationStore @Inject constructor(
             .doOnSuccess {
                 tokenStore.update(
                     tokenStore.fabricToken to it.token,
+                    tokenStore.fabricTokenExpiration to it.expiresAt?.toString(),
                     tokenStore.walletAddress to it.address,
+                    tokenStore.clusterToken to it.clusterToken,
+                    tokenStore.userEmail to it.email,
 
                     // Metamask doesn't support access/refresh tokens,
                     // so make sure to clear those out to prevent leaks from previous logins.

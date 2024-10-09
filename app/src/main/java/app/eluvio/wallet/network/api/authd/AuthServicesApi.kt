@@ -43,7 +43,12 @@ data class AuthTokenResponse(
     // Custodial wallets will return a "cluster token", and there will be additional steps to
     // create a fabric token from it.
     // Metamask will return a "fabric token" directly.
-    @field:Json(name = "token") val token: String,
+    val token: String,
+    val expiresAt: Long?,
+
+    // Optional. Returned from Ory, but not Auth0 or Metamask
+    val clusterToken: String?,
+    val email: String?,
 )
 
 @JsonClass(generateAdapter = true)

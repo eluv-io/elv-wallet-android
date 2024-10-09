@@ -66,14 +66,17 @@ class AuthenticationServiceImpl @Inject constructor(
                         )
                     }
                     .flatMap { jwtResponse ->
-                        val (accountId, hash, tokenString) = createTokenParts(
+                        val (accountId, hash, tokenString, expiresAt) = createTokenParts(
                             jwtResponse.address,
                             fabricConfig.qspace.id
                         )
                         remoteSign(hash, accountId, authServicesApi)
                             .map { signature ->
                                 createFabricToken(tokenString, signature).also {
-                                    tokenStore.fabricToken.set(it)
+                                    tokenStore.update(
+                                        tokenStore.fabricToken to it,
+                                        tokenStore.fabricTokenExpiration to expiresAt.toString()
+                                    )
                                 }
                             }
                     }
@@ -93,7 +96,7 @@ class AuthenticationServiceImpl @Inject constructor(
         val base64Address = Base64.encodeToString(addressBytes, Base64.DEFAULT)
         val base58Address = Base58.encode(addressBytes)
         val sub = "iusr${base58Address}"
-        val duration = 24.hours
+        val expiresAt = Date().time + 24.hours.inWholeMilliseconds
         val accountId = "ikms${base58Address}"
 
         val tokenString = """
@@ -102,17 +105,17 @@ class AuthenticationServiceImpl @Inject constructor(
             "adr": "$base64Address",
             "spc": "$qspace",
             "iat": ${Date().time},
-            "exp": ${Date().time + duration.inWholeMilliseconds}
+            "exp": $expiresAt
             }
         """.replace(Regex("\\n|\\s"), "")
         Log.d("tokenString before signing: $tokenString")
 
         val hash = keccak256("Eluvio Content Fabric Access Token 1.0\n$tokenString").toHexString()
         Log.d("eth msg hash: $hash")
-        return TokenParts(accountId, hash, tokenString)
+        return TokenParts(accountId, hash, tokenString, expiresAt)
     }
 
-    data class TokenParts(val accountId: String, val hash: String, val tokenString: String)
+    data class TokenParts(val accountId: String, val hash: String, val tokenString: String, val expiresAt: Long)
 
     /**
      * [accountId] is a base58 encoded string of the address prefixed with "ikms"

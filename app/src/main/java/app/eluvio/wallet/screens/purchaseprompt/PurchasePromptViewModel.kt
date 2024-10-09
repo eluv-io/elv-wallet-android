@@ -1,6 +1,7 @@
 package app.eluvio.wallet.screens.purchaseprompt
 
 import android.graphics.Bitmap
+import android.util.Base64
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
@@ -14,6 +15,7 @@ import app.eluvio.wallet.data.permissions.PermissionContextResolver
 import app.eluvio.wallet.data.stores.Environment
 import app.eluvio.wallet.data.stores.EnvironmentStore
 import app.eluvio.wallet.data.stores.MediaPropertyStore
+import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.onClickDirection
 import app.eluvio.wallet.screens.common.generateQrCode
 import app.eluvio.wallet.screens.destinations.PropertyDetailDestination
@@ -24,7 +26,6 @@ import app.eluvio.wallet.util.rx.Optional
 import app.eluvio.wallet.util.rx.asSharedState
 import app.eluvio.wallet.util.rx.mapNotNull
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
 import org.json.JSONArray
@@ -38,6 +39,7 @@ class PurchasePromptViewModel @Inject constructor(
     permissionContextResolver: PermissionContextResolver,
     private val environmentStore: EnvironmentStore,
     private val urlShortener: UrlShortener,
+    private val tokenStore: TokenStore,
     savedStateHandle: SavedStateHandle
 ) : BaseViewModel<PurchasePromptViewModel.State>(State(), savedStateHandle) {
 
@@ -89,7 +91,7 @@ class PurchasePromptViewModel @Inject constructor(
             .flatMapPublisher { env ->
                 permissionSettings
                     .map { permissionSettings ->
-                        buildPurchaseUrl(permissionContext, env, permissionSettings.orDefault(null))
+                        buildPurchaseUrl(permissionContext, env, permissionSettings.orDefault(null), tokenStore)
                     }
             }
             // Make sure to not re-generate the QR code if the URL hasn't changed.
@@ -210,6 +212,7 @@ private fun buildPurchaseUrl(
     permissionContext: PermissionContext,
     environment: Environment,
     permissionSettings: PermissionSettings?,
+    tokenStore: TokenStore,
 ): String {
     val context = JSONObject()
         // Only supported type is "purchase" for now.
@@ -231,7 +234,42 @@ private fun buildPurchaseUrl(
                 ?.let { JSONArray(it) }
         )
         .putOpt("secondaryPurchaseOption", permissionSettings?.secondaryMarketPurchaseOption)
+        .toBase58()
 
-    val encodedContext = Base58.encode(context.toString().toByteArray())
-    return "${environment.walletUrl}/${permissionContext.propertyId}/${permissionContext.pageId.orEmpty()}?p=$encodedContext"
+    val authorization = JSONObject().apply {
+        when (val clusterToken = tokenStore.clusterToken.get()) {
+            null -> {
+                // No cluster token only applies to the Metamask case.
+                put("provider", "metamask")
+                put("fabricToken", tokenStore.fabricToken.get())
+                put("expiresAt", tokenStore.fabricTokenExpiration.get()?.toLongOrNull())
+            }
+
+            else -> {
+                put("provider", tokenStore.loginProvider.value)
+                put("clusterToken", clusterToken)
+            }
+        }
+
+        put("address", tokenStore.walletAddress.get())
+        put("email", tokenStore.userEmail.get() ?: extractEmail(tokenStore.idToken.get()))
+    }.toBase58()
+
+    return "${environment.walletUrl}/${permissionContext.propertyId}/${permissionContext.pageId.orEmpty()}?p=${context}&authorization=${authorization}"
+}
+
+private fun JSONObject.toBase58(): String = Base58.encode(this.toString().toByteArray())
+
+private fun extractEmail(idToken: String?): String? {
+    idToken ?: return null
+    // idToken has 3 parts. The middle part is a base64 encoded JSON that has an "email" field.
+    return idToken.split(".")
+        .getOrNull(1)
+        .runCatching {
+            Base64.decode(this, Base64.URL_SAFE)
+                ?.decodeToString(throwOnInvalidSequence = true)
+                ?: throw IllegalArgumentException()
+        }
+        .mapCatching { JSONObject(it).getString("email") }
+        .getOrNull()
 }

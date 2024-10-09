@@ -22,11 +22,16 @@ interface TokenStore {
     val refreshToken: ReadWritePref<String>
     val clusterToken: ReadWritePref<String>
     val fabricToken: ReadWritePref<String>
+    // Only really needed when showing the Purchase Gate with a Metamask login, because in any other case we have a
+    // clusterToken and the expiration can be extracted from the token itself.
+    val fabricTokenExpiration: ReadWritePref<String>
     val walletAddress: ReadWritePref<String>
+    val userEmail: ReadWritePref<String>
     val isLoggedIn: Boolean get() = fabricToken.get() != null
 
     val loggedInObservable: Flowable<Boolean> get() = fabricToken.observe().map { it.isPresent }
     var loginProvider: LoginProviders
+
     /**
      * Update multiple preferences at once.
      * This is more performant than updating them one by one.
@@ -37,7 +42,6 @@ interface TokenStore {
      * Clear out everything in the store.
      */
     fun wipe()
-
 }
 
 @Module
@@ -61,8 +65,10 @@ class PreferenceTokenStore @Inject constructor(
     override val clusterToken = dataStore.readWriteStringPref("cluster_token")
 
     override val fabricToken = dataStore.readWriteStringPref("fabric_token")
+    override val fabricTokenExpiration = dataStore.readWriteStringPref("fabric_token_expires_at")
 
     override val walletAddress = dataStore.readWriteStringPref("wallet_address")
+    override val userEmail = dataStore.readWriteStringPref("user_email")
 
     private val loginProviderStr = dataStore.readWriteStringPref("login_provider")
     override var loginProvider: LoginProviders

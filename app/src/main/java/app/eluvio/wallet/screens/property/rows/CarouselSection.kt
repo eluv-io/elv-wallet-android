@@ -127,10 +127,11 @@ fun CarouselSection(
                         startPadding
                     )
                 }
-                if (item.filterAttribute != null) {
+                val hasFilterRow = false // item.filterAttribute != null // TODO: Re-enable section filters
+                if (hasFilterRow) {
                     FilterSelectorRow(
                         selectedValue = selectedFilter?.second,
-                        attributeValues = item.filterAttribute.values.map { it.value },
+                        attributeValues = item.filterAttribute!!.values.map { it.value },
                         onValueSelected = { tag ->
                             selectedFilter = tag?.let { item.filterAttribute.id to it }
                         },
@@ -150,14 +151,14 @@ fun CarouselSection(
                 // If we have at least one element in after the last spacer, add another one. It's
                 // brittle and duplicates the logic above, but compose makes it annoyingly hard to
                 // do any other way
-                if (hasTitleRow || item.filterAttribute != null || item.viewAllNavigationEvent != null) {
+                if (hasTitleRow || hasFilterRow || item.viewAllNavigationEvent != null) {
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
                 val exitFocusModifier = Modifier
                     .focusProperties {
                         exit = {
-                            if (it == FocusDirection.Up && item.filterAttribute != null) {
+                            if (it == FocusDirection.Up && hasFilterRow) {
                                 // Prevent focus from skipping over the filter row
                                 filterRowFocusRequester
                             } else {

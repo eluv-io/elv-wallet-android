@@ -2,5 +2,16 @@
 
     <style name="Theme.EluvioWallet" parent="@style/Theme.Leanback">
         <item name="android:colorControlHighlight">#FFFFFFFF</item>
+        <item name="android:dialogTheme">@style/FadingDialogTheme</item>
+    </style>
+
+    <!--  Dialog theme that uses alpha animation instead of translation  -->
+    <style name="FadingDialogTheme" parent="@style/DialogWindowTheme">
+        <item name="android:windowAnimationStyle">@style/DialogFadeTransitions</item>
+    </style>
+
+    <style name="DialogFadeTransitions">
+        <item name="android:windowEnterAnimation">@anim/dialog_enter_animation</item>
+        <item name="android:windowExitAnimation">@anim/dialog_exit_animation</item>
     </style>
 </resources>

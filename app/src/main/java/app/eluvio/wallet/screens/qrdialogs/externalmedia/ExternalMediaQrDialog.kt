@@ -4,8 +4,10 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
+import app.eluvio.wallet.screens.common.DelayedFullscreenLoader
 import app.eluvio.wallet.screens.common.FullscreenDialogStyle
 import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.common.generateQrCodeBlocking
@@ -70,13 +72,15 @@ private fun QrView(qrCode: Bitmap?) {
         modifier = Modifier.fillMaxWidth(0.5f),
     )
     Spacer(Modifier.size(20.dp))
-    if (qrCode != null) {
-        Image(
-            bitmap = qrCode.asImageBitmap(),
-            contentDescription = "QR Code",
-        )
-    } else {
-        EluvioLoadingSpinner()
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxHeight(0.8f)) {
+        if (qrCode != null) {
+            Image(
+                bitmap = qrCode.asImageBitmap(),
+                contentDescription = "QR Code",
+            )
+        } else {
+            DelayedFullscreenLoader()
+        }
     }
 }
 

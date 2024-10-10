@@ -3,6 +3,8 @@ package app.eluvio.wallet.screens.property.rows
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -323,13 +325,19 @@ private fun ViewAllButton(
     modifier: Modifier = Modifier,
 ) {
     val navigator = LocalNavigator.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    // What we really want is "!isFocused -> alpha=0.6", but setting alpha on the surface causes everything to
+    // look weird. So instead, we just play with the colors to make it look like 60% opacity.
+    val unfocusedColor = Color(0xFF7B7B7B)
     Surface(
         onClick = { navigator(navigationEvent) },
+        interactionSource = interactionSource,
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color.Transparent,
         ),
         border = ClickableSurfaceDefaults.border(
-            border = Border(BorderStroke(1.dp, Color.White)),
+            border = Border(BorderStroke(1.dp, unfocusedColor)),
             focusedBorder = Border.None
         ),
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(3.dp)),
@@ -338,6 +346,7 @@ private fun ViewAllButton(
         Text(
             "VIEW ALL",
             style = MaterialTheme.typography.button_24.copy(fontWeight = FontWeight.Normal),
+            color = if (isFocused) Color.Unspecified else unfocusedColor,
             modifier = Modifier
                 .align(Alignment.Center)
                 .padding(horizontal = 10.dp, vertical = 5.dp)

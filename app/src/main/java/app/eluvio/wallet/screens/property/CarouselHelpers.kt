@@ -11,6 +11,7 @@ import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.screens.destinations.MediaGridDestination
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState.CarouselItem
+import app.eluvio.wallet.screens.property.mediagrid.GridContentOverride
 import app.eluvio.wallet.util.logging.Log
 
 /**
@@ -25,7 +26,6 @@ private const val VIEW_ALL_THRESHOLD = 5
 fun MediaPageSectionEntity.toDynamicSections(
     parentPermissionContext: PermissionContext,
     filters: PropertySearchFiltersEntity? = null,
-    viewAllThreshold: Int = VIEW_ALL_THRESHOLD,
 ): List<DynamicPageLayoutState.Section> {
     return when (type) {
         MediaPageSectionEntity.TYPE_AUTOMATIC,
@@ -34,7 +34,6 @@ fun MediaPageSectionEntity.toDynamicSections(
             this.toCarouselSection(
                 parentPermissionContext,
                 filters,
-                viewAllThreshold,
             )
         )
 
@@ -43,7 +42,7 @@ fun MediaPageSectionEntity.toDynamicSections(
             // For now, just swap out container sections with their sub-sections.
             // In the future we'll want to add proper support for containers with filtering.
             subSections.flatMap {
-                it.toDynamicSections(parentPermissionContext, filters, viewAllThreshold)
+                it.toDynamicSections(parentPermissionContext, filters)
             }
         }
 
@@ -54,20 +53,29 @@ fun MediaPageSectionEntity.toDynamicSections(
 private fun MediaPageSectionEntity.toCarouselSection(
     parentPermissionContext: PermissionContext,
     filters: PropertySearchFiltersEntity? = null,
-    viewAllThreshold: Int = VIEW_ALL_THRESHOLD,
 ): DynamicPageLayoutState.Section.Carousel {
     val permissionContext = parentPermissionContext.copy(sectionId = id)
     val items = items.toCarouselItems(permissionContext, displaySettings)
     val displayLimit = displaySettings?.displayLimit?.takeIf { it > 0 } ?: items.size
-    val showViewAll = items.size > displayLimit || items.size > viewAllThreshold
+    val showViewAll = items.size > displayLimit || items.size > VIEW_ALL_THRESHOLD
     val filterAttribute = filters?.attributes?.get(primaryFilter)
+
+    val gridContentOverride = this.items
+        .takeIf { type == MediaPageSectionEntity.TYPE_SEARCH }
+        ?.mapNotNullTo(arrayListOf()) { it.media?.id }
+        ?.let { mediaItemIds ->
+            GridContentOverride(
+                title = displaySettings?.title ?: "",
+                mediaItemsOverride = mediaItemIds
+            )
+        }
 
     return DynamicPageLayoutState.Section.Carousel(
         permissionContext,
         displaySettings = displaySettings,
         items = items.take(displayLimit),
         filterAttribute = filterAttribute,
-        viewAllNavigationEvent = MediaGridDestination(permissionContext)
+        viewAllNavigationEvent = MediaGridDestination(permissionContext, gridContentOverride)
             .takeIf { showViewAll }
             ?.asPush()
     )

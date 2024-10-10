@@ -37,7 +37,7 @@ import app.eluvio.wallet.util.subscribeToState
 import com.ramcosta.composedestinations.annotation.Destination
 
 @MainGraph
-@Destination(navArgsDelegate = PermissionContext::class)
+@Destination(navArgsDelegate = MediaGridNavArgs::class)
 @Composable
 fun MediaGrid() {
     hiltViewModel<MediaGridViewModel>().subscribeToState { vm, state ->

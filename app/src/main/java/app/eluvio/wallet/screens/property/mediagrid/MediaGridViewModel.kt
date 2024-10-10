@@ -4,13 +4,15 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.app.Events
-import app.eluvio.wallet.data.permissions.PermissionResolver
 import app.eluvio.wallet.data.entities.v2.DisplayFormat
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
 import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
+import app.eluvio.wallet.data.entities.v2.permissions.PermissionSettings
+import app.eluvio.wallet.data.entities.v2.permissions.PermissionStatesEntity
 import app.eluvio.wallet.data.permissions.PermissionContext
-import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.data.permissions.PermissionContextResolver
+import app.eluvio.wallet.data.permissions.PermissionResolver
+import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.screens.destinations.MediaGridDestination
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState
@@ -36,7 +38,8 @@ class MediaGridViewModel @Inject constructor(
         val items: List<DynamicPageLayoutState.CarouselItem> = emptyList()
     )
 
-    private val permissionContext = MediaGridDestination.argsFrom(savedStateHandle)
+    private val navArgs = MediaGridDestination.argsFrom(savedStateHandle)
+    private val permissionContext = navArgs.permissionContext
 
     override fun onResume() {
         super.onResume()
@@ -48,7 +51,9 @@ class MediaGridViewModel @Inject constructor(
         permissionContextResolver
             .resolve(permissionContext)
             .switchMap { resolved ->
-                if (permissionContext.mediaItemId != null) {
+                if (navArgs.gridContentOverride != null) {
+                    observeMediaItems(navArgs.gridContentOverride, resolved)
+                } else if (permissionContext.mediaItemId != null) {
                     observeMediaItems(resolved)
                 } else if (permissionContext.sectionId != null) {
                     getSectionItem(resolved.section)
@@ -87,6 +92,25 @@ class MediaGridViewModel @Inject constructor(
         return Flowable.just(State(title = section.displaySettings?.title, items = items))
     }
 
+    /**
+     * Observe media items specified explicitly by [contentOverride].
+     * The context is used only for permission resolution.
+     */
+    private fun observeMediaItems(
+        contentOverride: GridContentOverride,
+        resolved: PermissionContext.Resolved
+    ): Flowable<State> {
+        return observeMediaItems(
+            contentOverride.mediaItemsOverride,
+            resolved.property.searchPermissions,
+            resolved.property.permissionStates
+        ).map { State(title = contentOverride.title, items = it) }
+    }
+
+    /**
+     * Assumes that [PermissionContext.Resolved.mediaItem] is set and is a container type.
+     * Displays all media items in the container.
+     */
     private fun observeMediaItems(resolved: PermissionContext.Resolved): Flowable<State> {
         val mediaContainer = resolved.mediaItem
         if (mediaContainer == null) {
@@ -95,17 +119,32 @@ class MediaGridViewModel @Inject constructor(
             return Flowable.error(RuntimeException("Media container is empty"))
         }
 
+        return observeMediaItems(
+            mediaContainer.mediaItemsIds,
+            mediaContainer.resolvedPermissions,
+            resolved.property.permissionStates
+        ).map { State(title = mediaContainer.name, items = it) }
+    }
+
+    /**
+     * Observes media items specified by [mediaItemIds], resolves their permissions and converts them to [DynamicPageLayoutState.CarouselItem.Media].
+     */
+    private fun observeMediaItems(
+        mediaItemIds: List<String>,
+        parentPermissions: PermissionSettings?,
+        permissionStates: Map<String, PermissionStatesEntity?>
+    ): Flowable<List<DynamicPageLayoutState.CarouselItem.Media>> {
         return contentStore.observeMediaItems(
             permissionContext.propertyId,
-            mediaContainer.mediaItemsIds,
+            mediaItemIds,
             forceRefresh = false
         )
             .doOnNext { mediaItems ->
                 // Resolve permissions
                 PermissionResolver.resolvePermissions(
                     mediaItems,
-                    mediaContainer.resolvedPermissions,
-                    resolved.property.permissionStates
+                    parentPermissions,
+                    permissionStates
                 )
             }
             .map { mediaItems ->
@@ -119,6 +158,5 @@ class MediaGridViewModel @Inject constructor(
                         )
                     }
             }
-            .map { State(title = mediaContainer.name, items = it) }
     }
 }

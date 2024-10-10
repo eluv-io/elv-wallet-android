@@ -261,11 +261,7 @@ class PropertySearchViewModel @Inject constructor(
             .subscribeBy { results ->
                 updateState {
                     val sections = results.flatMap { section ->
-                        section.toDynamicSections(
-                            permissionContext,
-                            // Never show ViewAll button for search results
-                            viewAllThreshold = Int.MAX_VALUE,
-                        )
+                        section.toDynamicSections(permissionContext)
                     }.ifEmpty {
                         // Show a message when no results are found
                         messageResult("No results found")

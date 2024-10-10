@@ -52,6 +52,9 @@ class MyItemsViewModel @Inject constructor(
     override fun onResume() {
         super.onResume()
 
+        query.onNext("")
+        selectedProperty.onNext(Optional.empty())
+
         resetOnAccountChange()
 
         selectedProperty.distinctUntilChanged()

@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Parcelable
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
+import app.eluvio.wallet.data.UrlShortener
 import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.data.stores.TokenStore
@@ -23,10 +24,11 @@ class ExternalMediaQrDialogViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val contentStore: ContentStore,
     private val tokenStore: TokenStore,
-    private val apiProvider: ApiProvider
+    private val apiProvider: ApiProvider,
+    private val urlShortener: UrlShortener,
 ) : BaseViewModel<ExternalMediaQrDialogViewModel.State>(State(), savedStateHandle) {
     @Parcelize
-    data class State(val qrCode: Bitmap? = null, val error: Boolean = false) : Parcelable
+    data class State(val qrCode: Bitmap? = null, val url: String? = null, val error: Boolean = false) : Parcelable
 
     private val mediaId = ExternalMediaQrDialogDestination.argsFrom(savedStateHandle).mediaItemId
     override fun onResume() {
@@ -34,13 +36,30 @@ class ExternalMediaQrDialogViewModel @Inject constructor(
         apiProvider.getFabricEndpoint()
             .flatMapPublisher { endpoint ->
                 contentStore.observeMediaItem(mediaId)
-                    .switchMapSingle { media ->
-                        generateQrCode(getAuthorizedUrl(endpoint, media))
-                    }
+                    .map { media -> getAuthorizedUrl(endpoint, media) }
+            }
+            .distinctUntilChanged()
+            .switchMapSingle { fullUrl ->
+                // Try to shorten
+                urlShortener.shorten(fullUrl)
+                    // Fall back to full URL if shortening fails
+                    .onErrorReturnItem(fullUrl)
+            }
+            .switchMapSingle { url ->
+                // Generate QR for whatever URL we have
+                generateQrCode(url)
+                    .map { it to url }
             }
             .subscribeBy(
-                onNext = {
-                    updateState { copy(qrCode = it, error = false) }
+                onNext = { (qrCode, url) ->
+                    updateState {
+                        copy(
+                            qrCode = qrCode,
+                            // Only display URLs if they were shortened successfully
+                            url = url.takeIf { it.length < 30 },
+                            error = false
+                        )
+                    }
                 },
                 onError = {
                     updateState { copy(error = true) }

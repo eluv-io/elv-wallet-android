@@ -12,6 +12,7 @@ import app.eluvio.wallet.network.dto.v2.SearchRequest
 import app.eluvio.wallet.util.realm.asFlowable
 import app.eluvio.wallet.util.realm.saveAsync
 import app.eluvio.wallet.util.realm.saveTo
+import app.eluvio.wallet.util.rx.doOnSuccessAsync
 import app.eluvio.wallet.util.rx.mapNotNull
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Single
@@ -65,11 +66,10 @@ class PropertySearchStore @Inject constructor(
                     ?.map { section -> section.toEntity(baseUrl) }
                     .orEmpty()
             }
-            .flatMap { sections ->
+            .doOnSuccessAsync { sections ->
                 // Persist only the MediaItems, not the Sections or SectionItems
                 val mediaItems = sections.flatMap { it.items }.mapNotNull { it.media }
                 realm.saveAsync(mediaItems)
-                    .toSingleDefault(sections)
             }
             .doOnSuccess { sections ->
                 PermissionResolver.resolvePermissions(

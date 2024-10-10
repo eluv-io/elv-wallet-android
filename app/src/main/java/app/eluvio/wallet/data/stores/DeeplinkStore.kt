@@ -7,6 +7,7 @@ import app.eluvio.wallet.data.entities.deeplink.DeeplinkRequestEntity
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.realm.asFlowable
 import app.eluvio.wallet.util.realm.saveAsync
+import app.eluvio.wallet.util.rx.doOnSuccessAsync
 import app.eluvio.wallet.util.rx.mapNotNull
 import app.eluvio.wallet.util.sharedprefs.boolean
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -36,10 +37,9 @@ class DeeplinkStore @Inject constructor(
             .asFlowable()
             .firstElement()
             .mapNotNull { it.firstOrNull() }
-            .flatMapSingle { deeplink ->
+            .doOnSuccessAsync {
                 Log.d("Deeplink found in DB, passing along and removing from db")
                 realm.saveAsync(emptyList<DeeplinkRequestEntity>(), clearTable = true)
-                    .toSingleDefault(deeplink)
             }
     }
 

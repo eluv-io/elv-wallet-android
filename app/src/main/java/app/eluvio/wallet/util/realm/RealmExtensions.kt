@@ -1,6 +1,7 @@
 package app.eluvio.wallet.util.realm
 
 import app.eluvio.wallet.util.logging.Log
+import app.eluvio.wallet.util.rx.doOnSuccessAsync
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Maybe
@@ -30,9 +31,8 @@ inline fun <reified T : RealmObject> Single<T>.saveTo(
     clearTable: Boolean = false,
     updatePolicy: UpdatePolicy = UpdatePolicy.ALL
 ): Single<T> {
-    return flatMap { entity ->
+    return doOnSuccessAsync { entity ->
         realm.saveAsync(listOf(entity), clearTable, updatePolicy)
-            .toSingleDefault(entity)
     }
 }
 
@@ -41,9 +41,8 @@ inline fun <reified T : RealmObject> Maybe<T>.saveTo(
     clearTable: Boolean = false,
     updatePolicy: UpdatePolicy = UpdatePolicy.ALL
 ): Maybe<T> {
-    return flatMap { entity ->
+    return doOnSuccessAsync { entity ->
         realm.saveAsync(listOf(entity), clearTable, updatePolicy)
-            .andThen(Maybe.just(entity))
     }
 }
 
@@ -57,9 +56,8 @@ inline fun <reified T : RealmObject> Single<List<T>>.saveTo(
     clearTable: Boolean = false,
     updatePolicy: UpdatePolicy = UpdatePolicy.ALL
 ): Single<List<T>> {
-    return flatMap { list ->
+    return doOnSuccessAsync { list ->
         realm.saveAsync(list, clearTable, updatePolicy)
-            .toSingleDefault(list)
     }
 }
 

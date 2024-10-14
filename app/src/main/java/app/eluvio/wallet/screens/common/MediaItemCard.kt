@@ -69,7 +69,7 @@ fun MediaItemCard(
     enablePurchaseOptionsOverlay: Boolean = true
 ) {
     val displaySettings = media.requireDisplaySettings().withOverrides(displayOverrides)
-    val (imageUrl, aspectRatio) = displaySettings.thumbnailUrlAndRatio ?: return
+    val (imageUrl, aspectRatio) = displaySettings.thumbnailUrlAndRatio ?: ("" to AspectRatio.SQUARE)
     if (media.isDisabled) {
         DisabledCard(imageUrl, media, shape, cardHeight, aspectRatio, modifier)
     } else {

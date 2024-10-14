@@ -22,6 +22,8 @@ data class MediaPropertyDto(
     val name: String,
     @field:Json(name = "main_page")
     val mainPage: MediaPageDto,
+    @field:Json(name = "subproperties")
+    val subpropertyIds: List<String>?,
 
     val login: LoginInfoDto?,
 

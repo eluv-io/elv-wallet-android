@@ -1,13 +1,14 @@
 package app.eluvio.wallet.screens.property.search
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.HorizontalDivider
@@ -45,10 +47,13 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
+import androidx.tv.material3.MaterialTheme
+import androidx.tv.material3.Surface
+import androidx.tv.material3.Text
 import app.eluvio.wallet.R
 import app.eluvio.wallet.data.entities.v2.DisplayFormat
-import app.eluvio.wallet.data.entities.v2.PropertySearchFiltersEntity
 import app.eluvio.wallet.data.entities.v2.SearchFilterAttribute
 import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
 import app.eluvio.wallet.data.permissions.PermissionContext
@@ -58,9 +63,11 @@ import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.common.SearchBox
 import app.eluvio.wallet.screens.common.SearchFilterChip
 import app.eluvio.wallet.screens.common.TvButton
+import app.eluvio.wallet.screens.common.spacer
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState
 import app.eluvio.wallet.screens.property.sections
 import app.eluvio.wallet.theme.EluvioThemePreview
+import app.eluvio.wallet.theme.carousel_36
 import app.eluvio.wallet.util.subscribeToState
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
@@ -82,7 +89,8 @@ fun PropertySearch() {
                 },
                 onPrimaryFilterSelected = vm::onPrimaryFilterSelected,
                 onSecondaryFilterClick = vm::onSecondaryFilterClicked,
-                onSearchClicked = vm::onSearchClicked
+                onSearchClicked = vm::onSearchClicked,
+                onSubpropertySelected = vm::onSubpropertySelected
             )
         },
         onEvent = {
@@ -104,6 +112,7 @@ private fun PropertySearch(
     onPrimaryFilterSelected: (SearchFilterAttribute.Value?) -> Unit,
     onSecondaryFilterClick: (String?) -> Unit,
     onSearchClicked: () -> Unit,
+    onSubpropertySelected: (String?) -> Unit
 ) {
     val bgModifier = Modifier
         .fillMaxSize()
@@ -112,28 +121,83 @@ private fun PropertySearch(
         LoadingSpinner(modifier = bgModifier)
         return
     }
-    Column(modifier = bgModifier) {
-        Header(state, query, onQueryChanged, onSearchClicked)
+    LazyColumn(modifier = bgModifier) {
+        item(contentType = "header") { Header(state, query, onQueryChanged, onSearchClicked) }
+        spacer(8.dp)
+        item(contentType = "subproperty_selector") {
+            SubpropertiesRow(state.subproperties, onSubpropertySelected)
+        }
+        spacer(8.dp)
         if (state.selectedFilters != null) {
-            SecondaryFilterSelector(
-                state,
-                onPrimaryFilterCleared = { onPrimaryFilterSelected(null) },
-                onSecondaryFilterClick = onSecondaryFilterClick
-            )
+            item(contentType = "secondary_filter_selector") {
+                SecondaryFilterSelector(
+                    state,
+                    onPrimaryFilterCleared = { onPrimaryFilterSelected(null) },
+                    onSecondaryFilterClick = onSecondaryFilterClick
+                )
+            }
         }
 
         if (state.loadingResults) {
-            // This could be optimized to only show a spinner on the "search results" part of the
-            // screen, while displaying the primary filters as soon as they are available, instead
-            // of waiting for everything to be ready before showing anything.
-            LoadingSpinner(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(56.dp)
-            )
+            item(contentType = "loading_spinner") {
+                LoadingSpinner(
+                    Modifier
+                        .fillParentMaxWidth()
+                        .padding(150.dp)
+                )
+            }
         } else {
-            LazyColumn(contentPadding = PaddingValues(vertical = 20.dp)) {
-                sections(state.allSections)
+            sections(state.allSections)
+        }
+    }
+}
+
+@Composable
+private fun SubpropertiesRow(
+    subproperties: List<PropertySearchViewModel.State.SubpropertyInfo>,
+    onSubpropertySelected: (String?) -> Unit
+) {
+    if (subproperties.isEmpty()) {
+        return
+    }
+
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Overscan.horizontalPadding)
+            .padding(top = 16.dp)
+    ) {
+        Text("Search In: ", style = MaterialTheme.typography.carousel_36)
+        subproperties.forEach { subproperty ->
+            val bgColor = if (subproperty.selected) Color.White else Color.Black
+            Surface(
+                onClick = { onSubpropertySelected(subproperty.takeIf { !it.selected }?.id) },
+                colors = ClickableSurfaceDefaults.colors(
+                    containerColor = bgColor,
+                    focusedContainerColor = bgColor
+                ),
+                border = ClickableSurfaceDefaults.border(
+                    border = Border(BorderStroke(1.dp, Color(0xFF5D5D5D))),
+                    focusedBorder = Border(BorderStroke(2.dp, Color.White)),
+                ),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                ) {
+                    AsyncImage(
+                        model = subproperty.logoUrl, contentDescription = subproperty.name, modifier = Modifier
+                            .size(28.dp)
+                            .background(
+                                color = Color(0xFF212121), shape = RoundedCornerShape(4.dp)
+                            )
+                            .padding(4.dp)
+                    )
+                    Text(text = subproperty.name)
+                }
             }
         }
     }
@@ -168,7 +232,7 @@ private fun SecondaryFilterSelector(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 22.dp)
+            .padding(vertical = 12.dp)
             .horizontalScroll(rememberScrollState())
             // "Manual" focusRestorer.
             // We need to do this because when the secondary filter is cleared (via hardware back
@@ -271,8 +335,11 @@ private fun PropertySearchPreview() = EluvioThemePreview {
         PropertySearchViewModel.State(
             loading = false,
             propertyName = "FlixVerse",
-            primaryFilters =
-            DynamicPageLayoutState.Section.Carousel(
+            subproperties = listOf(
+                PropertySearchViewModel.State.SubpropertyInfo("id1", "Subproperty1", ""),
+                PropertySearchViewModel.State.SubpropertyInfo("id2", "Sub2", ""),
+            ),
+            primaryFilters = DynamicPageLayoutState.Section.Carousel(
                 permissionContext = PermissionContext(propertyId = "p", sectionId = "4"),
                 displaySettings = SimpleDisplaySettings(
                     displayFormat = DisplayFormat.GRID,
@@ -291,6 +358,7 @@ private fun PropertySearchPreview() = EluvioThemePreview {
         onPrimaryFilterSelected = {},
         onSecondaryFilterClick = {},
         onQueryChanged = {},
-        onSearchClicked = {}
+        onSearchClicked = {},
+        onSubpropertySelected = {},
     )
 }

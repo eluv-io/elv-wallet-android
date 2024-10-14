@@ -10,6 +10,10 @@ data class SearchRequest(
     val searchTerm: String? = null,
     val tags: List<String>? = null,
     val attributes: Map<String, List<String>>? = null,
+    // We don't actually send this to the server, but we need it for SearchRequests to fail equality checks
+    // when subpropertyId changes.
+    @field:Json(ignore = true)
+    val subpropertyId: String? = null,
 )
 
 @JsonClass(generateAdapter = true)

@@ -12,6 +12,7 @@ import app.eluvio.wallet.network.converters.v2.permissions.toSearchPermissionsEn
 import app.eluvio.wallet.network.dto.v2.LoginInfoDto
 import app.eluvio.wallet.network.dto.v2.MediaPageDto
 import app.eluvio.wallet.network.dto.v2.MediaPropertyDto
+import app.eluvio.wallet.util.realm.toRealmListOrEmpty
 import io.realm.kotlin.ext.toRealmList
 
 fun MediaPropertyDto.toEntity(baseUrl: String): MediaPropertyEntity? {
@@ -24,6 +25,8 @@ fun MediaPropertyDto.toEntity(baseUrl: String): MediaPropertyEntity? {
         image = dto.image?.toUrl(baseUrl) ?: return null
         bgImageUrl = dto.discoverPageBgImage?.toUrl(baseUrl)
         mainPage = dto.mainPage.toEntity(id, baseUrl)
+        subproperyIds = dto.subpropertyIds.toRealmListOrEmpty()
+
         loginInfo = dto.login?.toEntity(baseUrl)
 
         permissionStates = dto.toPermissionStateEntities()

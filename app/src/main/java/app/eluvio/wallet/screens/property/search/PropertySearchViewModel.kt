@@ -9,6 +9,7 @@ import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.entities.v2.DisplayFormat
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
+import app.eluvio.wallet.data.entities.v2.MediaPropertyEntity
 import app.eluvio.wallet.data.entities.v2.PropertySearchFiltersEntity
 import app.eluvio.wallet.data.entities.v2.SearchFilterAttribute
 import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
@@ -28,6 +29,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.kotlin.addTo
+import io.reactivex.rxjava3.kotlin.combineLatest
 import io.reactivex.rxjava3.kotlin.subscribeBy
 import io.reactivex.rxjava3.processors.BehaviorProcessor
 import io.reactivex.rxjava3.processors.PublishProcessor
@@ -36,7 +38,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PropertySearchViewModel @Inject constructor(
-    propertyStore: MediaPropertyStore,
+    private val propertyStore: MediaPropertyStore,
     private val searchStore: PropertySearchStore,
     savedStateHandle: SavedStateHandle
 ) : BaseViewModel<PropertySearchViewModel.State>(State(), savedStateHandle) {
@@ -51,6 +53,8 @@ class PropertySearchViewModel @Inject constructor(
         val primaryFilters: DynamicPageLayoutState.Section? = null,
         val searchResults: List<DynamicPageLayoutState.Section> = emptyList(),
         val selectedFilters: SelectedFilters? = null,
+
+        val subproperties: List<SubpropertyInfo> = emptyList()
     ) {
         val allSections = listOfNotNull(primaryFilters) + searchResults
 
@@ -71,6 +75,13 @@ class PropertySearchViewModel @Inject constructor(
              */
             val secondaryFilterValue: String? = null,
         )
+
+        data class SubpropertyInfo(
+            val id: String,
+            val name: String,
+            val logoUrl: String?,
+            val selected: Boolean = false,
+        )
     }
 
     private val navArgs = savedStateHandle.navArgs<PropertySearchNavArgs>()
@@ -82,6 +93,8 @@ class PropertySearchViewModel @Inject constructor(
 
     private val selectedPrimaryFilter =
         BehaviorProcessor.createDefault(Optional.empty<State.SelectedFilters>())
+
+    private val selectedSubpropertyId = BehaviorProcessor.createDefault(Optional.empty<String>())
 
     /**
      * Once filters are fetched, hold onto them so we can look up attributes/values by ID.
@@ -108,6 +121,7 @@ class PropertySearchViewModel @Inject constructor(
             }
             .addTo(disposables)
 
+        observeSubpropertyInfo()
 
         searchStore.getFilters(navArgs.propertyId)
             .firstOrError(
@@ -134,6 +148,34 @@ class PropertySearchViewModel @Inject constructor(
                     navigateTo(NavigationEvent.GoBack)
                 }
             )
+            .addTo(disposables)
+    }
+
+    private fun observeSubpropertyInfo() {
+        property.map { it.subproperyIds }
+            .distinctUntilChanged()
+            .flatMap { ids ->
+                Flowable.combineLatest(
+                    ids.map { id ->
+                        propertyStore.observeMediaProperty(id, forceRefresh = false)
+                    }
+                ) { it.filterIsInstance<MediaPropertyEntity>() }
+            }
+            .combineLatest(selectedSubpropertyId)
+            .map { (properties, selectedSubpropertyId) ->
+                properties.map { property ->
+                    State.SubpropertyInfo(
+                        id = property.id,
+                        name = property.name,
+                        logoUrl = property.headerLogoUrl?.url,
+                        selected = property.id == selectedSubpropertyId.orDefault(null)
+                    )
+                }
+            }
+            .subscribeBy {
+                println("stav: Subproperties: $it")
+                updateState { copy(subproperties = it) }
+            }
             .addTo(disposables)
     }
 
@@ -195,7 +237,12 @@ class PropertySearchViewModel @Inject constructor(
     }
 
     private fun fetchResults(request: SearchRequest): Single<List<MediaPageSectionEntity>> {
-        return property.firstOrError()
+        val propertyToSearch = if (request.subpropertyId != null) {
+            propertyStore.observeMediaProperty(request.subpropertyId, forceRefresh = false)
+        } else {
+            property
+        }
+        return propertyToSearch.firstOrError()
             .flatMap { property ->
                 searchStore.search(property, request)
             }
@@ -235,10 +282,15 @@ class PropertySearchViewModel @Inject constructor(
             .map { SearchTriggers.FilterChanged(it.orDefault(null)) }
             .distinctUntilChanged()
 
+        val subpropertyChanged = selectedSubpropertyId
+            .map { SearchTriggers.SubpropertyChanged(it.orDefault(null)) }
+            .distinctUntilChanged()
+
         Flowable.merge(
             queryChanged,
             searchClicked,
-            filterChanged
+            filterChanged,
+            subpropertyChanged
         )
             .scan(SearchRequest()) { request, trigger ->
                 when (trigger) {
@@ -246,6 +298,8 @@ class PropertySearchViewModel @Inject constructor(
                     is SearchTriggers.FilterChanged -> {
                         request.copy(attributes = trigger.toAttributeMap())
                     }
+
+                    is SearchTriggers.SubpropertyChanged -> request.copy(subpropertyId = trigger.id)
                 }
             }
             .distinctUntilChanged()
@@ -297,6 +351,10 @@ class PropertySearchViewModel @Inject constructor(
             displaySettings = SimpleDisplaySettings(displayFormat = DisplayFormat.GRID),
         )
     }
+
+    fun onSubpropertySelected(subpropertyId: String?) {
+        selectedSubpropertyId.onNext(Optional.of(subpropertyId))
+    }
 }
 
 private data class QueryUpdate(val query: String, val immediate: Boolean)
@@ -319,4 +377,6 @@ private sealed interface SearchTriggers {
             }
         }
     }
+
+    data class SubpropertyChanged(val id: String?) : SearchTriggers
 }

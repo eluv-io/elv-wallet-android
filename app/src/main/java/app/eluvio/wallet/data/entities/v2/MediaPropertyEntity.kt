@@ -12,6 +12,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.ElementsIntoSet
 import io.realm.kotlin.ext.realmDictionaryOf
+import io.realm.kotlin.ext.realmListOf
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.TypedRealmObject
 import io.realm.kotlin.types.annotations.Ignore
@@ -35,6 +36,7 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
     // Property can also include a list of pages besides the main page.
     // But the TV apps have no use for it currently.
     var mainPage: MediaPageEntity? = null
+    var subproperyIds = realmListOf<String>()
 
     var loginInfo: PropertyLoginInfoRealmEntity? = null
 

@@ -74,7 +74,7 @@ import app.eluvio.wallet.util.compose.thenIf
 import app.eluvio.wallet.util.compose.thenIfNotNull
 import coil.compose.AsyncImage
 
-private val CARD_HEIGHT = 120.dp
+val CAROUSEL_CARD_HEIGHT = 120.dp
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -177,7 +177,7 @@ fun CarouselSection(
                         text = "Nothing here... yet?",
                         modifier = Modifier
                             .padding(horizontal = Overscan.horizontalPadding)
-                            .height(CARD_HEIGHT)
+                            .height(CAROUSEL_CARD_HEIGHT)
                             .wrapContentHeight(Alignment.CenterVertically)
                     )
                 } else {
@@ -239,7 +239,7 @@ private fun Logo(displaySettings: DisplaySettings) {
         onClick = {/* no click action, just here to capture focus */ },
         modifier = Modifier
             // Doesn't have to be accurate, but Surface should start below the top of card row
-            .padding(top = CARD_HEIGHT)
+            .padding(top = CAROUSEL_CARD_HEIGHT)
             // Doubles as the padding for the Logo/text. (size of 0.dp is never focusable)
             .size(width = Overscan.horizontalPadding, height = 1.dp)
             // Invisible, but still focusable
@@ -263,7 +263,7 @@ private fun Logo(displaySettings: DisplaySettings) {
                 } else {
                     Modifier
                         .padding(top = 16.dp)
-                        .height(CARD_HEIGHT)
+                        .height(CAROUSEL_CARD_HEIGHT)
                 }
             )
             .width(95.dp)
@@ -384,7 +384,7 @@ private fun ItemGrid(
             key(item) {
                 CarouselItemCard(
                     carouselItem = item,
-                    cardHeight = CARD_HEIGHT,
+                    cardHeight = CAROUSEL_CARD_HEIGHT,
                     modifier = Modifier.thenIf(index == 0) {
                         onGloballyPositioned {
                             firstChildPositioned = true
@@ -414,7 +414,7 @@ private fun ItemRow(items: List<CarouselItem>, startPadding: Dp, modifier: Modif
             itemsIndexed(items) { index, item ->
                 CarouselItemCard(
                     carouselItem = item,
-                    cardHeight = CARD_HEIGHT,
+                    cardHeight = CAROUSEL_CARD_HEIGHT,
                     modifier = Modifier.focusRequester(childFocusRequesters[index])
                 )
             }

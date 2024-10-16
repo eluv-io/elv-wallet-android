@@ -12,6 +12,7 @@ import app.eluvio.wallet.network.converters.v2.permissions.toSearchPermissionsEn
 import app.eluvio.wallet.network.dto.v2.LoginInfoDto
 import app.eluvio.wallet.network.dto.v2.MediaPageDto
 import app.eluvio.wallet.network.dto.v2.MediaPropertyDto
+import app.eluvio.wallet.network.dto.v2.PropertySelectionDto
 import app.eluvio.wallet.util.realm.toRealmListOrEmpty
 import io.realm.kotlin.ext.toRealmList
 
@@ -25,7 +26,11 @@ fun MediaPropertyDto.toEntity(baseUrl: String): MediaPropertyEntity? {
         image = dto.image?.toUrl(baseUrl) ?: return null
         bgImageUrl = dto.discoverPageBgImage?.toUrl(baseUrl)
         mainPage = dto.mainPage.toEntity(id, baseUrl)
-        subproperyIds = dto.subpropertyIds.toRealmListOrEmpty()
+        subpropertySelection = dto.property_selection
+            .takeIf { dto.show_property_selection == true }
+            ?.filter { it.property_id != dto.id }
+            ?.map { it.toEntity(baseUrl) }
+            .toRealmListOrEmpty()
 
         loginInfo = dto.login?.toEntity(baseUrl)
 
@@ -33,6 +38,16 @@ fun MediaPropertyDto.toEntity(baseUrl: String): MediaPropertyEntity? {
         rawPermissions = dto.permissions?.toContentPermissionsEntity()
         propertyPermissions = dto.permissions?.toPropertyPermissionsEntity()
         searchPermissions = dto.permissions?.toSearchPermissionsEntity()
+    }
+}
+
+private fun PropertySelectionDto.toEntity(baseUrl: String): MediaPropertyEntity.SubpropertySelectionEntity {
+    val dto = this
+    return MediaPropertyEntity.SubpropertySelectionEntity().apply {
+        id = dto.property_id
+        title = dto.title
+        icon = dto.icon?.toUrl(baseUrl)
+        tile = dto.tile?.toUrl(baseUrl)
     }
 }
 

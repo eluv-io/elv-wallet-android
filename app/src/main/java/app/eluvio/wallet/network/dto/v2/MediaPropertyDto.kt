@@ -22,8 +22,8 @@ data class MediaPropertyDto(
     val name: String,
     @field:Json(name = "main_page")
     val mainPage: MediaPageDto,
-    @field:Json(name = "subproperties")
-    val subpropertyIds: List<String>?,
+    val show_property_selection: Boolean?,
+    val property_selection: List<PropertySelectionDto>?,
 
     val login: LoginInfoDto?,
 
@@ -54,4 +54,12 @@ data class LoginStylingDto(
     @field:Json(name = "logo_tv")
     val logoTv: AssetLinkDto?,
     val logo: AssetLinkDto?
+)
+
+@JsonClass(generateAdapter = true)
+data class PropertySelectionDto(
+    val property_id: String,
+    val title: String?,
+    val icon: AssetLinkDto?,
+    val tile: AssetLinkDto?,
 )

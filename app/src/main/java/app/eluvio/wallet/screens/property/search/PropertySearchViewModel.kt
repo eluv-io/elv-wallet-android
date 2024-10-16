@@ -9,7 +9,6 @@ import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.entities.v2.DisplayFormat
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
-import app.eluvio.wallet.data.entities.v2.MediaPropertyEntity
 import app.eluvio.wallet.data.entities.v2.PropertySearchFiltersEntity
 import app.eluvio.wallet.data.entities.v2.SearchFilterAttribute
 import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
@@ -25,6 +24,7 @@ import app.eluvio.wallet.screens.property.toDynamicSections
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.Optional
 import app.eluvio.wallet.util.rx.asSharedState
+import app.eluvio.wallet.util.rx.delay
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Single
@@ -33,8 +33,8 @@ import io.reactivex.rxjava3.kotlin.combineLatest
 import io.reactivex.rxjava3.kotlin.subscribeBy
 import io.reactivex.rxjava3.processors.BehaviorProcessor
 import io.reactivex.rxjava3.processors.PublishProcessor
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class PropertySearchViewModel @Inject constructor(
@@ -54,7 +54,7 @@ class PropertySearchViewModel @Inject constructor(
         val searchResults: List<DynamicPageLayoutState.Section> = emptyList(),
         val selectedFilters: SelectedFilters? = null,
 
-        val subproperties: List<SubpropertyInfo> = emptyList()
+        val subproperties: List<SelectableSubproperty> = emptyList()
     ) {
         val allSections = listOfNotNull(primaryFilters) + searchResults
 
@@ -74,13 +74,6 @@ class PropertySearchViewModel @Inject constructor(
              * When this field is non-null, the secondary filter is actually selected.
              */
             val secondaryFilterValue: String? = null,
-        )
-
-        data class SubpropertyInfo(
-            val id: String,
-            val name: String,
-            val logoUrl: String?,
-            val selected: Boolean = false,
         )
     }
 
@@ -152,34 +145,30 @@ class PropertySearchViewModel @Inject constructor(
     }
 
     private fun observeSubpropertyInfo() {
-        property.map { it.subproperyIds }
+        property.map { it.subpropertySelection }
             .distinctUntilChanged()
-            .flatMap { ids ->
-                Flowable.combineLatest(
-                    ids.map { id ->
-                        propertyStore.observeMediaProperty(id, forceRefresh = false)
-                    }
-                ) { it.filterIsInstance<MediaPropertyEntity>() }
-            }
             .combineLatest(selectedSubpropertyId)
             .map { (properties, selectedSubpropertyId) ->
                 properties.map { property ->
-                    State.SubpropertyInfo(
-                        id = property.id,
-                        name = property.name,
-                        logoUrl = property.headerLogoUrl?.url,
+                    SelectableSubproperty(
+                        property.id,
+                        property.title,
+                        property.icon,
+                        property.tile,
                         selected = property.id == selectedSubpropertyId.orDefault(null)
                     )
                 }
             }
             .subscribeBy {
-                println("stav: Subproperties: $it")
                 updateState { copy(subproperties = it) }
             }
             .addTo(disposables)
     }
 
     fun onQueryChanged(query: String) {
+        if (query.isEmpty()) {
+            selectedSubpropertyId.onNext(Optional.empty())
+        }
         this.query.onNext(QueryUpdate(query, immediate = false))
     }
 
@@ -262,8 +251,7 @@ class PropertySearchViewModel @Inject constructor(
                 if (immediate) {
                     Single.just(query)
                 } else {
-                    Single.just(query)
-                        .delay(300, TimeUnit.MILLISECONDS)
+                    Single.just(query).delay(300.milliseconds)
                 }
             }
             .map { SearchTriggers.QueryChanged(it) }
@@ -380,3 +368,11 @@ private sealed interface SearchTriggers {
 
     data class SubpropertyChanged(val id: String?) : SearchTriggers
 }
+
+data class SelectableSubproperty(
+    val id: String,
+    val title: String?,
+    val icon: FabricUrl?,
+    val tile: FabricUrl?,
+    val selected: Boolean,
+)

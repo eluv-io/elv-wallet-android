@@ -9,8 +9,12 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -53,18 +57,24 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import app.eluvio.wallet.R
+import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.data.entities.v2.DisplayFormat
 import app.eluvio.wallet.data.entities.v2.SearchFilterAttribute
 import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
 import app.eluvio.wallet.data.permissions.PermissionContext
+import app.eluvio.wallet.navigation.LocalNavigator
 import app.eluvio.wallet.navigation.MainGraph
+import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
+import app.eluvio.wallet.screens.common.ImageCard
 import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.common.SearchBox
 import app.eluvio.wallet.screens.common.SearchFilterChip
 import app.eluvio.wallet.screens.common.TvButton
 import app.eluvio.wallet.screens.common.spacer
+import app.eluvio.wallet.screens.destinations.PropertyDetailDestination
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState
+import app.eluvio.wallet.screens.property.rows.CAROUSEL_CARD_HEIGHT
 import app.eluvio.wallet.screens.property.sections
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.carousel_36
@@ -125,7 +135,7 @@ private fun PropertySearch(
         item(contentType = "header") { Header(state, query, onQueryChanged, onSearchClicked) }
         spacer(8.dp)
         item(contentType = "subproperty_selector") {
-            SubpropertiesRow(state.subproperties, onSubpropertySelected)
+            SubpropertiesRow(state, onSubpropertySelected, query.isEmpty())
         }
         spacer(8.dp)
         if (state.selectedFilters != null) {
@@ -152,54 +162,89 @@ private fun PropertySearch(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SubpropertiesRow(
-    subproperties: List<PropertySearchViewModel.State.SubpropertyInfo>,
-    onSubpropertySelected: (String?) -> Unit
+    state: PropertySearchViewModel.State,
+    onSubpropertySelected: (String?) -> Unit,
+    queryIsEmpty: Boolean,
 ) {
-    if (subproperties.isEmpty()) {
+    val hideSubpropertyTilesAndFilters = queryIsEmpty && state.selectedFilters != null
+    if (hideSubpropertyTilesAndFilters || state.subproperties.isEmpty()) {
         return
     }
-
-    Row(
+    FlowRow(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Overscan.horizontalPadding)
             .padding(top = 16.dp)
     ) {
-        Text("Search In: ", style = MaterialTheme.typography.carousel_36)
-        subproperties.forEach { subproperty ->
-            val bgColor = if (subproperty.selected) Color.White else Color.Black
-            Surface(
-                onClick = { onSubpropertySelected(subproperty.takeIf { !it.selected }?.id) },
-                colors = ClickableSurfaceDefaults.colors(
-                    containerColor = bgColor,
-                    focusedContainerColor = bgColor
-                ),
-                border = ClickableSurfaceDefaults.border(
-                    border = Border(BorderStroke(1.dp, Color(0xFF5D5D5D))),
-                    focusedBorder = Border(BorderStroke(2.dp, Color.White)),
-                ),
+        if (queryIsEmpty) {
+            SubpropertyTiles(state.subproperties)
+        } else {
+            SubpropertyFilters(state.subproperties, onSubpropertySelected)
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun FlowRowScope.SubpropertyFilters(
+    subproperties: List<SelectableSubproperty>,
+    onSubpropertySelected: (String?) -> Unit
+) {
+    Text(
+        "Search In: ",
+        style = MaterialTheme.typography.carousel_36,
+        modifier = Modifier.align(Alignment.CenterVertically)
+    )
+    subproperties.forEach { subproperty ->
+        val bgColor = if (subproperty.selected) Color.White else Color.Black
+        Surface(
+            onClick = { onSubpropertySelected(subproperty.takeIf { !it.selected }?.id) },
+            colors = ClickableSurfaceDefaults.colors(
+                containerColor = bgColor,
+                focusedContainerColor = bgColor
+            ),
+            border = ClickableSurfaceDefaults.border(
+                border = Border(BorderStroke(1.dp, Color(0xFF5D5D5D))),
+                focusedBorder = Border(BorderStroke(2.dp, Color.White)),
+            ),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
-                ) {
-                    AsyncImage(
-                        model = subproperty.logoUrl, contentDescription = subproperty.name, modifier = Modifier
-                            .size(28.dp)
-                            .background(
-                                color = Color(0xFF212121), shape = RoundedCornerShape(4.dp)
-                            )
-                            .padding(4.dp)
-                    )
-                    Text(text = subproperty.name)
-                }
+                AsyncImage(
+                    model = subproperty.icon, contentDescription = subproperty.title, modifier = Modifier
+                        .size(28.dp)
+                        .background(
+                            color = Color(0xFF212121), shape = RoundedCornerShape(4.dp)
+                        )
+                        .padding(4.dp)
+                )
+                Text(text = subproperty.title ?: "")
             }
         }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalLayoutApi::class)
+private fun FlowRowScope.SubpropertyTiles(subproperties: List<SelectableSubproperty>) {
+    val navigator = LocalNavigator.current
+    subproperties.forEach { subproperty ->
+        ImageCard(
+            imageUrl = subproperty.tile?.url,
+            contentDescription = subproperty.title,
+            onClick = { navigator(PropertyDetailDestination(subproperty.id).asPush()) },
+            // Assume subproperty cards are wide
+            modifier = Modifier
+                .height(CAROUSEL_CARD_HEIGHT)
+                .aspectRatio(AspectRatio.WIDE)
+        )
     }
 }
 
@@ -336,8 +381,8 @@ private fun PropertySearchPreview() = EluvioThemePreview {
             loading = false,
             propertyName = "FlixVerse",
             subproperties = listOf(
-                PropertySearchViewModel.State.SubpropertyInfo("id1", "Subproperty1", ""),
-                PropertySearchViewModel.State.SubpropertyInfo("id2", "Sub2", ""),
+                SelectableSubproperty("id1", "Subproperty1", null, null, false),
+                SelectableSubproperty("id2", "Sub2", null, null, false),
             ),
             primaryFilters = DynamicPageLayoutState.Section.Carousel(
                 permissionContext = PermissionContext(propertyId = "p", sectionId = "4"),

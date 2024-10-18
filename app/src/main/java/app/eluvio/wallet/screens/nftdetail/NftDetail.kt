@@ -1,5 +1,6 @@
 package app.eluvio.wallet.screens.nftdetail
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,9 +17,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.tv.material3.ClickableSurfaceDefaults
+import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
@@ -171,7 +177,7 @@ private fun NftMetadata(state: NftDetailViewModel.State) {
     var selectedTab by rememberSaveable { mutableStateOf(tabs.first()) }
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(30.dp),
             modifier = Modifier
                 .padding(bottom = 16.dp)
                 .fillMaxWidth()
@@ -196,9 +202,13 @@ private fun MetadataTab(
 ) {
     Surface(
         onClick = { onSelected(value) },
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
+        shape = ClickableSurfaceDefaults.shape(RectangleShape),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color.Transparent,
-            contentColor = if (selected) Color.White else Color(0xFF7B7B7B),
+            focusedContainerColor = Color.Transparent,
+            contentColor = Color(0xFF7B7B7B),
+            focusedContentColor = Color.White,
             pressedContainerColor = Color.Transparent,
             disabledContainerColor = Color.Transparent,
         ),
@@ -212,8 +222,31 @@ private fun MetadataTab(
         Text(
             text = text,
             style = MaterialTheme.typography.body_32,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+            modifier = Modifier
+                .animatedUnderline(selected)
+                // Give underline some space below text
+                .padding(bottom = 2.dp)
         )
+    }
+}
+
+private fun Modifier.animatedUnderline(visible: Boolean) = composed {
+    val lineWidthFraction by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f, label = "underlineSize"
+    )
+    val color = LocalContentColor.current
+    drawWithCache {
+        onDrawBehind {
+            val strokeWidthPx = 2.dp.toPx()
+            val verticalOffset = size.height
+            val lineWidth = size.width * lineWidthFraction
+            drawLine(
+                color = color,
+                strokeWidth = strokeWidthPx,
+                start = Offset((size.width - lineWidth) / 2, verticalOffset),
+                end = Offset((size.width + lineWidth) / 2, verticalOffset)
+            )
+        }
     }
 }
 

@@ -69,11 +69,6 @@ val Typography.header_30: TextStyle
         fontWeight = FontWeight.Normal,
     )
 
-val Typography.button_32: TextStyle
-    get() = eluvioTextStlye(
-        size = 16.sp,
-        fontWeight = FontWeight.Normal,
-    )
 val Typography.button_28: TextStyle
     get() = eluvioTextStlye(
         size = 14.sp,

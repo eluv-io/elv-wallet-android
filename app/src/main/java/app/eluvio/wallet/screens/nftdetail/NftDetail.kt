@@ -5,6 +5,7 @@ import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,7 +29,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.LocalContentColor
@@ -47,7 +47,7 @@ import app.eluvio.wallet.screens.destinations.FullscreenQRDialogDestination
 import app.eluvio.wallet.screens.destinations.PropertyDetailDestination
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.body_32
-import app.eluvio.wallet.theme.carousel_36
+import app.eluvio.wallet.theme.carousel_48
 import app.eluvio.wallet.theme.label_24
 import app.eluvio.wallet.util.compose.RealisticDevices
 import app.eluvio.wallet.util.subscribeToState
@@ -92,23 +92,34 @@ private fun NftDetail(state: NftDetailViewModel.State) {
 }
 
 @Composable
-private fun MetadataTitle(text: String) {
+private fun ColumnScope.LabeledInfo(label: String, text: String, maxLines: Int = Int.MAX_VALUE) {
+    Text(
+        text = label,
+        style = MaterialTheme.typography.body_32,
+        color = Color(0xFF9B9B9B),
+        modifier = Modifier.padding(bottom = 5.dp)
+    )
     Text(
         text = text,
-        style = MaterialTheme.typography.carousel_36.copy(
-            fontWeight = FontWeight.Medium,
-            lineHeight = 26.sp
-        )
+        style = MaterialTheme.typography.label_24.copy(
+            fontWeight = FontWeight.Normal,
+        ),
+        overflow = TextOverflow.Ellipsis,
+        maxLines = maxLines,
+        modifier = Modifier.padding(bottom = 15.dp)
     )
 }
 
 private enum class NftTabs(val title: String) {
     DESCRIPTION("Description") {
         @Composable
-        override fun Content(state: NftDetailViewModel.State) {
+        override fun Content(state: NftDetailViewModel.State, scope: ColumnScope) {
             val media = state.media ?: return
             Column {
-                MetadataTitle(text = media.title)
+                Text(
+                    text = media.title,
+                    style = MaterialTheme.typography.carousel_48
+                )
                 Text(
                     text = "${media.subtitle}    #${media.tokenId}",
                     style = MaterialTheme.typography.label_24,
@@ -121,32 +132,27 @@ private enum class NftTabs(val title: String) {
     },
     MINT_INFO("Mint Info") {
         @Composable
-        override fun Content(state: NftDetailViewModel.State) {
+        override fun Content(state: NftDetailViewModel.State, scope: ColumnScope) {
             Column {
                 if (state.contractInfo != null) {
-                    Text(state.media?.subtitle ?: "")
-                    Text("Number Minted: ${state.contractInfo.minted}")
-                    Text("Number in Circulation: ${state.contractInfo.totalSupply}")
-                    Text("Number Burned: ${state.contractInfo.burned}")
-                    Text("Maximum Possible in Circulation: ${state.contractInfo.cap - state.contractInfo.burned}")
-                    Text("Cap: ${state.contractInfo.cap}")
+                    LabeledInfo("Edition", state.media?.subtitle ?: "")
+                    LabeledInfo("Number Minted", state.contractInfo.minted.toString())
+                    LabeledInfo("Number in Circulation", state.contractInfo.totalSupply.toString())
+                    LabeledInfo("Number Burned", state.contractInfo.burned.toString())
+                    LabeledInfo(
+                        "Maximum Possible in Circulation",
+                        (state.contractInfo.cap - state.contractInfo.burned).toString()
+                    )
+                    LabeledInfo("Cap", state.contractInfo.cap.toString())
                 }
             }
         }
     },
     CONTRACT_VERSION("Contract & Version") {
         @Composable
-        override fun Content(state: NftDetailViewModel.State) {
-            MetadataTitle("Contract Address")
-            Text(
-                state.media?.contractAddress ?: "...",
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(bottom = 20.dp)
-            )
-
-            MetadataTitle("Hash")
-            Text(state.media?.versionHash ?: "...", maxLines = 1, overflow = TextOverflow.Ellipsis)
+        override fun Content(state: NftDetailViewModel.State, scope: ColumnScope) = scope.run {
+            LabeledInfo("Contract Address", state.media?.contractAddress ?: "", maxLines = 1)
+            LabeledInfo("Hash", state.media?.versionHash ?: "", maxLines = 1)
 
             if (state.lookoutUrl != null) {
                 val navigator = LocalNavigator.current
@@ -167,7 +173,7 @@ private enum class NftTabs(val title: String) {
     };
 
     @Composable
-    abstract fun Content(state: NftDetailViewModel.State)
+    abstract fun Content(state: NftDetailViewModel.State, scope: ColumnScope)
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -188,7 +194,7 @@ private fun NftMetadata(state: NftDetailViewModel.State) {
                 MetadataTab(tab.title, selectedTab == tab, { selectedTab = tab })
             }
         }
-        selectedTab.Content(state)
+        selectedTab.Content(state, scope = this)
     }
 }
 

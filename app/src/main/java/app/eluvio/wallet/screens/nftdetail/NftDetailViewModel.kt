@@ -1,10 +1,8 @@
 package app.eluvio.wallet.screens.nftdetail
 
-import android.graphics.Bitmap
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.data.entities.ContractInfoEntity
 import app.eluvio.wallet.data.stores.ContentStore
-import app.eluvio.wallet.screens.common.generateQrCode
 import app.eluvio.wallet.screens.dashboard.myitems.AllMediaProvider
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.mapNotNull
@@ -17,13 +15,17 @@ import javax.inject.Inject
 class NftDetailViewModel @Inject constructor(
     private val navArgs: NftDetailNavArgs,
     private val contentStore: ContentStore,
-) : BaseViewModel<NftDetailViewModel.State>(State()) {
+) : BaseViewModel<NftDetailViewModel.State>(
+    State(
+        lookoutUrl = "https://explorer.contentfabric.io/address/${navArgs.contractAddress}/transactions"
+    )
+) {
 
     data class State(
         val loading: Boolean = true,
         val media: AllMediaProvider.Media? = null,
         val contractInfo: ContractInfoEntity? = null,
-        val lookoutQr: Bitmap? = null
+        val lookoutUrl: String? = null
     )
 
     override fun onResume() {
@@ -48,15 +50,6 @@ class NftDetailViewModel @Inject constructor(
                 onSuccess = { updateState { copy(contractInfo = it) } },
                 onError = {
                     Log.e("Error fetching Contract Info for ${navArgs.contractAddress}", it)
-                }
-            )
-            .addTo(disposables)
-
-        generateQrCode("https://explorer.contentfabric.io/address/${navArgs.contractAddress}/transactions")
-            .subscribeBy(
-                onSuccess = { updateState { copy(lookoutQr = it) } },
-                onError = {
-                    Log.e("Error generating Eluvio Lookout QR", it)
                 }
             )
             .addTo(disposables)

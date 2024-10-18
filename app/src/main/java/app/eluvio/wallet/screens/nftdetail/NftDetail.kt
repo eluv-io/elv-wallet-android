@@ -1,7 +1,5 @@
 package app.eluvio.wallet.screens.nftdetail
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,14 +19,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.MaterialTheme
@@ -40,9 +35,9 @@ import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.network.dto.ContractInfoDto
 import app.eluvio.wallet.screens.common.DelayedFullscreenLoader
 import app.eluvio.wallet.screens.common.TvButton
-import app.eluvio.wallet.screens.common.generateQrCodeBlocking
 import app.eluvio.wallet.screens.dashboard.myitems.AllMediaProvider
 import app.eluvio.wallet.screens.dashboard.myitems.MediaCard
+import app.eluvio.wallet.screens.destinations.FullscreenQRDialogDestination
 import app.eluvio.wallet.screens.destinations.PropertyDetailDestination
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.body_32
@@ -122,13 +117,6 @@ private enum class NftTabs(val title: String) {
         @Composable
         override fun Content(state: NftDetailViewModel.State) {
             Column {
-                // TODO: comment out until we figure what if this makes sense on TV
-//                MetadataTitle("Media URL")
-//                Text("http...", Modifier.padding(bottom = 20.dp))
-//
-//                MetadataTitle("Image URL")
-//                Text("http://..", Modifier.padding(bottom = 20.dp))
-
                 if (state.contractInfo != null) {
                     Text(state.media?.subtitle ?: "")
                     Text("Number Minted: ${state.contractInfo.minted}")
@@ -154,30 +142,18 @@ private enum class NftTabs(val title: String) {
             MetadataTitle("Hash")
             Text(state.media?.versionHash ?: "...", maxLines = 1, overflow = TextOverflow.Ellipsis)
 
-            var showDialog by rememberSaveable { mutableStateOf(false) }
-            if (state.lookoutQr != null) {
-                if (showDialog) {
-                    Dialog(
-                        onDismissRequest = { showDialog = false },
-                        properties = DialogProperties(usePlatformDefaultWidth = false)
-                    ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.8f))
-                        ) {
-                            Image(
-                                bitmap = state.lookoutQr.asImageBitmap(),
-                                contentDescription = "Eluvio Lookout link",
-                                modifier = Modifier.fillMaxSize(0.45f)
-                            )
-                        }
-                    }
-                }
+            if (state.lookoutUrl != null) {
+                val navigator = LocalNavigator.current
                 TvButton(
                     "See more info on Eluvio Lookout",
-                    onClick = { showDialog = true },
+                    onClick = {
+                        navigator(
+                            FullscreenQRDialogDestination(
+                                url = state.lookoutUrl,
+                                title = "See More Info on Eluvio Lookout"
+                            ).asPush()
+                        )
+                    },
                     Modifier.padding(vertical = 20.dp)
                 )
             }
@@ -195,10 +171,7 @@ private fun NftMetadata(state: NftDetailViewModel.State) {
     var selectedTab by rememberSaveable { mutableStateOf(tabs.first()) }
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(
-                10.dp,
-                alignment = Alignment.CenterHorizontally
-            ),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier
                 .padding(bottom = 16.dp)
                 .fillMaxWidth()
@@ -270,7 +243,7 @@ private fun NftDetailPreview() = EluvioThemePreview {
                 totalSupply = 400,
                 burned = 3
             ),
-            lookoutQr = generateQrCodeBlocking("https://eluv.io")
+            lookoutUrl = "https://eluv.io"
         )
     )
 }

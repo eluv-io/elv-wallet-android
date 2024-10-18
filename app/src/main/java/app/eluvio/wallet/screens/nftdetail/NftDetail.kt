@@ -228,6 +228,7 @@ private fun MetadataTab(
         Text(
             text = text,
             style = MaterialTheme.typography.body_32,
+            maxLines = 1,
             modifier = Modifier
                 .animatedUnderline(selected)
                 // Give underline some space below text
@@ -236,6 +237,9 @@ private fun MetadataTab(
     }
 }
 
+/**
+ * Only works for 1 line of text.
+ */
 private fun Modifier.animatedUnderline(visible: Boolean) = composed {
     val lineWidthFraction by animateFloatAsState(
         targetValue = if (visible) 1f else 0f, label = "underlineSize"

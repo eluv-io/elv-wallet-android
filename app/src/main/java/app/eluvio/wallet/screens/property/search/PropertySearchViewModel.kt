@@ -29,7 +29,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.kotlin.addTo
-import io.reactivex.rxjava3.kotlin.combineLatest
 import io.reactivex.rxjava3.kotlin.subscribeBy
 import io.reactivex.rxjava3.processors.BehaviorProcessor
 import io.reactivex.rxjava3.processors.PublishProcessor
@@ -53,8 +52,6 @@ class PropertySearchViewModel @Inject constructor(
         val primaryFilters: DynamicPageLayoutState.Section? = null,
         val searchResults: List<DynamicPageLayoutState.Section> = emptyList(),
         val selectedFilters: SelectedFilters? = null,
-
-        val subproperties: List<SelectableSubproperty> = emptyList()
     ) {
         val allSections = listOfNotNull(primaryFilters) + searchResults
 
@@ -87,8 +84,6 @@ class PropertySearchViewModel @Inject constructor(
     private val selectedPrimaryFilter =
         BehaviorProcessor.createDefault(Optional.empty<State.SelectedFilters>())
 
-    private val selectedSubpropertyId = BehaviorProcessor.createDefault(Optional.empty<String>())
-
     /**
      * Once filters are fetched, hold onto them so we can look up attributes/values by ID.
      */
@@ -113,8 +108,6 @@ class PropertySearchViewModel @Inject constructor(
                 }
             }
             .addTo(disposables)
-
-        observeSubpropertyInfo()
 
         searchStore.getFilters(navArgs.propertyId)
             .firstOrError(
@@ -144,31 +137,7 @@ class PropertySearchViewModel @Inject constructor(
             .addTo(disposables)
     }
 
-    private fun observeSubpropertyInfo() {
-        property.map { it.subpropertySelection }
-            .distinctUntilChanged()
-            .combineLatest(selectedSubpropertyId)
-            .map { (properties, selectedSubpropertyId) ->
-                properties.map { property ->
-                    SelectableSubproperty(
-                        property.id,
-                        property.title,
-                        property.icon,
-                        property.tile,
-                        selected = property.id == selectedSubpropertyId.orDefault(null)
-                    )
-                }
-            }
-            .subscribeBy {
-                updateState { copy(subproperties = it) }
-            }
-            .addTo(disposables)
-    }
-
     fun onQueryChanged(query: String) {
-        if (query.isEmpty()) {
-            selectedSubpropertyId.onNext(Optional.empty())
-        }
         this.query.onNext(QueryUpdate(query, immediate = false))
     }
 
@@ -270,15 +239,10 @@ class PropertySearchViewModel @Inject constructor(
             .map { SearchTriggers.FilterChanged(it.orDefault(null)) }
             .distinctUntilChanged()
 
-        val subpropertyChanged = selectedSubpropertyId
-            .map { SearchTriggers.SubpropertyChanged(it.orDefault(null)) }
-            .distinctUntilChanged()
-
         Flowable.merge(
             queryChanged,
             searchClicked,
             filterChanged,
-            subpropertyChanged
         )
             .scan(SearchRequest()) { request, trigger ->
                 when (trigger) {
@@ -286,8 +250,6 @@ class PropertySearchViewModel @Inject constructor(
                     is SearchTriggers.FilterChanged -> {
                         request.copy(attributes = trigger.toAttributeMap())
                     }
-
-                    is SearchTriggers.SubpropertyChanged -> request.copy(subpropertyId = trigger.id)
                 }
             }
             .distinctUntilChanged()
@@ -339,10 +301,6 @@ class PropertySearchViewModel @Inject constructor(
             displaySettings = SimpleDisplaySettings(displayFormat = DisplayFormat.GRID),
         )
     }
-
-    fun onSubpropertySelected(subpropertyId: String?) {
-        selectedSubpropertyId.onNext(Optional.of(subpropertyId))
-    }
 }
 
 private data class QueryUpdate(val query: String, val immediate: Boolean)
@@ -365,14 +323,4 @@ private sealed interface SearchTriggers {
             }
         }
     }
-
-    data class SubpropertyChanged(val id: String?) : SearchTriggers
 }
-
-data class SelectableSubproperty(
-    val id: String,
-    val title: String?,
-    val icon: FabricUrl?,
-    val tile: FabricUrl?,
-    val selected: Boolean,
-)

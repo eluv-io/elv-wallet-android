@@ -22,14 +22,14 @@ fun <Value> SearchFilterChip(
     value: Value,
     selected: Boolean,
     modifier: Modifier = Modifier,
-    onClicked: (Value) -> Unit,
-    onHighlighted: (Value) -> Unit = onClicked,
+    onClick: (Value) -> Unit,
+    onFocus: (Value) -> Unit = onClick,
 ) {
     Surface(
-        onClick = { onClicked(value) },
+        onClick = { onClick(value) },
         modifier = modifier.onFocusChanged {
             if (it.hasFocus) {
-                onHighlighted(value)
+                onFocus(value)
             }
         }
     ) {

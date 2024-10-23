@@ -221,8 +221,8 @@ private fun PropertyFilterRow(
                 title = it.name,
                 value = it,
                 selected = it.id == state.selectedProperty?.id,
-                onClicked = { property -> onPropertySelected(property) },
-                onHighlighted = { /*No Op*/ }
+                onClick = { property -> onPropertySelected(property) },
+                onFocus = { /*No Op*/ }
             )
         }
     }

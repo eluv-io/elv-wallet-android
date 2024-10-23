@@ -72,10 +72,6 @@ fun CarouselItemCard(carouselItem: CarouselItem, cardHeight: Dp, modifier: Modif
             onClick
         )
 
-        is CarouselItem.CustomCard -> {
-            CustomCard(carouselItem, cardHeight, modifier)
-        }
-
         is CarouselItem.ItemPurchase -> ItemPurchaseCard(
             item = carouselItem,
             cardHeight = cardHeight,

@@ -5,13 +5,10 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.app.Events.ToastMessage
-import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.data.FabricUrl
-import app.eluvio.wallet.data.entities.v2.DisplayFormat
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
 import app.eluvio.wallet.data.entities.v2.PropertySearchFiltersEntity
 import app.eluvio.wallet.data.entities.v2.SearchFilterAttribute
-import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.PropertySearchStore
@@ -49,12 +46,11 @@ class PropertySearchViewModel @Inject constructor(
         val headerLogo: FabricUrl? = null,
         val propertyName: String? = null,
 
-        val primaryFilters: DynamicPageLayoutState.Section? = null,
         val searchResults: List<DynamicPageLayoutState.Section> = emptyList(),
+
+        val primaryFilterValues: List<SearchFilterAttribute.Value> = emptyList(),
         val selectedFilters: SelectedFilters? = null,
     ) {
-        val allSections = listOfNotNull(primaryFilters) + searchResults
-
         /**
          * Represents the currently selected filters.
          * All instances represent a non-empty selection of at least Primary filter and value.
@@ -81,7 +77,7 @@ class PropertySearchViewModel @Inject constructor(
     private val query = BehaviorProcessor.createDefault(QueryUpdate("", true))
     private val manualSearch = PublishProcessor.create<Unit>()
 
-    private val selectedPrimaryFilter =
+    private val selectedFilter =
         BehaviorProcessor.createDefault(Optional.empty<State.SelectedFilters>())
 
     /**
@@ -92,7 +88,7 @@ class PropertySearchViewModel @Inject constructor(
     override fun onResume() {
         super.onResume()
 
-        selectedPrimaryFilter
+        selectedFilter
             .subscribeBy {
                 updateState { copy(selectedFilters = it.orDefault(null)) }
             }
@@ -122,12 +118,12 @@ class PropertySearchViewModel @Inject constructor(
                             // Technically we might not have finished loading the Property at this point,
                             // but we still know the filters, so we can show them.
                             loading = false,
-                            primaryFilters = filters.primaryFilter?.toCustomCardsSection()
+                            primaryFilterValues = filters.primaryFilter?.values ?: emptyList(),
                         )
                     }
 
                     // Now that everything is ready, we can start observing search triggers.
-                    observeSearchTriggers(filters)
+                    observeSearchTriggers()
                 },
                 onError = {
                     fireEvent(ToastMessage("We hit a problem. Please try again later."))
@@ -142,7 +138,7 @@ class PropertySearchViewModel @Inject constructor(
     }
 
     fun onBackPressed() {
-        val selectedFilter = selectedPrimaryFilter.value?.orDefault(null)
+        val selectedFilter = selectedFilter.value?.orDefault(null)
         when {
             query.value?.query?.isNotEmpty() == true -> {
                 fireEvent(ResetQueryEvent)
@@ -153,10 +149,10 @@ class PropertySearchViewModel @Inject constructor(
                 if (selectedFilter.secondaryFilterValue != null) {
                     // Secondary filter is selected, clear it
                     val updatedFilter = selectedFilter.copy(secondaryFilterValue = null)
-                    selectedPrimaryFilter.onNext(Optional.of(updatedFilter))
+                    this.selectedFilter.onNext(Optional.of(updatedFilter))
                 } else {
                     // Only primary filter is selected, clear it.
-                    selectedPrimaryFilter.onNext(Optional.empty())
+                    this.selectedFilter.onNext(Optional.empty())
                 }
             }
             // Using [GoBack] sends us into an infinite loop, so instead we assume we
@@ -165,29 +161,34 @@ class PropertySearchViewModel @Inject constructor(
         }
     }
 
-    fun onPrimaryFilterSelected(primaryFilterValue: SearchFilterAttribute.Value?) {
-        val selectedFilter = primaryFilterValue?.let {
-            val primaryFilterAttribute = searchFilters?.primaryFilter ?: return@let null
-            val nextFilter = searchFilters?.attributes?.get(primaryFilterValue.nextFilterAttribute)
-            State.SelectedFilters(
-                primaryFilterAttribute = primaryFilterAttribute,
-                primaryFilterValue = primaryFilterValue.value,
-                secondaryFilterAttribute = nextFilter,
-            )
+    fun onPrimaryFilterClick(primaryFilterValue: SearchFilterAttribute.Value) {
+        val currentSelection = selectedFilter.value?.orDefault(null)
+        if (currentSelection?.primaryFilterValue == primaryFilterValue.value) {
+            // If clicked the currently selected filter, deselect it.
+            selectedFilter.onNext(Optional.empty())
+        } else {
+            val newSelection = searchFilters?.primaryFilter
+                ?.let { primaryFilterAttribute ->
+                    val nextFilter = searchFilters?.attributes?.get(primaryFilterValue.nextFilterAttribute)
+                    State.SelectedFilters(
+                        primaryFilterAttribute = primaryFilterAttribute,
+                        primaryFilterValue = primaryFilterValue.value,
+                        secondaryFilterAttribute = nextFilter,
+                    )
+                }
+            selectedFilter.onNext(Optional.of(newSelection))
         }
-        selectedPrimaryFilter.onNext(Optional.of(selectedFilter))
     }
 
-    fun onSecondaryFilterClicked(value: String?) {
-        val selectedFilter = selectedPrimaryFilter.value?.orDefault(null)
+    fun onSecondaryFilterClick(secondaryFilterValue: SearchFilterAttribute.Value) {
+        val selectedFilter = selectedFilter.value?.orDefault(null)
             ?: return Log.w("Secondary filter selected without primary filter?!")
         val updatedFilter = selectedFilter.copy(
-            secondaryFilterValue = value
-            // If clicked the currently selected filter, deselect it.
-            // Disabled for now, since we switched to select by highlighting.
-            // .takeIf { it != selectedFilter.secondaryFilterValue }
+            secondaryFilterValue = secondaryFilterValue.value
+                // If clicked the currently selected filter, deselect it.
+                .takeIf { it != selectedFilter.secondaryFilterValue }
         )
-        selectedPrimaryFilter.onNext(Optional.of(updatedFilter))
+        this.selectedFilter.onNext(Optional.of(updatedFilter))
     }
 
     fun onSearchClicked() {
@@ -214,7 +215,7 @@ class PropertySearchViewModel @Inject constructor(
             }
     }
 
-    private fun observeSearchTriggers(searchFilters: PropertySearchFiltersEntity) {
+    private fun observeSearchTriggers() {
         val queryChanged = query
             .switchMapSingle { (query, immediate) ->
                 if (immediate) {
@@ -226,16 +227,7 @@ class PropertySearchViewModel @Inject constructor(
             .map { SearchTriggers.QueryChanged(it) }
         val searchClicked = manualSearch
             .map { SearchTriggers.QueryChanged(query.value?.query ?: "") }
-        val filterChanged = selectedPrimaryFilter
-            .doOnNext {
-                val primaryFilterSelected = it.orDefault(null)?.primaryFilterValue != null
-                updateState {
-                    copy(primaryFilters = searchFilters.primaryFilter
-                        // only show primary filters while non are selected
-                        ?.takeIf { !primaryFilterSelected }
-                        ?.toCustomCardsSection())
-                }
-            }
+        val filterChanged = selectedFilter
             .map { SearchTriggers.FilterChanged(it.orDefault(null)) }
             .distinctUntilChanged()
 
@@ -282,23 +274,6 @@ class PropertySearchViewModel @Inject constructor(
                 "message_result",
                 AnnotatedString(message)
             )
-        )
-    }
-
-    private fun SearchFilterAttribute.toCustomCardsSection(): DynamicPageLayoutState.Section {
-        val propertyContext = permissionContext
-        return DynamicPageLayoutState.Section.Carousel(
-            permissionContext = propertyContext.copy(sectionId = "PRIMARY_FILTERS"),
-            items = values.map { filterValue ->
-                DynamicPageLayoutState.CarouselItem.CustomCard(
-                    permissionContext = propertyContext.copy(),
-                    imageUrl = filterValue.imageUrl,
-                    title = filterValue.value,
-                    aspectRatio = AspectRatio.WIDE,
-                    onClick = { onPrimaryFilterSelected(filterValue) }
-                )
-            },
-            displaySettings = SimpleDisplaySettings(displayFormat = DisplayFormat.GRID),
         )
     }
 }

@@ -3,7 +3,6 @@ package app.eluvio.wallet.screens.property
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.AnnotatedString
 import androidx.media3.exoplayer.source.MediaSource
-import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.entities.RedeemableOfferEntity
 import app.eluvio.wallet.data.entities.v2.SearchFilterAttribute
@@ -90,15 +89,6 @@ data class DynamicPageLayoutState(
             val tokenId: String,
             val imageUrl: String?,
             val animation: MediaSource?,
-        ) : CarouselItem
-
-        @Immutable
-        data class CustomCard(
-            override val permissionContext: PermissionContext,
-            val imageUrl: FabricUrl?,
-            val title: String,
-            val aspectRatio: Float = 1f,
-            val onClick: (() -> Unit)
         ) : CarouselItem
 
         @Immutable

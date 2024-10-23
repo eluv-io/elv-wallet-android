@@ -22,12 +22,6 @@ fun CarouselItem.onClickDirection(): Direction? {
             delegate.onClickDirection()
         }
 
-        is CarouselItem.CustomCard -> {
-            // invoke the custom onClick, but don't return a direction to navigate to.
-            onClick()
-            null
-        }
-
         is CarouselItem.ItemPurchase -> PurchasePromptDestination(permissionContext)
         is CarouselItem.PageLink -> PropertyDetailDestination(
             propertyId = propertyId,

@@ -1,9 +1,7 @@
 package app.eluvio.wallet.screens.property.search
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,53 +11,40 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusProperties
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.tv.material3.ClickableSurfaceDefaults
+import androidx.tv.material3.MaterialTheme
+import androidx.tv.material3.Text
 import app.eluvio.wallet.R
-import app.eluvio.wallet.data.entities.v2.DisplayFormat
 import app.eluvio.wallet.data.entities.v2.SearchFilterAttribute
-import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
-import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.common.SearchBox
 import app.eluvio.wallet.screens.common.SearchFilterChip
-import app.eluvio.wallet.screens.common.TvButton
 import app.eluvio.wallet.screens.common.spacer
-import app.eluvio.wallet.screens.property.DynamicPageLayoutState
+import app.eluvio.wallet.screens.common.withAlpha
 import app.eluvio.wallet.screens.property.sections
 import app.eluvio.wallet.theme.EluvioThemePreview
+import app.eluvio.wallet.theme.carousel_36
 import app.eluvio.wallet.util.subscribeToState
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
@@ -79,8 +64,8 @@ fun PropertySearch() {
                     query = it
                     vm.onQueryChanged(it)
                 },
-                onPrimaryFilterSelected = vm::onPrimaryFilterSelected,
-                onSecondaryFilterClick = vm::onSecondaryFilterClicked,
+                onPrimaryFilterClick = vm::onPrimaryFilterClick,
+                onSecondaryFilterClick = vm::onSecondaryFilterClick,
                 onSearchClicked = vm::onSearchClicked,
             )
         },
@@ -100,8 +85,8 @@ private fun PropertySearch(
     state: PropertySearchViewModel.State,
     query: String,
     onQueryChanged: (String) -> Unit,
-    onPrimaryFilterSelected: (SearchFilterAttribute.Value?) -> Unit,
-    onSecondaryFilterClick: (String?) -> Unit,
+    onPrimaryFilterClick: (SearchFilterAttribute.Value) -> Unit,
+    onSecondaryFilterClick: (SearchFilterAttribute.Value) -> Unit,
     onSearchClicked: () -> Unit,
 ) {
     val bgModifier = Modifier
@@ -114,16 +99,9 @@ private fun PropertySearch(
     LazyColumn(modifier = bgModifier) {
         item(contentType = "header") { Header(state, query, onQueryChanged, onSearchClicked) }
         spacer(8.dp)
-        if (state.selectedFilters != null) {
-            item(contentType = "secondary_filter_selector") {
-                SecondaryFilterSelector(
-                    state,
-                    onPrimaryFilterCleared = { onPrimaryFilterSelected(null) },
-                    onSecondaryFilterClick = onSecondaryFilterClick
-                )
-            }
+        item(contentType = "filter_selector") {
+            FilterSelector(state, onPrimaryFilterClick, onSecondaryFilterClick)
         }
-
         if (state.loadingResults) {
             item(contentType = "loading_spinner") {
                 LoadingSpinner(
@@ -133,7 +111,7 @@ private fun PropertySearch(
                 )
             }
         } else {
-            sections(state.allSections)
+            sections(state.searchResults)
         }
     }
 }
@@ -145,86 +123,61 @@ private fun LoadingSpinner(modifier: Modifier) {
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun SecondaryFilterSelector(
+fun FilterSelector(
     state: PropertySearchViewModel.State,
-    onPrimaryFilterCleared: () -> Unit,
-    onSecondaryFilterClick: (String?) -> Unit,
+    onPrimaryFilterClick: (SearchFilterAttribute.Value) -> Unit,
+    onSecondaryFilterClick: (SearchFilterAttribute.Value) -> Unit
 ) {
-    val filter = state.selectedFilters ?: return
-    val secondaryFilters = filter.secondaryFilterAttribute?.values.orEmpty()
-    val filterCount = secondaryFilters.size
-
-    val backButtonFocusRequester = remember { FocusRequester() }
-    val filterFocusRequesters = remember(filterCount) {
-        List(filterCount) { FocusRequester() }
+    if (state.primaryFilterValues.isEmpty()) {
+        return
     }
-    // Made non-lazy to make sure the "back" button (primary filter) is always attached so we can
-    // always call .requestFocus() without crashing.
-    // The number of secondary filters should be low enough that this is not a performance issue.
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp)
-            .horizontalScroll(rememberScrollState())
-            // "Manual" focusRestorer.
-            // We need to do this because when the secondary filter is cleared (via hardware back
-            // button), for a split second there will be 0 items in the search results, which will
-            // cause the system to focus on this row and re-select the last-selected secondary
-            // filter.
-            .focusProperties {
-                enter = {
-                    val selectedFilter = state.selectedFilters.secondaryFilterValue
-                    if (selectedFilter == null) {
-                        backButtonFocusRequester
-                    } else {
-                        secondaryFilters
-                            .indexOfFirst { it.value == selectedFilter }
-                            .takeIf { it != -1 }
-                            ?.let { index ->
-                                filterFocusRequesters[index]
-                            }
-                            ?: FocusRequester.Default
-                    }
-                }
-            }
-            .focusGroup()
+            .padding(vertical = 20.dp)
+    ) {
+        FiltersRow(
+            filters = state.primaryFilterValues,
+            selectedFilterValue = state.selectedFilters?.primaryFilterValue,
+            onClick = onPrimaryFilterClick
+        )
+
+        val secondaryFilters = state.selectedFilters?.secondaryFilterAttribute?.values.orEmpty()
+        if (secondaryFilters.isNotEmpty()) {
+            Spacer(Modifier.height(10.dp))
+            FiltersRow(
+                filters = secondaryFilters,
+                selectedFilterValue = state.selectedFilters?.secondaryFilterValue,
+                onClick = onSecondaryFilterClick,
+                labelAlpha = 0f
+            )
+        }
+    }
+}
+
+@Composable
+private fun FiltersRow(
+    filters: List<SearchFilterAttribute.Value>,
+    selectedFilterValue: String?,
+    onClick: (SearchFilterAttribute.Value) -> Unit,
+    // For the secondary row, we still want to take up that space, but not actually show anything
+    labelAlpha: Float = 1f
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.horizontalScroll(rememberScrollState())
     ) {
         Spacer(Modifier.width(Overscan.horizontalPadding))
-
-        Image(
-            imageVector = Icons.AutoMirrored.Default.KeyboardArrowLeft,
-            contentDescription = null,
-            colorFilter = ColorFilter.tint(Color(0xFF939393)),
-            contentScale = ContentScale.FillBounds,
-            modifier = Modifier.size(12.dp, 30.dp)
-        )
-        TvButton(
-            text = filter.primaryFilterValue,
-            onClick = onPrimaryFilterCleared,
-            shape = ClickableSurfaceDefaults.shape(CircleShape),
-            modifier = Modifier
-                .focusRequester(backButtonFocusRequester)
-                .padding(end = 5.dp)
-                .onFocusChanged {
-                    if (it.hasFocus) {
-                        onSecondaryFilterClick(null)
-                    }
-                }
-        )
-
-        secondaryFilters.forEachIndexed { index, attributeValue ->
+        Text("Filters", style = MaterialTheme.typography.carousel_36.withAlpha(labelAlpha))
+        filters.forEach { filter ->
+            Spacer(Modifier.width(16.dp))
             SearchFilterChip(
-                title = attributeValue.value,
-                value = attributeValue.value,
-                selected = filter.secondaryFilterValue == attributeValue.value,
-                onClicked = onSecondaryFilterClick,
-                modifier = Modifier
-                    .focusRequester(filterFocusRequesters[index])
-                    .padding(horizontal = 5.dp)
-            )
+                title = filter.value,
+                value = filter,
+                selected = selectedFilterValue == filter.value,
+                onClick = onClick,
+                onFocus = {})
         }
         Spacer(Modifier.width(Overscan.horizontalPadding))
     }
@@ -247,7 +200,9 @@ private fun Header(
             model = state.headerLogo,
             contentDescription = "Logo",
             placeholder = placeholder,
-            modifier = Modifier.height(48.dp)
+            modifier = Modifier
+                .height(48.dp)
+                .widthIn(max = 80.dp)
         )
         Spacer(Modifier.width(24.dp))
         Column {
@@ -270,23 +225,12 @@ private fun PropertySearchPreview() = EluvioThemePreview {
         PropertySearchViewModel.State(
             loading = false,
             propertyName = "FlixVerse",
-            primaryFilters = DynamicPageLayoutState.Section.Carousel(
-                permissionContext = PermissionContext(propertyId = "p", sectionId = "4"),
-                displaySettings = SimpleDisplaySettings(
-                    displayFormat = DisplayFormat.GRID,
-                ),
-                items = List(4) {
-                    DynamicPageLayoutState.CarouselItem.CustomCard(
-                        permissionContext = PermissionContext(propertyId = "property1"),
-                        title = "Primary Filter Value ${it + 1}",
-                        imageUrl = null,
-                        aspectRatio = 16f / 9f,
-                        onClick = {})
-                }
-            ),
+            primaryFilterValues = List(4) {
+                SearchFilterAttribute.Value.from("Primary Filter Value $it")
+            },
         ),
         query = "",
-        onPrimaryFilterSelected = {},
+        onPrimaryFilterClick = {},
         onSecondaryFilterClick = {},
         onQueryChanged = {},
         onSearchClicked = {},

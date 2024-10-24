@@ -5,7 +5,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.media3.exoplayer.source.MediaSource
 import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.entities.RedeemableOfferEntity
-import app.eluvio.wallet.data.entities.v2.SearchFilterAttribute
+import app.eluvio.wallet.data.entities.v2.search.FilterAttributeEntity
 import app.eluvio.wallet.data.entities.v2.display.DisplaySettings
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.navigation.NavigationEvent
@@ -52,7 +52,7 @@ data class DynamicPageLayoutState(
             val displaySettings: DisplaySettings? = null,
             val viewAllNavigationEvent: NavigationEvent? = null,
             val items: List<CarouselItem>,
-            val filterAttribute: SearchFilterAttribute? = null,
+            val filterAttribute: FilterAttributeEntity? = null,
         ) : Section {
             override val sectionId: String =
                 requireNotNull(permissionContext.sectionId) { "PermissionContext.sectionId is null" }

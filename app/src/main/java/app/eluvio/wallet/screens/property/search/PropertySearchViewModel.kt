@@ -7,8 +7,7 @@ import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.app.Events.ToastMessage
 import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
-import app.eluvio.wallet.data.entities.v2.PropertySearchFiltersEntity
-import app.eluvio.wallet.data.entities.v2.SearchFilterAttribute
+import app.eluvio.wallet.data.entities.v2.search.SearchFilter
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.PropertySearchStore
@@ -48,7 +47,7 @@ class PropertySearchViewModel @Inject constructor(
 
         val searchResults: List<DynamicPageLayoutState.Section> = emptyList(),
 
-        val primaryFilterValues: List<SearchFilterAttribute.Value> = emptyList(),
+        val primaryFilter: SearchFilter? = null,
         val selectedFilters: SelectedFilters? = null,
     ) {
         /**
@@ -56,13 +55,13 @@ class PropertySearchViewModel @Inject constructor(
          * All instances represent a non-empty selection of at least Primary filter and value.
          */
         data class SelectedFilters(
-            val primaryFilterAttribute: SearchFilterAttribute,
+            val primaryFilterAttribute: SearchFilter,
             val primaryFilterValue: String,
             /**
              * The secondary filter matching the selected primary filter value.
              * The existence of this field doesn't mean that a secondary filter is selected yet.
              */
-            val secondaryFilterAttribute: SearchFilterAttribute?,
+            val secondaryFilterAttribute: SearchFilter?,
             /**
              * When this field is non-null, the secondary filter is actually selected.
              */
@@ -79,11 +78,6 @@ class PropertySearchViewModel @Inject constructor(
 
     private val selectedFilter =
         BehaviorProcessor.createDefault(Optional.empty<State.SelectedFilters>())
-
-    /**
-     * Once filters are fetched, hold onto them so we can look up attributes/values by ID.
-     */
-    private var searchFilters: PropertySearchFiltersEntity? = null
 
     override fun onResume() {
         super.onResume()
@@ -112,13 +106,12 @@ class PropertySearchViewModel @Inject constructor(
             )
             .subscribeBy(
                 onSuccess = { filters ->
-                    searchFilters = filters
                     updateState {
                         copy(
                             // Technically we might not have finished loading the Property at this point,
                             // but we still know the filters, so we can show them.
                             loading = false,
-                            primaryFilterValues = filters.primaryFilter?.values ?: emptyList(),
+                            primaryFilter = filters.buildPrimaryFilter()
                         )
                     }
 
@@ -161,26 +154,23 @@ class PropertySearchViewModel @Inject constructor(
         }
     }
 
-    fun onPrimaryFilterClick(primaryFilterValue: SearchFilterAttribute.Value) {
+    fun onPrimaryFilterClick(primaryFilterValue: SearchFilter.Value) {
         val currentSelection = selectedFilter.value?.orDefault(null)
         if (currentSelection?.primaryFilterValue == primaryFilterValue.value) {
             // If clicked the currently selected filter, deselect it.
             selectedFilter.onNext(Optional.empty())
         } else {
-            val newSelection = searchFilters?.primaryFilter
-                ?.let { primaryFilterAttribute ->
-                    val nextFilter = searchFilters?.attributes?.get(primaryFilterValue.nextFilterAttribute)
-                    State.SelectedFilters(
-                        primaryFilterAttribute = primaryFilterAttribute,
-                        primaryFilterValue = primaryFilterValue.value,
-                        secondaryFilterAttribute = nextFilter,
-                    )
-                }
+            val nextFilter = primaryFilterValue.nextFilter
+            val newSelection = State.SelectedFilters(
+                primaryFilterAttribute = primaryFilterValue.parent,
+                primaryFilterValue = primaryFilterValue.value,
+                secondaryFilterAttribute = nextFilter,
+            )
             selectedFilter.onNext(Optional.of(newSelection))
         }
     }
 
-    fun onSecondaryFilterClick(secondaryFilterValue: SearchFilterAttribute.Value) {
+    fun onSecondaryFilterClick(secondaryFilterValue: SearchFilter.Value) {
         val selectedFilter = selectedFilter.value?.orDefault(null)
             ?: return Log.w("Secondary filter selected without primary filter?!")
         val updatedFilter = selectedFilter.copy(

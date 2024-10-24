@@ -29,7 +29,7 @@ data class GetFiltersResponse(
     val secondaryFilter: String?,
 
     @field:Json(name = "filter_options")
-    val filterOptions: List<FilterOptionsDto>?,
+    val filterOptions: List<PrimaryFilterOptionsDto>?,
 )
 
 /**
@@ -44,7 +44,7 @@ data class SearchFiltersDto(
     val secondaryFilter: String?,
 
     @field:Json(name = "filter_options")
-    val filterOptions: List<FilterOptionsDto>?,
+    val filterOptions: List<PrimaryFilterOptionsDto>?,
 )
 
 @JsonClass(generateAdapter = true)
@@ -56,11 +56,23 @@ data class SearchFilterAttributeDto(
 )
 
 @JsonClass(generateAdapter = true)
-data class FilterOptionsDto(
-    @field:Json(name = "primary_filter_image")
-    val image: AssetLinkDto?,
+data class PrimaryFilterOptionsDto(
     @field:Json(name = "primary_filter_value")
     val primaryFilterValue: String,
+
     @field:Json(name = "secondary_filter_attribute")
-    val secondaryFilterAttribute: String?
+    val secondaryFilterAttribute: String?,
+    @field:Json(name = "secondary_filter_options")
+    val secondaryFilterOptions: List<SecondaryFilterOptionsDto>?,
+
+    @field:Json(name = "secondary_filter_style")
+    val secondaryFilterStyle: String?,
+)
+
+@JsonClass(generateAdapter = true)
+data class SecondaryFilterOptionsDto(
+    @field:Json(name = "secondary_filter_image_tv")
+    val image: AssetLinkDto?,
+    @field:Json(name = "secondary_filter_value")
+    val value: String,
 )

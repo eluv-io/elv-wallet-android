@@ -1,6 +1,7 @@
 package app.eluvio.wallet.screens.property.search
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,10 +33,13 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.tv.material3.Border
+import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.MaterialTheme
+import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import app.eluvio.wallet.R
-import app.eluvio.wallet.data.entities.v2.SearchFilterAttribute
+import app.eluvio.wallet.data.entities.v2.search.SearchFilter
 import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.Overscan
@@ -85,8 +90,8 @@ private fun PropertySearch(
     state: PropertySearchViewModel.State,
     query: String,
     onQueryChanged: (String) -> Unit,
-    onPrimaryFilterClick: (SearchFilterAttribute.Value) -> Unit,
-    onSecondaryFilterClick: (SearchFilterAttribute.Value) -> Unit,
+    onPrimaryFilterClick: (SearchFilter.Value) -> Unit,
+    onSecondaryFilterClick: (SearchFilter.Value) -> Unit,
     onSearchClicked: () -> Unit,
 ) {
     val bgModifier = Modifier
@@ -126,10 +131,10 @@ private fun LoadingSpinner(modifier: Modifier) {
 @Composable
 fun FilterSelector(
     state: PropertySearchViewModel.State,
-    onPrimaryFilterClick: (SearchFilterAttribute.Value) -> Unit,
-    onSecondaryFilterClick: (SearchFilterAttribute.Value) -> Unit
+    onPrimaryFilterClick: (SearchFilter.Value) -> Unit,
+    onSecondaryFilterClick: (SearchFilter.Value) -> Unit
 ) {
-    if (state.primaryFilterValues.isEmpty()) {
+    if (state.primaryFilter == null || state.primaryFilter.values.isEmpty()) {
         return
     }
     Column(
@@ -138,17 +143,17 @@ fun FilterSelector(
             .padding(vertical = 20.dp)
     ) {
         FiltersRow(
-            filters = state.primaryFilterValues,
+            filter = state.primaryFilter,
             selectedFilterValue = state.selectedFilters?.primaryFilterValue,
             onClick = onPrimaryFilterClick
         )
 
-        val secondaryFilters = state.selectedFilters?.secondaryFilterAttribute?.values.orEmpty()
-        if (secondaryFilters.isNotEmpty()) {
+        val secondaryFilters = state.selectedFilters?.secondaryFilterAttribute
+        if (secondaryFilters != null && secondaryFilters.values.isNotEmpty()) {
             Spacer(Modifier.height(10.dp))
             FiltersRow(
-                filters = secondaryFilters,
-                selectedFilterValue = state.selectedFilters?.secondaryFilterValue,
+                filter = secondaryFilters,
+                selectedFilterValue = state.selectedFilters.secondaryFilterValue,
                 onClick = onSecondaryFilterClick,
                 labelAlpha = 0f
             )
@@ -158,9 +163,9 @@ fun FilterSelector(
 
 @Composable
 private fun FiltersRow(
-    filters: List<SearchFilterAttribute.Value>,
+    filter: SearchFilter,
     selectedFilterValue: String?,
-    onClick: (SearchFilterAttribute.Value) -> Unit,
+    onClick: (SearchFilter.Value) -> Unit,
     // For the secondary row, we still want to take up that space, but not actually show anything
     labelAlpha: Float = 1f
 ) {
@@ -170,14 +175,39 @@ private fun FiltersRow(
     ) {
         Spacer(Modifier.width(Overscan.horizontalPadding))
         Text("Filters", style = MaterialTheme.typography.carousel_36.withAlpha(labelAlpha))
-        filters.forEach { filter ->
+        filter.values.forEach { filterValue ->
             Spacer(Modifier.width(16.dp))
-            SearchFilterChip(
-                title = filter.value,
-                value = filter,
-                selected = selectedFilterValue == filter.value,
-                onClick = onClick,
-                onFocus = {})
+            val selected = selectedFilterValue == filterValue.value
+            if (filter.style == SearchFilter.Style.IMAGE && filterValue.imageUrl != null) {
+                val border = ClickableSurfaceDefaults.border(
+                    border = if (selected) Border(
+                        BorderStroke(2.dp, MaterialTheme.colorScheme.border)
+                    ) else Border.None
+                )
+                Surface(
+                    onClick = { onClick(filterValue) },
+                    colors = ClickableSurfaceDefaults.colors(
+                        containerColor = Color.Transparent,
+                        focusedContainerColor = Color.Transparent,
+                    ),
+                    border = border,
+                ) {
+                    AsyncImage(
+                        model = filterValue.imageUrl,
+                        contentDescription = filterValue.value,
+                        modifier = Modifier
+                            .size(56.dp)
+                            .padding(4.dp),
+                    )
+                }
+            } else {
+                SearchFilterChip(
+                    title = filterValue.value,
+                    value = filterValue,
+                    selected = selected,
+                    onClick = onClick,
+                    onFocus = {})
+            }
         }
         Spacer(Modifier.width(Overscan.horizontalPadding))
     }
@@ -225,9 +255,13 @@ private fun PropertySearchPreview() = EluvioThemePreview {
         PropertySearchViewModel.State(
             loading = false,
             propertyName = "FlixVerse",
-            primaryFilterValues = List(4) {
-                SearchFilterAttribute.Value.from("Primary Filter Value $it")
-            },
+            primaryFilter = SearchFilter(
+                "p1", "Primary Filter",
+                List(4) {
+                    SearchFilter.Value("Primary Filter Value $it")
+                },
+                style = SearchFilter.Style.TEXT
+            ),
         ),
         query = "",
         onPrimaryFilterClick = {},

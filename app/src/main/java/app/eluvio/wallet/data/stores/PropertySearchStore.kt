@@ -3,7 +3,7 @@ package app.eluvio.wallet.data.stores
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
 import app.eluvio.wallet.data.entities.v2.MediaPropertyEntity
 import app.eluvio.wallet.data.entities.v2.PropertySearchFiltersEntity
-import app.eluvio.wallet.data.entities.v2.SearchFilterAttribute
+import app.eluvio.wallet.data.entities.v2.search.FilterValueEntity
 import app.eluvio.wallet.data.permissions.PermissionResolver
 import app.eluvio.wallet.di.ApiProvider
 import app.eluvio.wallet.network.api.mwv2.SearchApi
@@ -54,7 +54,7 @@ class PropertySearchStore @Inject constructor(
         val sanitizedRequest = request.copy(
             // Any attribute with a tag of "All" should be omitted from the request
             attributes = request.attributes
-                ?.filterNot { (_, tags) -> tags.contains(SearchFilterAttribute.Value.ALL) }
+                ?.filterNot { (_, tags) -> tags.contains(FilterValueEntity.ALL) }
         )
         return apiProvider.getApi(SearchApi::class)
             .flatMap { api ->

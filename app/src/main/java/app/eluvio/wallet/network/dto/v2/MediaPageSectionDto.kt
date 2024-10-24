@@ -15,6 +15,7 @@ data class MediaPageSectionDto(
     val id: String,
     val type: String,
     val display: DisplaySettingsDto?,
+    // TODO: this also has "filter options", needs to be implemented.
     @field:Json(name = "primary_filter")
     val primaryFilter: String?,
     @field:Json(name = "secondary_filter")

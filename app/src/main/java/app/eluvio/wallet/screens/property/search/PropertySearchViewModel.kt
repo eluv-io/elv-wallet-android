@@ -7,6 +7,7 @@ import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.app.Events.ToastMessage
 import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
+import app.eluvio.wallet.data.entities.v2.search.FilterValueEntity
 import app.eluvio.wallet.data.entities.v2.search.SearchFilter
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.data.stores.MediaPropertyStore
@@ -106,12 +107,20 @@ class PropertySearchViewModel @Inject constructor(
             )
             .subscribeBy(
                 onSuccess = { filters ->
+                    val primaryFilter = filters.buildPrimaryFilter()
+                    if (primaryFilter != null) {
+                        primaryFilter.values
+                            // When filters contain an "All" option, it should be selected by default
+                            .firstOrNull { it.value == FilterValueEntity.ALL }
+                            ?.let { value -> State.SelectedFilters(primaryFilter, value.value, value.nextFilter) }
+                            ?.let { selectedFilter.onNext(Optional.of(it)) }
+                    }
                     updateState {
                         copy(
                             // Technically we might not have finished loading the Property at this point,
                             // but we still know the filters, so we can show them.
                             loading = false,
-                            primaryFilter = filters.buildPrimaryFilter()
+                            primaryFilter = primaryFilter,
                         )
                     }
 

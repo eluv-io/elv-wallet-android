@@ -1,15 +1,17 @@
 package app.eluvio.wallet.screens.property
 
+import android.os.Parcelable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.AnnotatedString
 import androidx.media3.exoplayer.source.MediaSource
 import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.entities.RedeemableOfferEntity
-import app.eluvio.wallet.data.entities.v2.search.FilterAttributeEntity
 import app.eluvio.wallet.data.entities.v2.display.DisplaySettings
+import app.eluvio.wallet.data.entities.v2.search.FilterAttributeEntity
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState.CarouselItem
+import kotlinx.parcelize.Parcelize
 
 
 /**
@@ -23,6 +25,7 @@ data class DynamicPageLayoutState(
     val sections: List<Section> = emptyList(),
 
     val searchNavigationEvent: NavigationEvent? = null,
+    val propertyLinks: List<PropertyLink> = emptyList(),
 
     // For cross-app deeplinks
     val backLinkUrl: String? = null,
@@ -110,6 +113,14 @@ data class DynamicPageLayoutState(
             val bannerImageUrl: String
         ) : CarouselItem by delegate
     }
+
+    @Parcelize
+    @Immutable
+    data class PropertyLink(
+        val id: String,
+        val name: String,
+        val isCurrent: Boolean,
+    ) : Parcelable
 }
 
 /**

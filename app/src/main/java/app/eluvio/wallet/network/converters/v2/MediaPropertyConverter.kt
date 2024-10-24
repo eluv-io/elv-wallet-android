@@ -28,7 +28,6 @@ fun MediaPropertyDto.toEntity(baseUrl: String): MediaPropertyEntity? {
         mainPage = dto.mainPage.toEntity(id, baseUrl)
         subpropertySelection = dto.property_selection
             .takeIf { dto.show_property_selection == true }
-            ?.filter { it.property_id != dto.id }
             ?.map { it.toEntity(baseUrl) }
             .toRealmListOrEmpty()
 

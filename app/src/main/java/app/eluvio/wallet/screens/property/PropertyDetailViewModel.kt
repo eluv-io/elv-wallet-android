@@ -48,7 +48,10 @@ class PropertyDetailViewModel @Inject constructor(
 
     private val unauthorizedPageIds = mutableSetOf<String>()
 
-    private val pageLayout = propertyStore.observeMediaProperty(propertyId)
+    private val property = propertyStore.observeMediaProperty(propertyId)
+        .asSharedState()
+
+    private val pageLayout = property
         .switchMap { property ->
             if (navArgs.pageId != null) {
                 // Observing a specific page will skip the property permissions check.
@@ -83,6 +86,8 @@ class PropertyDetailViewModel @Inject constructor(
         updateSections()
 
         updateBackground()
+
+        updateSubpropertySelector()
     }
 
     private fun updateSections() {
@@ -121,6 +126,27 @@ class PropertyDetailViewModel @Inject constructor(
             .addTo(disposables)
     }
 
+    private fun updateSubpropertySelector() {
+        if (navArgs.propertyLinks.isNotEmpty()) {
+            // Property links provided externally. Update the isCurrent flag for each and
+            // ignore the Property's subpropertySelection.
+            updateState { copy(propertyLinks = navArgs.propertyLinks.map { it.copy(isCurrent = it.id == propertyId) }) }
+        } else {
+            property
+                .subscribeBy { property ->
+                    updateState {
+                        copy(propertyLinks = property.subpropertySelection.mapNotNull {
+                            DynamicPageLayoutState.PropertyLink(
+                                id = it.id,
+                                name = it.title ?: return@mapNotNull null,
+                                isCurrent = it.id == propertyId
+                            )
+                        })
+                    }
+                }
+                .addTo(disposables)
+        }
+    }
 
     /**
      * Updates the state with the background image/video.

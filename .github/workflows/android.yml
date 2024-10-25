@@ -31,6 +31,7 @@ jobs:
     - name: Build with Gradle
       run: |
         ./gradlew assembleDefaultDebug assembleDefaultRelease \
+          -Pci_build_number=${{ github.run_number }} \
           -Pandroid.injected.signing.store.file='${{ github.workspace }}/keystore.jks' \
           -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
           -Pandroid.injected.signing.key.alias=${{ secrets.KEYSTORE_ALIAS }} \
@@ -39,7 +40,7 @@ jobs:
     - name: Save version info
       run: |
         sha=$(git rev-parse --short ${{ github.sha }})
-        app_version=$(./gradlew -q printVersion)
+        app_version=$(./gradlew -q printVersion -Pci_build_number=${{ github.run_number }})
         apk_version=$(echo "$app_version-$sha")
         echo "APK_VERSION=$apk_version" >> $GITHUB_ENV
 

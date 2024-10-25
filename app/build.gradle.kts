@@ -20,6 +20,13 @@ android {
         targetSdk = 34
         versionCode = 21
         versionName = "2.0"
+        // Change version name to include CI build number and version code
+        project.ext
+            .takeIf { it.has("ci_build_number") }
+            ?.get("ci_build_number")
+            ?.let { build ->
+                versionName = "v${versionName}_${versionCode}-b$build"
+            }
     }
 
     buildTypes {
@@ -149,5 +156,5 @@ secrets {
 }
 
 tasks.register("printVersion") {
-    println("v${android.defaultConfig.versionName}_${android.defaultConfig.versionCode}")
+    println(android.defaultConfig.versionName)
 }

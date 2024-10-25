@@ -17,7 +17,7 @@ import app.eluvio.wallet.screens.property.DynamicPageLayoutState
 import app.eluvio.wallet.theme.label_24
 
 @Composable
-fun DescriptionSection(item: DynamicPageLayoutState.Section.Description) {
+fun DescriptionSection(item: DynamicPageLayoutState.Section.Description, modifier: Modifier = Modifier) {
     var isClickable by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
     Text(
@@ -29,7 +29,7 @@ fun DescriptionSection(item: DynamicPageLayoutState.Section.Description) {
             // Only clickable if there's actually overflow.
             isClickable = expanded || textLayoutResult.hasVisualOverflow
         },
-        modifier = Modifier
+        modifier = modifier
             .clickable(enabled = isClickable, onClick = { expanded = !expanded })
             .padding(
                 start = Overscan.horizontalPadding,

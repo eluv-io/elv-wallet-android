@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.zIndex
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Glow
 import androidx.tv.material3.Icon
@@ -111,7 +112,7 @@ fun DynamicPageLayout(state: DynamicPageLayoutState) {
 
     LazyColumn(
         state = scrollState,
-        contentPadding = PaddingValues(top = 50.dp, bottom = 32.dp),
+        contentPadding = PaddingValues(bottom = 32.dp),
         modifier = Modifier.focusRequester(listFocusRequester)
     ) {
         sections(state.sections)
@@ -124,19 +125,20 @@ fun DynamicPageLayout(state: DynamicPageLayoutState) {
 fun LazyListScope.sections(
     sections: List<DynamicPageLayoutState.Section>,
 ) {
-    sections.forEach { section ->
+    sections.forEachIndexed { index, section ->
         item(contentType = section::class) {
+            val modifier = if (index == 0) Modifier.padding(top = 50.dp) else Modifier
             when (section) {
                 is DynamicPageLayoutState.Section.Banner -> BannerSection(
-                    item = section,
+                    item = section, modifier
                 )
 
                 is DynamicPageLayoutState.Section.Carousel -> CarouselSection(
-                    item = section,
+                    item = section, modifier
                 )
 
-                is DynamicPageLayoutState.Section.Description -> DescriptionSection(item = section)
-                is DynamicPageLayoutState.Section.Title -> TitleSection(item = section)
+                is DynamicPageLayoutState.Section.Description -> DescriptionSection(item = section, modifier)
+                is DynamicPageLayoutState.Section.Title -> TitleSection(item = section, modifier)
             }
         }
     }

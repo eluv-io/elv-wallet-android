@@ -87,7 +87,7 @@ fun CarouselSection(
         return
     }
     Box(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .thenIfNotNull(display.inlineBackgroundColor) { background(Color.fromHex(it)) }
     ) {
@@ -100,7 +100,7 @@ fun CarouselSection(
                 modifier = Modifier.matchParentSize()
             )
         }
-        Row {
+        Row(modifier = modifier) {
             val showLogo = display.logoUrl != null
             if (showLogo) {
                 Logo(display)

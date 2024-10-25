@@ -12,11 +12,11 @@ import app.eluvio.wallet.screens.property.DynamicPageLayoutState
 import app.eluvio.wallet.theme.carousel_48
 
 @Composable
-fun TitleSection(item: DynamicPageLayoutState.Section.Title) {
+fun TitleSection(item: DynamicPageLayoutState.Section.Title, modifier: Modifier = Modifier) {
     Text(
         item.text,
         style = MaterialTheme.typography.carousel_48.copy(fontWeight = FontWeight.Bold),
-        modifier = Modifier.padding(
+        modifier = modifier.padding(
             start = Overscan.horizontalPadding,
             top = 0.dp,
             end = 380.dp,

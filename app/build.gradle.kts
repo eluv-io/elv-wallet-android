@@ -18,7 +18,7 @@ android {
         applicationId = "app.eluvio.wallet"
         minSdk = 23
         targetSdk = 34
-        versionCode = 21
+        versionCode = 22
         versionName = "2.0"
         // Change version name to include CI build number and version code
         project.ext

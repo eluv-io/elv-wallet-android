@@ -42,6 +42,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
@@ -115,7 +116,7 @@ fun DynamicPageLayout(state: DynamicPageLayoutState) {
         contentPadding = PaddingValues(bottom = 32.dp),
         modifier = Modifier.focusRequester(listFocusRequester)
     ) {
-        sections(state.sections)
+        sections(state.sections, firstItemPadding = 50.dp)
     }
 }
 
@@ -124,18 +125,19 @@ fun DynamicPageLayout(state: DynamicPageLayoutState) {
  */
 fun LazyListScope.sections(
     sections: List<DynamicPageLayoutState.Section>,
+    // Some sections might have different handling for top padding, so we pass it to the row itself,
+    // rather than just add it before the sections.
+    // E.g. Carousels will add the padding before the content, but still put the Background with no padding, so
+    // it will reach the top of the screen if it happens to be the first element in the page.
+    firstItemPadding: Dp = 0.dp,
 ) {
     sections.forEachIndexed { index, section ->
         item(contentType = section::class) {
-            val modifier = if (index == 0) Modifier.padding(top = 50.dp) else Modifier
+            val modifier = if (index == 0) Modifier.padding(top = firstItemPadding) else Modifier
             when (section) {
-                is DynamicPageLayoutState.Section.Banner -> BannerSection(
-                    item = section, modifier
-                )
+                is DynamicPageLayoutState.Section.Banner -> BannerSection(item = section, modifier)
 
-                is DynamicPageLayoutState.Section.Carousel -> CarouselSection(
-                    item = section, modifier
-                )
+                is DynamicPageLayoutState.Section.Carousel -> CarouselSection(item = section, modifier)
 
                 is DynamicPageLayoutState.Section.Description -> DescriptionSection(item = section, modifier)
                 is DynamicPageLayoutState.Section.Title -> TitleSection(item = section, modifier)

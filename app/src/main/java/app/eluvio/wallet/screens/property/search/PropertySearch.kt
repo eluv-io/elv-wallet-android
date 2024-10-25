@@ -44,13 +44,19 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import app.eluvio.wallet.R
 import app.eluvio.wallet.data.FabricUrl
+import app.eluvio.wallet.data.entities.MediaEntity
+import app.eluvio.wallet.data.entities.RedeemableOfferEntity
+import app.eluvio.wallet.data.entities.v2.DisplayFormat
+import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
 import app.eluvio.wallet.data.entities.v2.search.SearchFilter
+import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.common.SearchBox
 import app.eluvio.wallet.screens.common.SearchFilterChip
 import app.eluvio.wallet.screens.common.spacer
+import app.eluvio.wallet.screens.property.DynamicPageLayoutState
 import app.eluvio.wallet.screens.property.sections
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.carousel_36
@@ -144,7 +150,7 @@ fun FilterSelector(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 20.dp)
+            .padding(top = 20.dp, bottom = 10.dp)
     ) {
         FiltersRow(
             filter = state.primaryFilter,
@@ -288,6 +294,36 @@ private fun PropertySearchPreview() = EluvioThemePreview {
                 primaryFilter.values.first().value,
                 secondaryFilter,
                 secondaryFilter.values[1].value
+            ),
+            searchResults = listOf(
+                DynamicPageLayoutState.Section.Carousel(
+                    permissionContext = PermissionContext(propertyId = "p", sectionId = "4"),
+                    displaySettings = SimpleDisplaySettings(
+                        title = "Carousel",
+                        subtitle = "Subtitle",
+                        displayFormat = DisplayFormat.CAROUSEL,
+                    ),
+                    items = listOf(
+                        DynamicPageLayoutState.CarouselItem.Media(
+                            permissionContext = PermissionContext(propertyId = "property1"),
+                            entity = MediaEntity().apply {
+                                id = "1"
+                                name = "Media 1"
+                                mediaType = "image"
+                            },
+                        ),
+                        DynamicPageLayoutState.CarouselItem.RedeemableOffer(
+                            permissionContext = PermissionContext(propertyId = "property1"),
+                            offerId = "1",
+                            name = "Offer 1",
+                            fulfillmentState = RedeemableOfferEntity.FulfillmentState.AVAILABLE,
+                            contractAddress = "0x123",
+                            tokenId = "1",
+                            imageUrl = "https://via.placeholder.com/150",
+                            animation = null
+                        )
+                    )
+                )
             )
         ),
         query = "",

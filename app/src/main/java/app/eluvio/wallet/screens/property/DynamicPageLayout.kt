@@ -176,6 +176,7 @@ private fun TopActionRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 37.dp, end = 47.dp)
+            .zIndex(100f) // float above everything else
             .offset { IntOffset(0, -offset) }
             .focusProperties { down = listFocusRequester }
             .onFocusChanged {

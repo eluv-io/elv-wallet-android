@@ -234,7 +234,7 @@ private fun PropertySwitcher(links: List<DynamicPageLayoutState.PropertyLink>) {
                 onDismissRequest = { expanded = false }
             ) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier
                         .width(IntrinsicSize.Min)
                         .background(Color(0xFFa3a3a3), shape = MaterialTheme.shapes.large)

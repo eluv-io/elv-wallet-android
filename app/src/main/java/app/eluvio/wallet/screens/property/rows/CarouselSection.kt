@@ -74,7 +74,7 @@ import app.eluvio.wallet.util.compose.thenIf
 import app.eluvio.wallet.util.compose.thenIfNotNull
 import coil.compose.AsyncImage
 
-val CAROUSEL_CARD_HEIGHT = 120.dp
+val CAROUSEL_CARD_HEIGHT = 110.dp
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable

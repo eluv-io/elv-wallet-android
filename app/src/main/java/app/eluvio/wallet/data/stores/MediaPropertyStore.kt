@@ -28,7 +28,7 @@ class MediaPropertyStore @Inject constructor(
     private val realm: Realm,
 ) {
 
-    fun observeMediaProperties(forceRefresh: Boolean = true): Flowable<List<MediaPropertyEntity>> {
+    fun observeDiscoverableProperties(forceRefresh: Boolean = true): Flowable<List<MediaPropertyEntity>> {
         val orderedProperties =
             Flowable.combineLatest(
                 realm.query<MediaPropertyEntity>().asFlowable(),
@@ -43,7 +43,11 @@ class MediaPropertyStore @Inject constructor(
                         it.permissionStates
                     )
                 }
-                properties.sortedBy { orderMap[it.id]?.index ?: Int.MAX_VALUE }
+                properties
+                    // The local cache of properties can contain properties that didn't come from /mw/properties,
+                    // filter out any property the BE didn't explicitly return to show in Discover.
+                    .filter { orderMap.containsKey(it.id) }
+                    .sortedBy { orderMap[it.id]?.index ?: Int.MAX_VALUE }
             }
                 // Because we are observing 2 tables, it's important to not emit the same list twice
                 // or we might cancel an ongoing fetch request

@@ -51,7 +51,7 @@ class DiscoverViewModel @Inject constructor(
             .combineLatest(tokenStore.loggedInObservable.distinctUntilChanged())
             .switchMap {
                 // Restart property observing when log-in state changes
-                propertyStore.observeMediaProperties(true)
+                propertyStore.observeDiscoverableProperties(true)
                     .doOnError {
                         Log.e("Error observing properties ${it.message}, offering retry")
                         fireEvent(Events.NetworkError)

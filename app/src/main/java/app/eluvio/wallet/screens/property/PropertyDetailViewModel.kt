@@ -127,25 +127,42 @@ class PropertyDetailViewModel @Inject constructor(
     }
 
     private fun updateSubpropertySelector() {
-        if (navArgs.propertyLinks.isNotEmpty()) {
+        val propertyLinks = if (navArgs.propertyLinks.isNotEmpty()) {
             // Property links provided externally. Update the isCurrent flag for each and
             // ignore the Property's subpropertySelection.
-            updateState { copy(propertyLinks = navArgs.propertyLinks.map { it.copy(isCurrent = it.id == propertyId) }) }
+            Flowable.just(navArgs.propertyLinks.map { it.copy(isCurrent = it.id == propertyId) })
         } else {
-            property
-                .subscribeBy { property ->
-                    updateState {
-                        copy(propertyLinks = property.subpropertySelection.mapNotNull {
-                            DynamicPageLayoutState.PropertyLink(
-                                id = it.id,
-                                name = it.title ?: return@mapNotNull null,
-                                isCurrent = it.id == propertyId
-                            )
-                        })
-                    }
+            property.mapNotNull {
+                it.subpropertySelection.map { subproperty ->
+                    DynamicPageLayoutState.PropertyLink(
+                        id = subproperty.id,
+                        name = subproperty.title ?: return@mapNotNull null,
+                        isCurrent = subproperty.id == propertyId
+                    )
                 }
-                .addTo(disposables)
+            }
         }
+
+        propertyLinks
+            // Maintain order, but filter out unauthorized Properties.
+            .switchMap { links ->
+                // Convert each Link to a flowable that emits the PropertyLink when authorized, or empty Optional when not.
+                val optionalLinksFlowable = links
+                    .map { propertyLink ->
+                        propertyStore.observeMediaProperty(propertyLink.id, forceRefresh = false)
+                            .map { property ->
+                                // Don't filter out unauthorized Properties yet, we need to emit all properties for
+                                // combineLatest to work right. So just emit an empty Optional for unauthorized Properties.
+                                Optional.of(propertyLink.takeIf { property.propertyPermissions?.authorized == true })
+                            }
+                    }
+                Flowable.combineLatest(optionalLinksFlowable) { optionalLinks ->
+                    optionalLinks.filterIsInstance<Optional<DynamicPageLayoutState.PropertyLink>>()
+                        .mapNotNull { it.orDefault(null) }
+                }
+            }
+            .subscribeBy { updateState { copy(propertyLinks = it) } }
+            .addTo(disposables)
     }
 
     /**

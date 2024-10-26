@@ -59,10 +59,6 @@ class DiscoverViewModel @Inject constructor(
                     }
                     .onErrorResumeWith(Flowable.never())
             }
-            .map { properties ->
-                // Filter out unauthorized properties.
-                properties.filter { property -> property.propertyPermissions?.authorized == true }
-            }
             .subscribeBy(
                 onNext = { properties ->
                     // Assume that Properties will never be empty once fetched from Server

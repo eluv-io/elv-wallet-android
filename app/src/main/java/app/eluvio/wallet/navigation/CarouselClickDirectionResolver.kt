@@ -30,7 +30,7 @@ fun CarouselItem.onClickDirection(): Direction? {
         )
 
         is CarouselItem.ExternalLink -> FullscreenQRDialogDestination(
-            urlOrWalletPath = url,
+            url = url,
             title = "Point your camera to the QR Code below for content"
         )
 

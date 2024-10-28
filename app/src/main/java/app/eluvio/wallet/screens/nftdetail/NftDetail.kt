@@ -161,7 +161,7 @@ private enum class NftTabs(val title: String) {
                     onClick = {
                         navigator(
                             FullscreenQRDialogDestination(
-                                urlOrWalletPath = state.lookoutUrl,
+                                url = state.lookoutUrl,
                                 title = "See More Info on Eluvio Lookout"
                             ).asPush()
                         )

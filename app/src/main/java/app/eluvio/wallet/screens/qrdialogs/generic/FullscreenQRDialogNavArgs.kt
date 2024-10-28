@@ -8,12 +8,10 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ViewModelComponent
 
 data class FullscreenQRDialogNavArgs(
-    // Either a fully qualified URL, or a path (starting with "/") to append to the wallet URL.
-    val urlOrWalletPath: String,
+    val url: String,
     val title: String,
     val subtitleOverride: String? = null,
-    val shortenUrl: Boolean = true,
-    val appendAuthToken: Boolean = false,
+    val shortenUrl: Boolean = true
 )
 
 @Module

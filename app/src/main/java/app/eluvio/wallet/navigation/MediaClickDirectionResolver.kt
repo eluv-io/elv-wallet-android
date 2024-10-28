@@ -5,7 +5,6 @@ import app.eluvio.wallet.data.entities.v2.permissions.PermissionBehavior
 import app.eluvio.wallet.data.entities.v2.permissions.behaviorEnum
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.screens.destinations.ExternalMediaQrDialogDestination
-import app.eluvio.wallet.screens.destinations.FullscreenQRDialogDestination
 import app.eluvio.wallet.screens.destinations.ImageGalleryDestination
 import app.eluvio.wallet.screens.destinations.LockedMediaDialogDestination
 import app.eluvio.wallet.screens.destinations.MediaGridDestination
@@ -37,15 +36,8 @@ private fun clickWithPermissionContext(
     permissionContext: PermissionContext
 ): Direction? {
     return when {
-        media.showAlternatePage -> {
-            FullscreenQRDialogDestination(
-                urlOrWalletPath = "/${permissionContext.propertyId}/${media.resolvedPermissions?.alternatePageId!!}",
-                title = "Sign In On Browser to Purchase",
-                appendAuthToken = true
-            )
-        }
-
-        media.showPurchaseOptions -> {
+        // We never want to show alt page on click for TV clients. Treat it the same as show_purchase_options.
+        media.showPurchaseOptions || media.showAlternatePage -> {
             PurchasePromptDestination(permissionContext)
         }
 

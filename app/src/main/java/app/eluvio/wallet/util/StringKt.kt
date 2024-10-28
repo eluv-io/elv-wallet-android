@@ -1,5 +1,4 @@
 @file:JvmName("StringUtils")
-
 package app.eluvio.wallet.util
 
 import app.eluvio.wallet.util.crypto.Base58
@@ -24,8 +23,5 @@ fun ByteArray.hexToString(): String {
     return result.toString()
 }
 
-val String.hexAsBase58: String
-    get() = Base58.encode(this.toHexByteArray())
-
 val String.base58: String
-    get() = Base58.encode(this.toByteArray())
+    get() = Base58.encode(this.toHexByteArray())

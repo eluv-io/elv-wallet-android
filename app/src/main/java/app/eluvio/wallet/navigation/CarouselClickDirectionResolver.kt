@@ -1,5 +1,6 @@
 package app.eluvio.wallet.navigation
 
+import app.eluvio.wallet.screens.destinations.FullscreenQRDialogDestination
 import app.eluvio.wallet.screens.destinations.PropertyDetailDestination
 import app.eluvio.wallet.screens.destinations.PurchasePromptDestination
 import app.eluvio.wallet.screens.destinations.RedeemDialogDestination
@@ -26,6 +27,11 @@ fun CarouselItem.onClickDirection(): Direction? {
         is CarouselItem.PageLink -> PropertyDetailDestination(
             propertyId = propertyId,
             pageId = pageId
+        )
+
+        is CarouselItem.ExternalLink -> FullscreenQRDialogDestination(
+            url = url,
+            title = "Point your camera to the QR Code below for content"
         )
 
         is CarouselItem.RedeemableOffer -> RedeemDialogDestination(

@@ -12,9 +12,10 @@ import app.eluvio.wallet.util.realm.toRealmListOrEmpty
 private const val TYPE_PROPERTY_LINK = "property_link"
 private const val TYPE_SUBPROPERTY_LINK = "subproperty_link"
 private const val TYPE_PAGE_LINK = "page_link"
+private const val TYPE_EXTERNAL_LINK = "external_link"
 
 private val supportedSectionItemTypes =
-    setOf("media", "item_purchase", TYPE_PROPERTY_LINK, TYPE_SUBPROPERTY_LINK, TYPE_PAGE_LINK)
+    setOf("media", "item_purchase", TYPE_PROPERTY_LINK, TYPE_SUBPROPERTY_LINK, TYPE_PAGE_LINK, TYPE_EXTERNAL_LINK)
 
 fun MediaPageSectionDto.toEntity(baseUrl: String): MediaPageSectionEntity {
     val dto = this
@@ -103,6 +104,12 @@ private fun SectionItemDto.getLinkDataEntity(): SectionItemEntity.LinkData? {
         TYPE_PAGE_LINK -> {
             SectionItemEntity.LinkData().apply {
                 linkPageId = pageId
+            }
+        }
+
+        TYPE_EXTERNAL_LINK -> {
+            SectionItemEntity.LinkData().apply {
+                externalLink = url
             }
         }
 

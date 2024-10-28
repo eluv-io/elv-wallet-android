@@ -120,6 +120,14 @@ fun List<SectionItemEntity>.toCarouselItems(
             // Filter out hidden items
             item.isHidden -> null
 
+            item.linkData?.externalLink != null -> item.linkData?.externalLink?.let {
+                CarouselItem.ExternalLink(
+                    permissionContext = permissionContext,
+                    url = it,
+                    displaySettings = item.displaySettings,
+                )
+            }
+
             item.linkData != null -> {
                 CarouselItem.PageLink(
                     permissionContext = permissionContext,

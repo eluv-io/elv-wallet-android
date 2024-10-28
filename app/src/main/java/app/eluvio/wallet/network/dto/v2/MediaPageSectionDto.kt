@@ -61,6 +61,9 @@ data class SectionItemDto(
     // SectionsItems inside a Banner section will have this field defined
     @field:Json(name = "banner_image")
     val bannerImage: AssetLinkDto?,
+
+    // External link data
+    val url: String?,
 ) : DtoWithPermissions
 
 @JsonClass(generateAdapter = true)

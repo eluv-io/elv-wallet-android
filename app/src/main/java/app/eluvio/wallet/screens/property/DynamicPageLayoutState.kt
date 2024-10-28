@@ -83,6 +83,13 @@ data class DynamicPageLayoutState(
         ) : CarouselItem
 
         @Immutable
+        data class ExternalLink(
+            override val permissionContext: PermissionContext,
+            val url: String,
+            val displaySettings: DisplaySettings?,
+        ) : CarouselItem
+
+        @Immutable
         data class RedeemableOffer(
             override val permissionContext: PermissionContext,
             val offerId: String,

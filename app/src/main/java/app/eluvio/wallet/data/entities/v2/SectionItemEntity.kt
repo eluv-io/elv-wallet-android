@@ -82,13 +82,25 @@ class SectionItemEntity : RealmObject, EntityWithPermissions {
         return result
     }
 
+    /** This section item links to a property/page. */
     class LinkData : EmbeddedRealmObject {
-        /** This section item links to a property/page. */
+        /**
+         * Present when the link is to a property, or a specific page within another property.
+         */
         var linkPropertyId: String? = null
+
+        /**
+         * Present when the link is to a specific page within the current property, or a specific page within another property.
+         */
         var linkPageId: String? = null
 
+        /**
+         * Present when the link is to an external URL, outside MW.
+         */
+        var externalLink: String? = null
+
         override fun toString(): String {
-            return "LinkData(linkPropertyId=$linkPropertyId, linkPageId=$linkPageId)"
+            return "LinkData(linkPropertyId=$linkPropertyId, linkPageId=$linkPageId, externalLink=$externalLink)"
         }
 
         override fun equals(other: Any?): Boolean {
@@ -99,6 +111,7 @@ class SectionItemEntity : RealmObject, EntityWithPermissions {
 
             if (linkPropertyId != other.linkPropertyId) return false
             if (linkPageId != other.linkPageId) return false
+            if (externalLink != other.externalLink) return false
 
             return true
         }
@@ -106,6 +119,7 @@ class SectionItemEntity : RealmObject, EntityWithPermissions {
         override fun hashCode(): Int {
             var result = linkPropertyId?.hashCode() ?: 0
             result = 31 * result + (linkPageId?.hashCode() ?: 0)
+            result = 31 * result + (externalLink?.hashCode() ?: 0)
             return result
         }
     }

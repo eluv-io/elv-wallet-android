@@ -72,8 +72,14 @@ fun CarouselItemCard(carouselItem: CarouselItem, cardHeight: Dp, modifier: Modif
             onClick
         )
 
-        is CarouselItem.ItemPurchase -> ItemPurchaseCard(
-            item = carouselItem,
+        is CarouselItem.ExternalLink -> DisplaySettingsCard(
+            displaySettings = carouselItem.displaySettings,
+            cardHeight = cardHeight,
+            onClick
+        )
+
+        is CarouselItem.ItemPurchase -> DisplaySettingsCard(
+            displaySettings = carouselItem.displaySettings,
             cardHeight = cardHeight,
             onClick
         )

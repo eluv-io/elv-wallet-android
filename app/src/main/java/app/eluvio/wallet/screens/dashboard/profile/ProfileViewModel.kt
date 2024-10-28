@@ -8,7 +8,7 @@ import app.eluvio.wallet.data.stores.Environment
 import app.eluvio.wallet.data.stores.EnvironmentStore
 import app.eluvio.wallet.data.stores.FabricConfigStore
 import app.eluvio.wallet.data.stores.TokenStore
-import app.eluvio.wallet.util.base58
+import app.eluvio.wallet.util.hexAsBase58
 import app.eluvio.wallet.util.logging.Log
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Flowable
@@ -48,7 +48,7 @@ class ProfileViewModel @Inject constructor(
             val address = walletAddress.orDefault(null) ?: ""
             State(
                 address = address,
-                userId = "iusr${address.base58}",
+                userId = "iusr${address.hexAsBase58}",
                 network = env,
                 fabricNode = config.fabricEndpoint,
                 authNode = config.authdEndpoint,

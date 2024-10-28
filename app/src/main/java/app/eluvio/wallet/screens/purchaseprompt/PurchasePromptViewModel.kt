@@ -1,6 +1,7 @@
 package app.eluvio.wallet.screens.purchaseprompt
 
 import android.graphics.Bitmap
+import android.net.Uri
 import android.util.Base64
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
@@ -56,7 +57,8 @@ class PurchasePromptViewModel @Inject constructor(
         data class ItemPurchase(val displaySettings: DisplaySettings?)
     }
 
-    private val permissionContext = savedStateHandle.navArgs<PermissionContext>()
+    private val navArgs = savedStateHandle.navArgs<PurchasePromptNavArgs>()
+    private val permissionContext = navArgs.permissionContext
 
     private val resolvedContext = permissionContextResolver.resolve(permissionContext)
         .asSharedState()
@@ -91,7 +93,7 @@ class PurchasePromptViewModel @Inject constructor(
             .flatMapPublisher { env ->
                 permissionSettings
                     .map { permissionSettings ->
-                        buildPurchaseUrl(permissionContext, env, permissionSettings.orDefault(null), tokenStore)
+                        buildPurchaseUrl(env, permissionSettings.orDefault(null))
                     }
             }
             // Make sure to not re-generate the QR code if the URL hasn't changed.
@@ -202,60 +204,75 @@ class PurchasePromptViewModel @Inject constructor(
             .subscribe()
             .addTo(disposables)
     }
-}
 
-/**
- * Creates a Wallet URL for either purchasing a specific item, or being offered multiple items that
- * will unlock access for this [PermissionContext].
- */
-private fun buildPurchaseUrl(
-    permissionContext: PermissionContext,
-    environment: Environment,
-    permissionSettings: PermissionSettings?,
-    tokenStore: TokenStore,
-): String {
-    val context = JSONObject()
-        // Only supported type is "purchase" for now.
-        .put("type", "purchase")
-        // Start from the most broad id and keep overriding with more specific ids.
-        // Any field that is [null] will not override the previous value.
-        .putOpt("id", permissionContext.propertyId)
-        .putOpt("id", permissionContext.pageId)
-        .putOpt("id", permissionContext.sectionId)
-        .putOpt("id", permissionContext.sectionItemId)
-        .putOpt("id", permissionContext.mediaItemId)
-        // Everything else we have explicitly specified.
-        .putOpt("sectionSlugOrId", permissionContext.sectionId)
-        .putOpt("sectionItemId", permissionContext.sectionItemId)
-        .putOpt(
-            "permissionItemIds",
-            permissionSettings?.permissionItemIds
-                ?.takeIf { it.isNotEmpty() }
-                ?.let { JSONArray(it) }
-        )
-        .putOpt("secondaryPurchaseOption", permissionSettings?.secondaryMarketPurchaseOption)
-        .toBase58()
-
-    val authorization = JSONObject().apply {
-        when (val clusterToken = tokenStore.clusterToken.get()) {
-            null -> {
-                // No cluster token only applies to the Metamask case.
-                put("provider", "metamask")
-                put("fabricToken", tokenStore.fabricToken.get())
-                put("expiresAt", tokenStore.fabricTokenExpiration.get()?.toLongOrNull())
+    /**
+     * Creates a Wallet URL for either purchasing a specific item, or being offered multiple items that
+     * will unlock access for this [PermissionContext].
+     */
+    private fun buildPurchaseUrl(
+        environment: Environment,
+        permissionSettings: PermissionSettings?,
+    ): String {
+        val context = takeIf { navArgs.pageOverride.isNullOrEmpty() }
+            // In the show_alt_page scenario we don't want to include the context, because that will make the web
+            // show the purchase_options dialog.
+            ?.let {
+                JSONObject()
+                    // Only supported type is "purchase" for now.
+                    .put("type", "purchase")
+                    // Start from the most broad id and keep overriding with more specific ids.
+                    // Any field that is [null] will not override the previous value.
+                    .putOpt("id", permissionContext.propertyId)
+                    .putOpt("id", permissionContext.pageId)
+                    .putOpt("id", permissionContext.sectionId)
+                    .putOpt("id", permissionContext.sectionItemId)
+                    .putOpt("id", permissionContext.mediaItemId)
+                    // Everything else we have explicitly specified.
+                    .putOpt("sectionSlugOrId", permissionContext.sectionId)
+                    .putOpt("sectionItemId", permissionContext.sectionItemId)
+                    .putOpt(
+                        "permissionItemIds",
+                        permissionSettings?.permissionItemIds
+                            ?.takeIf { it.isNotEmpty() }
+                            ?.let { JSONArray(it) }
+                    )
+                    .putOpt("secondaryPurchaseOption", permissionSettings?.secondaryMarketPurchaseOption)
+                    .toBase58()
             }
 
-            else -> {
-                put("provider", tokenStore.loginProvider.value)
-                put("clusterToken", clusterToken)
+        val authorization = JSONObject().apply {
+            when (val clusterToken = tokenStore.clusterToken.get()) {
+                null -> {
+                    // No cluster token only applies to the Metamask case.
+                    put("provider", "metamask")
+                    put("fabricToken", tokenStore.fabricToken.get())
+                    put("expiresAt", tokenStore.fabricTokenExpiration.get()?.toLongOrNull())
+                }
+
+                else -> {
+                    put("provider", tokenStore.loginProvider.value)
+                    put("clusterToken", clusterToken)
+                }
             }
-        }
 
-        put("address", tokenStore.walletAddress.get())
-        put("email", tokenStore.userEmail.get() ?: extractEmail(tokenStore.idToken.get()))
-    }.toBase58()
+            put("address", tokenStore.walletAddress.get())
+            put("email", tokenStore.userEmail.get() ?: extractEmail(tokenStore.idToken.get()))
+        }.toBase58()
 
-    return "${environment.walletUrl}/${permissionContext.propertyId}/${permissionContext.pageId.orEmpty()}?p=${context}&authorization=${authorization}"
+        val pageId = navArgs.pageOverride ?: permissionContext.pageId.orEmpty()
+        return Uri.parse(environment.walletUrl)
+            .buildUpon()
+            .appendPath(permissionContext.propertyId)
+            .appendPath(pageId)
+            .apply {
+                if (context != null) {
+                    appendQueryParameter("p", context)
+                }
+            }
+            .appendQueryParameter("authorization", authorization)
+            .build()
+            .toString()
+    }
 }
 
 private fun JSONObject.toBase58(): String = Base58.encode(this.toString().toByteArray())

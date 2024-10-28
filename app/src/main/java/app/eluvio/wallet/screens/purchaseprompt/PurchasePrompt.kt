@@ -60,7 +60,7 @@ import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 
 @MainGraph
-@Destination(navArgsDelegate = PermissionContext::class)
+@Destination(navArgsDelegate = PurchasePromptNavArgs::class)
 @Composable
 fun PurchasePrompt() {
     hiltViewModel<PurchasePromptViewModel>().subscribeToState { vm, state ->

@@ -36,8 +36,11 @@ private fun clickWithPermissionContext(
     permissionContext: PermissionContext
 ): Direction? {
     return when {
-        // We never want to show alt page on click for TV clients. Treat it the same as show_purchase_options.
-        media.showPurchaseOptions || media.showAlternatePage -> {
+        media.showAlternatePage -> {
+            PurchasePromptDestination(permissionContext, pageOverride = media.resolvedPermissions?.alternatePageId)
+        }
+
+        media.showPurchaseOptions -> {
             PurchasePromptDestination(permissionContext)
         }
 

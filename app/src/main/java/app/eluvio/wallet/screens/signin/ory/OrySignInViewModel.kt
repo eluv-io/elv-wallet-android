@@ -2,6 +2,7 @@ package app.eluvio.wallet.screens.signin.ory
 
 import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
+import app.eluvio.wallet.data.UrlShortener
 import app.eluvio.wallet.data.entities.v2.LoginProviders
 import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.MetamaskActivationStore
@@ -20,10 +21,12 @@ class OrySignInViewModel @Inject constructor(
     private val metamaskActivationStore: MetamaskActivationStore,
     propertyStore: MediaPropertyStore,
     tokenStore: TokenStore,
+    urlShortener: UrlShortener,
     savedStateHandle: SavedStateHandle
 ) : BaseLoginViewModel<MetamaskActivationData>(
     propertyStore,
     tokenStore,
+    urlShortener,
     LoginProviders.ORY,
     savedStateHandle
 ) {

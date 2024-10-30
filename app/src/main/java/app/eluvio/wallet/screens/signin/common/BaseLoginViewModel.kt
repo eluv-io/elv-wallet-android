@@ -2,6 +2,7 @@ package app.eluvio.wallet.screens.signin.common
 
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
+import app.eluvio.wallet.data.UrlShortener
 import app.eluvio.wallet.data.entities.v2.LoginProviders
 import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.TokenStore
@@ -29,6 +30,7 @@ abstract class BaseLoginViewModel<ActivationData : Any>(
     // Just for convenience, we always provide this, even if we don't use it (propertyId=null)
     private val propertyStore: MediaPropertyStore,
     private val tokenStore: TokenStore,
+    private val urlShortener: UrlShortener,
     private val loginProvider: LoginProviders,
     savedStateHandle: SavedStateHandle
 ) : BaseViewModel<LoginState>(LoginState(), savedStateHandle) {
@@ -81,7 +83,10 @@ abstract class BaseLoginViewModel<ActivationData : Any>(
                 observeActivationComplete(it)
             }
             .switchMapSingle { activationData ->
-                generateQrCode(activationData.getQrUrl())
+                val url = activationData.getQrUrl()
+                urlShortener.shorten(url)
+                    .onErrorReturnItem(url)
+                    .flatMap { generateQrCode(it) }
                     .map { qr -> activationData to qr }
             }
             .subscribeBy { (activationData, qrCode) ->

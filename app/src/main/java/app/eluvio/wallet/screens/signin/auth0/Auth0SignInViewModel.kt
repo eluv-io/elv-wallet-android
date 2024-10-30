@@ -2,6 +2,7 @@ package app.eluvio.wallet.screens.signin.auth0
 
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.data.AuthenticationService
+import app.eluvio.wallet.data.UrlShortener
 import app.eluvio.wallet.data.entities.v2.LoginProviders
 import app.eluvio.wallet.data.stores.DeviceActivationStore
 import app.eluvio.wallet.data.stores.MediaPropertyStore
@@ -23,10 +24,12 @@ class Auth0SignInViewModel @Inject constructor(
     private val authenticationService: AuthenticationService,
     propertyStore: MediaPropertyStore,
     tokenStore: TokenStore,
+    urlShortener: UrlShortener,
     savedStateHandle: SavedStateHandle
 ) : BaseLoginViewModel<DeviceActivationData>(
     propertyStore,
     tokenStore,
+    urlShortener,
     LoginProviders.AUTH0,
     savedStateHandle
 ) {

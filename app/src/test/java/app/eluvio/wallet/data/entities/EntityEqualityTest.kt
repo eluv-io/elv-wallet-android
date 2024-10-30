@@ -1,6 +1,7 @@
 package app.eluvio.wallet.data.entities
 
 
+import app.eluvio.wallet.util.realm.nowCompat
 import io.realm.kotlin.ext.realmDictionaryOf
 import io.realm.kotlin.ext.realmListOf
 import io.realm.kotlin.ext.toRealmList
@@ -148,7 +149,7 @@ class EntityEqualityTest {
             }
 
             "io.realm.kotlin.types.RealmInstant" -> {
-                RealmInstant.now()
+                RealmInstant.nowCompat()
             }
             // Ignored classes
             "android.graphics.drawable.Drawable" -> null

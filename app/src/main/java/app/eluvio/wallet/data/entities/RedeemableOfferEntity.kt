@@ -1,5 +1,6 @@
 package app.eluvio.wallet.data.entities
 
+import app.eluvio.wallet.util.realm.nowCompat
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -35,10 +36,10 @@ class RedeemableOfferEntity : EmbeddedRealmObject {
     val availableNow: Boolean get() = !unreleased && !expired
 
     @Ignore
-    val unreleased: Boolean get() = (availableAt ?: RealmInstant.MIN) > RealmInstant.now()
+    val unreleased: Boolean get() = (availableAt ?: RealmInstant.MIN) > RealmInstant.nowCompat()
 
     @Ignore
-    val expired: Boolean get() = (expiresAt ?: RealmInstant.MAX) < RealmInstant.now()
+    val expired: Boolean get() = (expiresAt ?: RealmInstant.MAX) < RealmInstant.nowCompat()
 
     /**
      * Whether or not the offer should be hidden from the UI.

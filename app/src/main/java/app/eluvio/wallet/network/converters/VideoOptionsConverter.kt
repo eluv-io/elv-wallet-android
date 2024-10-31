@@ -9,6 +9,7 @@ fun VideoOptionsDto.toEntity(baseUrl: String, fabricToken: String?): VideoOption
     return dash_clear?.toEntity(baseUrl, fabricToken)
         ?: hls_clear?.toEntity(baseUrl, fabricToken)
         ?: dash_widevine?.toEntity(baseUrl, fabricToken)
+        ?: hls_widevine?.toEntity(baseUrl, fabricToken)
 }
 
 private fun PlayoutConfigDto.toEntity(baseUrl: String, fabricToken: String?): VideoOptionsEntity {

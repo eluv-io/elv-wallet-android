@@ -8,6 +8,7 @@ data class VideoOptionsDto(
     @field:Json(name = "dash-clear") val dash_clear: PlayoutConfigDto?,
     @field:Json(name = "hls-clear") val hls_clear: PlayoutConfigDto?,
     @field:Json(name = "dash-widevine") val dash_widevine: PlayoutConfigDto?,
+    @field:Json(name = "hls-widevine-cenc") val hls_widevine: PlayoutConfigDto?,
 )
 
 @JsonClass(generateAdapter = true)

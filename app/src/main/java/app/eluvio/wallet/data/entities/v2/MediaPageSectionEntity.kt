@@ -48,6 +48,7 @@ class MediaPageSectionEntity : RealmObject, EntityWithPermissions {
     override val isHidden: Boolean
         get() = when {
             super.isHidden -> true
+            displaySettings?.hiddenOnTv == true -> true
             type == TYPE_CONTAINER -> subSections.all { it.isHidden }
             else -> items.all { it.isHidden }
         }

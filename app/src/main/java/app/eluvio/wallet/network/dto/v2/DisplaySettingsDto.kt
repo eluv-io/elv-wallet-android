@@ -25,4 +25,6 @@ interface DisplaySettingsDto {
 
     val background_image: AssetLinkDto?
     val background_video: PlayableHashDto?
+
+    val hide_on_tv: Boolean?
 }

@@ -59,6 +59,7 @@ data class MediaItemV2Dto(
     override val inline_background_image: AssetLinkDto?,
     override val background_image: AssetLinkDto?,
     override val background_video: PlayableHashDto?,
+    override val hide_on_tv: Boolean?,
 ) : DisplaySettingsDto
 
 @JsonClass(generateAdapter = true)

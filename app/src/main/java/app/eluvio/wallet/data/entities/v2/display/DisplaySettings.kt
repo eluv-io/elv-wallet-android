@@ -29,6 +29,8 @@ interface DisplaySettings {
 
     val heroBackgroundImageUrl: FabricUrl?
     val heroBackgroundVideoHash: String?
+
+    val hiddenOnTv: Boolean?
 }
 
 /**
@@ -72,6 +74,7 @@ data class SimpleDisplaySettings(
     override val inlineBackgroundImageUrl: FabricUrl? = null,
     override val heroBackgroundImageUrl: FabricUrl? = null,
     override val heroBackgroundVideoHash: String? = null,
+    override val hiddenOnTv: Boolean? = null,
 ) : DisplaySettings {
     companion object {
         fun from(other: DisplaySettings?, forcedAspectRatio: Float? = null): SimpleDisplaySettings {
@@ -93,6 +96,7 @@ data class SimpleDisplaySettings(
                 inlineBackgroundImageUrl = other?.inlineBackgroundImageUrl,
                 heroBackgroundImageUrl = other?.heroBackgroundImageUrl,
                 heroBackgroundVideoHash = other?.heroBackgroundVideoHash,
+                hiddenOnTv = other?.hiddenOnTv,
             )
         }
     }
@@ -123,5 +127,6 @@ fun DisplaySettings.withOverrides(overrides: DisplaySettings?): DisplaySettings 
             ?: default.inlineBackgroundImageUrl,
         heroBackgroundImageUrl = overrides.heroBackgroundImageUrl ?: default.heroBackgroundImageUrl,
         heroBackgroundVideoHash = overrides.heroBackgroundVideoHash ?: default.heroBackgroundVideoHash,
+        hiddenOnTv = overrides.hiddenOnTv ?: default.hiddenOnTv,
     )
 }

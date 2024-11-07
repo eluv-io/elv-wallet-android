@@ -30,5 +30,6 @@ fun DisplaySettingsDto.toEntity(baseUrl: String): DisplaySettingsEntity {
         inlineBackgroundImageUrl = dto.inline_background_image?.toUrl(baseUrl)
         heroBackgroundImageUrl = dto.background_image?.toUrl(baseUrl)
         heroBackgroundVideoHash = dto.background_video?.hash
+        hiddenOnTv = dto.hide_on_tv
     }
 }

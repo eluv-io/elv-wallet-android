@@ -40,8 +40,10 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
     override var heroBackgroundImageUrl: FabricUrlEntity? = null
     override var heroBackgroundVideoHash: String? = null
 
+    override var hiddenOnTv: Boolean? = null
+
     override fun toString(): String {
-        return "DisplaySettingsEntity(title=$title, subtitle=$subtitle, headers=$headers, description=$description, forcedAspectRatio=$forcedAspectRatio, thumbnailLandscapeUrl=$thumbnailLandscapeUrl, thumbnailPortraitUrl=$thumbnailPortraitUrl, thumbnailSquareUrl=$thumbnailSquareUrl, displayLimit=$displayLimit, displayLimitType=$displayLimitType, _displayFormat='$_displayFormat', logoUrl=$logoUrl, logoText=$logoText, inlineBackgroundColor=$inlineBackgroundColor, inlineBackgroundImageUrl=$inlineBackgroundImageUrl, heroBackgroundImageUrl=$heroBackgroundImageUrl, heroBackgroundVideoHash=$heroBackgroundVideoHash)"
+        return "DisplaySettingsEntity(title=$title, subtitle=$subtitle, headers=$headers, description=$description, forcedAspectRatio=$forcedAspectRatio, thumbnailLandscapeUrl=$thumbnailLandscapeUrl, thumbnailPortraitUrl=$thumbnailPortraitUrl, thumbnailSquareUrl=$thumbnailSquareUrl, displayLimit=$displayLimit, displayLimitType=$displayLimitType, _displayFormat='$_displayFormat', logoUrl=$logoUrl, logoText=$logoText, inlineBackgroundColor=$inlineBackgroundColor, inlineBackgroundImageUrl=$inlineBackgroundImageUrl, heroBackgroundImageUrl=$heroBackgroundImageUrl, heroBackgroundVideoHash=$heroBackgroundVideoHash, hiddenOnTv=$hiddenOnTv)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -52,8 +54,8 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
 
         if (title != other.title) return false
         if (subtitle != other.subtitle) return false
-        if (description != other.description) return false
         if (headers != other.headers) return false
+        if (description != other.description) return false
         if (forcedAspectRatio != other.forcedAspectRatio) return false
         if (thumbnailLandscapeUrl != other.thumbnailLandscapeUrl) return false
         if (thumbnailPortraitUrl != other.thumbnailPortraitUrl) return false
@@ -67,6 +69,7 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
         if (inlineBackgroundImageUrl != other.inlineBackgroundImageUrl) return false
         if (heroBackgroundImageUrl != other.heroBackgroundImageUrl) return false
         if (heroBackgroundVideoHash != other.heroBackgroundVideoHash) return false
+        if (hiddenOnTv != other.hiddenOnTv) return false
 
         return true
     }
@@ -74,8 +77,8 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
     override fun hashCode(): Int {
         var result = title?.hashCode() ?: 0
         result = 31 * result + (subtitle?.hashCode() ?: 0)
-        result = 31 * result + (description?.hashCode() ?: 0)
         result = 31 * result + headers.hashCode()
+        result = 31 * result + (description?.hashCode() ?: 0)
         result = 31 * result + (forcedAspectRatio?.hashCode() ?: 0)
         result = 31 * result + (thumbnailLandscapeUrl?.hashCode() ?: 0)
         result = 31 * result + (thumbnailPortraitUrl?.hashCode() ?: 0)
@@ -89,6 +92,7 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
         result = 31 * result + (inlineBackgroundImageUrl?.hashCode() ?: 0)
         result = 31 * result + (heroBackgroundImageUrl?.hashCode() ?: 0)
         result = 31 * result + (heroBackgroundVideoHash?.hashCode() ?: 0)
+        result = 31 * result + (hiddenOnTv?.hashCode() ?: 0)
         return result
     }
 

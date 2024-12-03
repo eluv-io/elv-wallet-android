@@ -219,6 +219,28 @@ fun NonVideoCardPreview() = EluvioThemePreview {
     }
 }
 
+@Preview(heightDp = 150, widthDp = 300)
+@Composable
+fun PurchaseOptionsPreview() = EluvioThemePreview {
+    val media = MediaEntity().apply {
+        id = "id"
+        name = "NFT Media Item"
+        mediaType = MediaEntity.MEDIA_TYPE_IMAGE
+        resolvedPermissions = VolatilePermissionSettings(
+            authorized = false,
+            behavior = PermissionBehavior.SHOW_PURCHASE.value,
+            permissionItemIds = emptyList(),
+            alternatePageId = null,
+            secondaryMarketPurchaseOption = null
+        )
+    }
+    Row(modifier = Modifier.padding(10.dp)) {
+        MediaItemCard(media)
+        Spacer(modifier = Modifier.width(10.dp))
+        MediaItemCard(media, modifier = Modifier.requestInitialFocus())
+    }
+}
+
 @Preview(heightDp = 330, widthDp = 270)
 @Composable
 fun VideoCardPreview() = EluvioThemePreview {

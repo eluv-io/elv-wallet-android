@@ -1,5 +1,6 @@
 package app.eluvio.wallet.screens.common
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -16,6 +17,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -36,6 +43,7 @@ import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.data.entities.LiveVideoInfoEntity
 import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.entities.getEventStartDateTimeString
+import app.eluvio.wallet.data.entities.timeUntilStateChange
 import app.eluvio.wallet.data.entities.v2.display.DisplaySettings
 import app.eluvio.wallet.data.entities.v2.display.DisplaySettingsEntity
 import app.eluvio.wallet.data.entities.v2.display.thumbnailUrlAndRatio
@@ -54,6 +62,7 @@ import app.eluvio.wallet.util.compose.Black
 import app.eluvio.wallet.util.compose.requestInitialFocus
 import io.realm.kotlin.ext.realmListOf
 import io.realm.kotlin.types.RealmInstant
+import kotlinx.coroutines.delay
 
 typealias MediaClickHandler = (MediaEntity, PermissionContext?) -> Unit
 
@@ -68,10 +77,11 @@ fun MediaItemCard(
     shape: Shape = MaterialTheme.shapes.medium,
     enablePurchaseOptionsOverlay: Boolean = true
 ) {
+    val liveVideoState by rememberLiveVideoState(media.liveVideoInfo)
     val displaySettings = media.requireDisplaySettings().withOverrides(displayOverrides)
     val (imageUrl, aspectRatio) = displaySettings.thumbnailUrlAndRatio ?: ("" to AspectRatio.SQUARE)
     if (media.isDisabled) {
-        DisabledCard(imageUrl, media, shape, cardHeight, aspectRatio, modifier)
+        DisabledCard(imageUrl, media, liveVideoState, shape, cardHeight, aspectRatio, modifier)
     } else {
         val showPurchaseOptions =
             enablePurchaseOptionsOverlay && (media.showPurchaseOptions || media.showAlternatePage)
@@ -95,9 +105,9 @@ fun MediaItemCard(
             },
             unFocusedOverlay = {
                 if (media.mediaType == MediaEntity.MEDIA_TYPE_VIDEO) {
-                    val liveVideoInfo = media.liveVideoInfo
-                    if (liveVideoInfo != null) {
-                        LiveVideoUnFocusedOverlay(liveVideoInfo)
+                    val liveState = liveVideoState
+                    if (liveState != null) {
+                        LiveVideoUnFocusedOverlay(liveState)
                     } else {
                         Icon(
                             imageVector = Icons.Default.PlayArrow,
@@ -125,10 +135,35 @@ fun MediaItemCard(
     }
 }
 
+// make sure the live video info updates when we reach timestamps that change the ui state
+@Composable
+fun rememberLiveVideoState(liveVideoInfo: LiveVideoInfoEntity?): State<LiveVideoState?> {
+    val liveVideoState = remember { mutableStateOf<LiveVideoState?>(null) }
+    val context = LocalContext.current
+    LaunchedEffect(liveVideoInfo) {
+        if (liveVideoInfo == null) {
+            liveVideoState.value = null
+            return@LaunchedEffect
+        }
+        liveVideoState.value = LiveVideoState.from(liveVideoInfo, context)
+        while (true) {
+            val timeUntilChange = liveVideoInfo.timeUntilStateChange()
+            if (timeUntilChange != null) {
+                delay(timeUntilChange)
+                liveVideoState.value = LiveVideoState.from(liveVideoInfo, context)
+            } else {
+                break
+            }
+        }
+    }
+    return liveVideoState
+}
+
 @Composable
 private fun DisabledCard(
     imageUrl: String,
     media: MediaEntity,
+    liveState: LiveVideoState?,
     shape: Shape,
     cardHeight: Dp,
     aspectRatio: Float,
@@ -146,20 +181,20 @@ private fun DisabledCard(
                 .height(cardHeight)
                 .aspectRatio(aspectRatio, matchHeightConstraintsFirst = true)
         )
-        media.liveVideoInfo?.let {
+        liveState?.let {
             LiveVideoUnFocusedOverlay(it)
         }
     }
 }
 
 @Composable
-private fun BoxScope.LiveVideoUnFocusedOverlay(liveVideo: LiveVideoInfoEntity) {
+private fun BoxScope.LiveVideoUnFocusedOverlay(liveVideoState: LiveVideoState) {
     when {
-        liveVideo.ended -> {
+        liveVideoState.ended -> {
             // Maybe never even displayed in the UI in the first place?
         }
 
-        liveVideo.streamStarted -> {
+        liveVideoState.streamStarted -> {
             Text(
                 "LIVE",
                 style = MaterialTheme.typography.button_24.copy(
@@ -177,7 +212,7 @@ private fun BoxScope.LiveVideoUnFocusedOverlay(liveVideo: LiveVideoInfoEntity) {
         }
 
         else /* Upcoming */ -> {
-            val startTime = liveVideo.getEventStartDateTimeString(LocalContext.current)
+            val startTime = liveVideoState.startDateTimeString
             Text(
                 "UPCOMING\n$startTime",
                 style = MaterialTheme.typography.button_24.copy(
@@ -191,6 +226,23 @@ private fun BoxScope.LiveVideoUnFocusedOverlay(liveVideo: LiveVideoInfoEntity) {
                     .background(Color(0xFF272727), shape = RoundedCornerShape(2.dp))
                     .align(Alignment.BottomEnd)
                     .padding(horizontal = 6.dp, vertical = 1.dp)
+            )
+        }
+    }
+}
+
+@Immutable
+data class LiveVideoState(
+    val ended: Boolean,
+    val streamStarted: Boolean,
+    val startDateTimeString: String?
+) {
+    companion object {
+        fun from(liveVideo: LiveVideoInfoEntity, context: Context): LiveVideoState {
+            return LiveVideoState(
+                ended = liveVideo.ended,
+                streamStarted = liveVideo.streamStarted,
+                startDateTimeString = liveVideo.getEventStartDateTimeString(context)
             )
         }
     }

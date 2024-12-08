@@ -2,6 +2,7 @@ package app.eluvio.wallet.data.entities
 
 import android.content.Context
 import android.text.format.DateFormat
+import app.eluvio.wallet.util.realm.millis
 import app.eluvio.wallet.util.realm.nowCompat
 import app.eluvio.wallet.util.realm.toDate
 import dagger.Module
@@ -17,6 +18,8 @@ import io.realm.kotlin.types.TypedRealmObject
 import io.realm.kotlin.types.annotations.Ignore
 import java.util.Locale
 import kotlin.reflect.KClass
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 class LiveVideoInfoEntity : EmbeddedRealmObject {
     // icon image paths.
@@ -31,7 +34,9 @@ class LiveVideoInfoEntity : EmbeddedRealmObject {
     var _streamStartTime: RealmInstant? = null
     var streamStartTime: RealmInstant?
         get() = _streamStartTime ?: eventStartTime
-        set(value) { _streamStartTime = value }
+        set(value) {
+            _streamStartTime = value
+        }
 
     @Ignore
     val streamStarted: Boolean
@@ -86,3 +91,19 @@ fun LiveVideoInfoEntity.getEventStartDateTimeString(context: Context): String? =
         val time = timeFormat.format(startTime)
         return "$date at $time"
     }
+
+/**
+ * returns the duration until this entity will go from UPCOMING to LIVE or from LIVE to ENDED.
+ * Returns null if the entity is already in the ENDED state.
+ */
+fun LiveVideoInfoEntity.timeUntilStateChange(): Duration? {
+    val now = System.currentTimeMillis()
+    return when {
+        // Stream ended, no more changes.
+        ended -> null
+        // Stream started, next change is Stream End
+        streamStarted -> endTime?.let { it.millis - now }?.milliseconds
+        // Stream hasn't started yet. Next change is Stream Start
+        else -> streamStartTime?.let { it.millis - now }?.milliseconds
+    }
+}

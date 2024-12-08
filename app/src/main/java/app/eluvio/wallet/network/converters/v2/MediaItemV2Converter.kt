@@ -82,7 +82,8 @@ private fun parseLiveVideoInfo(dto: MediaItemV2Dto): LiveVideoInfoEntity? {
     }
     return LiveVideoInfoEntity().apply {
         icons = dto.icons?.mapNotNull { it.icon?.path }.toRealmListOrEmpty()
-        startTime = dto.startTime?.toRealmInstant()
+        eventStartTime = dto.eventStartTime?.toRealmInstant()
+        streamStartTime = dto.streamStartTime?.toRealmInstant()
         endTime = dto.endTime?.toRealmInstant()
     }
 }

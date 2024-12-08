@@ -2,11 +2,21 @@ package app.eluvio.wallet.screens.property.upcoming
 
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
+import app.eluvio.wallet.data.entities.MediaEntity
+import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
+import app.eluvio.wallet.data.permissions.PermissionContext
+import app.eluvio.wallet.data.permissions.PermissionContextResolver
 import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.di.ApiProvider
+import app.eluvio.wallet.navigation.asReplace
+import app.eluvio.wallet.screens.destinations.VideoPlayerActivityDestination
 import app.eluvio.wallet.util.realm.millis
+import app.eluvio.wallet.util.rx.mapNotNull
+import app.eluvio.wallet.util.rx.timer
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.reactivex.rxjava3.core.Flowable
+import io.reactivex.rxjava3.kotlin.Flowables
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
 import javax.inject.Inject
@@ -19,6 +29,7 @@ class UpcomingVideoViewModel @Inject constructor(
     private val propertyStore: MediaPropertyStore,
     private val apiProvider: ApiProvider,
     private val navArgs: UpcomingVideoNavArgs,
+    private val permissionContextResolver: PermissionContextResolver,
     savedStateHandle: SavedStateHandle,
 ) : BaseViewModel<UpcomingVideoViewModel.State>(
     State(mediaItemId = navArgs.mediaItemId, propertyId = navArgs.propertyId),
@@ -42,6 +53,10 @@ class UpcomingVideoViewModel @Inject constructor(
             .subscribeBy { updateState { copy(imagesBaseUrl = it) } }
             .addTo(disposables)
 
+        // This has some duplicated logic from PropertyDetailViewModel, but I'm in a hurry.
+        if (navArgs.sourcePageId != null) {
+            updateBackgroundImage()
+        }
         propertyStore.observeMediaProperty(navArgs.propertyId)
             .subscribeBy {
                 updateState { copy(backgroundImageUrl = it.mainPage?.backgroundImageUrl?.url) }
@@ -49,6 +64,9 @@ class UpcomingVideoViewModel @Inject constructor(
             .addTo(disposables)
 
         contentStore.observeMediaItem(navArgs.mediaItemId)
+            .switchMap { mediaItem ->
+                autoNavigateOnStreamStart(mediaItem)
+            }
             .subscribeBy(
                 onNext = { mediaItem ->
                     updateState {
@@ -56,12 +74,64 @@ class UpcomingVideoViewModel @Inject constructor(
                             title = mediaItem.name,
                             icons = mediaItem.liveVideoInfo?.icons.orEmpty(),
                             headers = mediaItem.displaySettings?.headers.orEmpty(),
-                            startTimeMillis = mediaItem.liveVideoInfo?.startTime?.millis
+                            startTimeMillis = mediaItem.liveVideoInfo?.eventStartTime?.millis
                         )
                     }
                 },
                 onError = {}
             )
+            .addTo(disposables)
+    }
+
+    /**
+     * Automatically navigate to the video player when the stream starts.
+     * Returns the MediaEntity immediately
+     */
+    private fun autoNavigateOnStreamStart(mediaItem: MediaEntity): Flowable<MediaEntity> {
+        val remainingTime = mediaItem.liveVideoInfo?.streamStartTime
+            ?.let { startTime ->
+                (startTime.millis - System.currentTimeMillis()).milliseconds
+            }
+        return if (remainingTime != null && remainingTime.inWholeSeconds > 0) {
+            Flowables.timer(remainingTime)
+                .doOnNext {
+                    navigateTo(
+                        VideoPlayerActivityDestination(
+                            propertyId = navArgs.propertyId,
+                            mediaItemId = navArgs.mediaItemId
+                        ).asReplace()
+                    )
+                }
+                // Convert stream to MediaEntity but don't actually emit anything at the end of the timer
+                .mapNotNull { null as MediaEntity? }
+                .startWithItem(mediaItem)
+        } else {
+            Flowable.just(mediaItem)
+        }
+    }
+
+    private fun updateBackgroundImage() {
+        // Fake permission context to quickly resolve property and page
+        val permissionContext = PermissionContext(
+            propertyId = navArgs.propertyId, pageId = navArgs.sourcePageId
+        )
+        permissionContextResolver.resolve(permissionContext)
+            .firstElement()
+            .flatMap { (property, page) ->
+                propertyStore.observeSections(property, page!!, forceRefresh = false)
+                    .firstElement()
+                    .mapNotNull { sections ->
+                        // Find the first hero section and use its background
+                        sections
+                            .firstOrNull { it.type == MediaPageSectionEntity.TYPE_HERO }
+                            ?.displaySettings
+                            ?.heroBackgroundImageUrl
+                            ?: page.backgroundImageUrl
+                    }
+            }
+            .subscribeBy {
+                updateState { copy(backgroundImageUrl = it.url) }
+            }
             .addTo(disposables)
     }
 }

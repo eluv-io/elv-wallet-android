@@ -54,11 +54,12 @@ private fun clickWithPermissionContext(
             MediaGridDestination(permissionContext)
         }
 
-        media.liveVideoInfo?.started == false -> {
+        media.liveVideoInfo?.streamStarted == false -> {
             // this is a live video that hasn't started yet.
             UpcomingVideoDestination(
                 propertyId = permissionContext.propertyId,
                 mediaItemId = media.id,
+                sourcePageId = permissionContext.pageId,
             )
         }
 

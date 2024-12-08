@@ -35,7 +35,7 @@ import androidx.tv.material3.Text
 import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.data.entities.LiveVideoInfoEntity
 import app.eluvio.wallet.data.entities.MediaEntity
-import app.eluvio.wallet.data.entities.getStartDateTimeString
+import app.eluvio.wallet.data.entities.getEventStartDateTimeString
 import app.eluvio.wallet.data.entities.v2.display.DisplaySettings
 import app.eluvio.wallet.data.entities.v2.display.DisplaySettingsEntity
 import app.eluvio.wallet.data.entities.v2.display.thumbnailUrlAndRatio
@@ -73,7 +73,8 @@ fun MediaItemCard(
     if (media.isDisabled) {
         DisabledCard(imageUrl, media, shape, cardHeight, aspectRatio, modifier)
     } else {
-        val showPurchaseOptions = enablePurchaseOptionsOverlay && (media.showPurchaseOptions || media.showAlternatePage)
+        val showPurchaseOptions =
+            enablePurchaseOptionsOverlay && (media.showPurchaseOptions || media.showAlternatePage)
         ImageCard(
             imageUrl = imageUrl,
             contentDescription = media.nameOrLockedName(),
@@ -158,7 +159,7 @@ private fun BoxScope.LiveVideoUnFocusedOverlay(liveVideo: LiveVideoInfoEntity) {
             // Maybe never even displayed in the UI in the first place?
         }
 
-        liveVideo.started -> {
+        liveVideo.streamStarted -> {
             Text(
                 "LIVE",
                 style = MaterialTheme.typography.button_24.copy(
@@ -176,7 +177,7 @@ private fun BoxScope.LiveVideoUnFocusedOverlay(liveVideo: LiveVideoInfoEntity) {
         }
 
         else /* Upcoming */ -> {
-            val startTime = liveVideo.getStartDateTimeString(LocalContext.current)
+            val startTime = liveVideo.getEventStartDateTimeString(LocalContext.current)
             Text(
                 "UPCOMING\n$startTime",
                 style = MaterialTheme.typography.button_24.copy(
@@ -271,7 +272,7 @@ fun LiveVideoCardPreview() = EluvioThemePreview {
         mediaType = MediaEntity.MEDIA_TYPE_VIDEO
         imageAspectRatio = AspectRatio.WIDE
         liveVideoInfo = LiveVideoInfoEntity().apply {
-            startTime = RealmInstant.MIN
+            streamStartTime = RealmInstant.MIN
         }
     }
     Column(modifier = Modifier.padding(10.dp)) {
@@ -295,7 +296,7 @@ fun UpcomingLiveVideoCardPreview() = EluvioThemePreview {
         mediaType = MediaEntity.MEDIA_TYPE_VIDEO
         imageAspectRatio = AspectRatio.WIDE
         liveVideoInfo = LiveVideoInfoEntity().apply {
-            startTime = RealmInstant.MAX
+            streamStartTime = RealmInstant.MAX
         }
     }
     Column(modifier = Modifier.padding(10.dp)) {
@@ -340,7 +341,7 @@ fun DisabledCardPreview() = EluvioThemePreview {
             secondaryMarketPurchaseOption = null
         )
         liveVideoInfo = LiveVideoInfoEntity().apply {
-            startTime = RealmInstant.MIN
+            streamStartTime = RealmInstant.MIN
         }
     })
 }

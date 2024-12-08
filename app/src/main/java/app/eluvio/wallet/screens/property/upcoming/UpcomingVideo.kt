@@ -31,9 +31,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import app.eluvio.wallet.navigation.LocalNavigator
 import app.eluvio.wallet.navigation.MainGraph
-import app.eluvio.wallet.navigation.asReplace
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
-import app.eluvio.wallet.screens.destinations.VideoPlayerActivityDestination
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.body_32
 import app.eluvio.wallet.theme.title_62
@@ -110,12 +108,13 @@ private fun UpcomingVideoContent(state: UpcomingVideoViewModel.State) {
         val navigator = LocalNavigator.current
         Countdown(state, onComplete = {
             // Countdown done. Navigate to the video player.
-            navigator(
-                VideoPlayerActivityDestination(
-                    propertyId = state.propertyId,
-                    mediaItemId = state.mediaItemId
-                ).asReplace()
-            )
+            // Disabled - vm will take care of this.
+//            navigator(
+//                VideoPlayerActivityDestination(
+//                    propertyId = state.propertyId,
+//                    mediaItemId = state.mediaItemId
+//                ).asReplace()
+//            )
         })
     }
 }

@@ -30,7 +30,9 @@ data class MediaItemV2Dto(
     @field:Json(name = "live_video")
     val liveVideo: Boolean?,
     @field:Json(name = "start_time")
-    val startTime: Date?,
+    val eventStartTime: Date?,
+    @field:Json(name = "stream_start_time")
+    val streamStartTime: Date?,
     @field:Json(name = "end_time")
     val endTime: Date?,
     val icons: List<MediaIconDto>?,

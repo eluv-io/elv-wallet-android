@@ -22,10 +22,20 @@ class LiveVideoInfoEntity : EmbeddedRealmObject {
     // icon image paths.
     var icons: RealmList<String> = realmListOf()
 
-    var startTime: RealmInstant? = null
+    var eventStartTime: RealmInstant? = null
 
     @Ignore
-    val started: Boolean get() = (startTime ?: RealmInstant.MIN) <= RealmInstant.nowCompat()
+    val eventStarted: Boolean
+        get() = (eventStartTime ?: RealmInstant.MIN) <= RealmInstant.nowCompat()
+
+    var _streamStartTime: RealmInstant? = null
+    var streamStartTime: RealmInstant?
+        get() = _streamStartTime ?: eventStartTime
+        set(value) { _streamStartTime = value }
+
+    @Ignore
+    val streamStarted: Boolean
+        get() = (streamStartTime ?: RealmInstant.MIN) <= RealmInstant.nowCompat()
 
     var endTime: RealmInstant? = null
 
@@ -41,7 +51,7 @@ class LiveVideoInfoEntity : EmbeddedRealmObject {
     }
 
     override fun toString(): String {
-        return "LiveVideoInfoEntity(icons=$icons, startTime=$startTime, endTime=$endTime)"
+        return "LiveVideoInfoEntity(icons=$icons, eventStartTime=$eventStartTime, streamStartTime=$streamStartTime, endTime=$endTime)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -51,7 +61,8 @@ class LiveVideoInfoEntity : EmbeddedRealmObject {
         other as LiveVideoInfoEntity
 
         if (icons != other.icons) return false
-        if (startTime != other.startTime) return false
+        if (eventStartTime != other.eventStartTime) return false
+        if (streamStartTime != other.streamStartTime) return false
         if (endTime != other.endTime) return false
 
         return true
@@ -59,14 +70,16 @@ class LiveVideoInfoEntity : EmbeddedRealmObject {
 
     override fun hashCode(): Int {
         var result = icons.hashCode()
-        result = 31 * result + (startTime?.hashCode() ?: 0)
+        result = 31 * result + (eventStartTime?.hashCode() ?: 0)
+        result = 31 * result + (streamStartTime?.hashCode() ?: 0)
         result = 31 * result + (endTime?.hashCode() ?: 0)
         return result
     }
+
 }
 
-fun LiveVideoInfoEntity.getStartDateTimeString(context: Context): String? =
-    startTime?.toDate()?.let { startTime ->
+fun LiveVideoInfoEntity.getEventStartDateTimeString(context: Context): String? =
+    eventStartTime?.toDate()?.let { startTime ->
         val dateFormat = DateFormat.getBestDateTimePattern(Locale.getDefault(), "M/d")
         val date = DateFormat.format(dateFormat, startTime).toString()
         val timeFormat = DateFormat.getTimeFormat(context)

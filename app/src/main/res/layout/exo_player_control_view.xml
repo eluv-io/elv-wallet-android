@@ -47,7 +47,7 @@ so be mindful of pruning the view hierarchy-->
                     android:id="@id/exo_play_pause"
                     style="@style/ExoStyledControls.Button.Center.PlayPause"
                     android:nextFocusLeft="@id/exo_progress"
-                    android:nextFocusDown="@id/exo_subtitle" />
+                    android:nextFocusDown="@id/exo_bottom_bar" />
             </FrameLayout>
 
             <androidx.media3.ui.DefaultTimeBar
@@ -60,6 +60,7 @@ so be mindful of pruning the view hierarchy-->
         </LinearLayout>
 
         <LinearLayout
+            android:id="@id/exo_bottom_bar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
@@ -85,6 +86,19 @@ so be mindful of pruning the view hierarchy-->
                 <TextView
                     android:id="@id/exo_duration"
                     style="@style/ExoStyledControls.TimeText.Duration" />
+
+                <TextView
+                    android:id="@+id/live_indicator"
+                    style="@style/ExoStyledControls.TimeText.Position"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:background="@drawable/live_tag_bg"
+                    android:nextFocusUp="@id/exo_play_pause"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="1dp"
+                    android:text="LIVE"
+                    android:visibility="gone" />
             </LinearLayout>
 
             <View

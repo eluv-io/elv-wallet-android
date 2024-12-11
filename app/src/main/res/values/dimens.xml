@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Makes sure controller slides completely off-screen after timeout -->
+    <dimen name="exo_styled_bottom_bar_height" tools:ignore="PrivateResource">1000dp</dimen>
+    <dimen name="exo_styled_progress_bar_height" tools:ignore="PrivateResource">0dp</dimen>
+</resources>

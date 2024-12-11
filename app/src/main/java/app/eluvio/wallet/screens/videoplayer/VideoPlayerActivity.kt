@@ -7,8 +7,10 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentActivity
 import androidx.media3.common.AudioAttributes
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -24,6 +26,7 @@ import app.eluvio.wallet.screens.destinations.VideoPlayerActivityDestination
 import app.eluvio.wallet.util.crypto.Base58
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.mapNotNull
+import app.eluvio.wallet.util.rx.safeDispose
 import com.ramcosta.composedestinations.annotation.ActivityDestination
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
@@ -49,6 +52,7 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
 
     private var playerView: PlayerView? = null
     private var exoPlayer: ExoPlayer? = null
+    private var liveIndicator: View? = null
 
     private val backPressedCallback = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() {
@@ -72,6 +76,12 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
         setContentView(R.layout.activity_video_player)
 
         onBackPressedDispatcher.addCallback(this, backPressedCallback)
+
+        liveIndicator = findViewById(R.id.live_indicator)
+        liveIndicator?.setOnClickListener {
+            exoPlayer?.seekToDefaultPosition()
+            exoPlayer?.playWhenReady = true
+        }
 
         exoPlayer = ExoPlayer.Builder(this)
             .setAudioAttributes(AudioAttributes.DEFAULT,  /* handleAudioFocus= */true)
@@ -147,6 +157,39 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             )
     }
 
+    override fun onEvents(player: Player, events: Player.Events) {
+        // re-calc live state on every event
+        updateLiveTagState()
+    }
+
+    private fun updateLiveTagState() {
+        val exoPlayer = exoPlayer ?: return
+        val isLive = exoPlayer.isCurrentMediaItemLive
+        liveIndicator?.isVisible = isLive
+        if (isLive) {
+            /**
+             * [ExoPlayer.getCurrentLiveOffset] didn't work as expected, so just using proximity to end of seekbar instead.
+             */
+            val isCloseToLiveEdge =
+                exoPlayer.contentDuration - exoPlayer.contentPosition < 20.seconds.inWholeMilliseconds
+            val playingLive = exoPlayer.isPlaying && isCloseToLiveEdge
+            // Setting the Activated state will make the label turn red.
+            liveIndicator?.isActivated = playingLive
+            liveIndicator?.isFocusable = !playingLive
+        }
+    }
+
+    override fun onPlayerError(error: PlaybackException) {
+        Log.e("Error playing video ${error.errorCodeName}")
+        if (error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
+            // Re-initialize player at the live edge.
+            exoPlayer?.seekToDefaultPosition()
+            exoPlayer?.prepare()
+        } else {
+            // Handle other errors
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         playerView?.onResume()
@@ -169,6 +212,7 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
         playerView = null
         exoPlayer?.release()
         exoPlayer = null
+        disposable.safeDispose()
         super.onDestroy()
     }
 

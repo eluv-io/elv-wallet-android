@@ -27,13 +27,17 @@ import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.Optional
 import app.eluvio.wallet.util.rx.asSharedState
 import app.eluvio.wallet.util.rx.combineLatest
+import app.eluvio.wallet.util.rx.interval
 import app.eluvio.wallet.util.rx.mapNotNull
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Maybe
+import io.reactivex.rxjava3.kotlin.Flowables
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
 class PropertyDetailViewModel @Inject constructor(
@@ -71,7 +75,10 @@ class PropertyDetailViewModel @Inject constructor(
                 .map { authorizedPage -> property to authorizedPage }
         }
         .switchMap { (property, page) ->
-            propertyStore.observeSections(property, page)
+            Flowables.interval(period = 1.minutes, initialDelay = 0.seconds)
+                .switchMap {
+                    propertyStore.observeSections(property, page, forceRefresh = true)
+                }
                 .map { sections -> sections.associateBy { section -> section.id } }
                 .map { sections -> page to sections }
         }

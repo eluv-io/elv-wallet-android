@@ -6,8 +6,12 @@ import io.reactivex.rxjava3.kotlin.Flowables
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
 
-fun Flowables.interval(duration: Duration): Flowable<Long> =
-    Flowable.interval(duration.inWholeMilliseconds, TimeUnit.MILLISECONDS)
+fun Flowables.interval(period: Duration, initialDelay: Duration = period): Flowable<Long> =
+    Flowable.interval(
+        initialDelay.inWholeMilliseconds,
+        period.inWholeMilliseconds,
+        TimeUnit.MILLISECONDS
+    )
 
 fun Flowables.timer(duration: Duration): Flowable<Long> =
     Flowable.timer(duration.inWholeMilliseconds, TimeUnit.MILLISECONDS)

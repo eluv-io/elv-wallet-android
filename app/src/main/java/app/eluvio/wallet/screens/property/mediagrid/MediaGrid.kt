@@ -131,6 +131,7 @@ private fun MediaGridPreview() = EluvioThemePreview {
                         name = "Media 1"
                         mediaType = "image"
                     },
+                    playbackProgress = null,
                 ),
                 CarouselItem.RedeemableOffer(
                     permissionContext = PermissionContext(propertyId = "property1"),

@@ -45,7 +45,8 @@ fun CarouselItemCard(carouselItem: CarouselItem, cardHeight: Dp, modifier: Modif
                 entity,
                 displayOverrides = carouselItem.displayOverrides,
                 cardHeight = cardHeight,
-                permissionContext = carouselItem.permissionContext
+                permissionContext = carouselItem.permissionContext,
+                playbackProgress = carouselItem.playbackProgress,
             )
             Spacer(Modifier.height(10.dp))
             val title = carouselItem.displayOverrides?.title ?: entity.name
@@ -101,6 +102,7 @@ private fun CarouselItemCardPreview() = EluvioThemePreview {
             entity = MediaEntity().apply {
                 name = "this is a very very very very long title"
             },
+            playbackProgress = null,
         ), 120.dp
     )
 }

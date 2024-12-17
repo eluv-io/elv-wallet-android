@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -27,6 +28,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
@@ -75,7 +78,8 @@ fun MediaItemCard(
     onMediaItemClick: MediaClickHandler = defaultMediaItemClickHandler(LocalNavigator.current),
     cardHeight: Dp = 150.dp,
     shape: Shape = MaterialTheme.shapes.medium,
-    enablePurchaseOptionsOverlay: Boolean = true
+    enablePurchaseOptionsOverlay: Boolean = true,
+    playbackProgress: Float? = null
 ) {
     val liveVideoState by rememberLiveVideoState(media.liveVideoInfo)
     val displaySettings = media.requireDisplaySettings().withOverrides(displayOverrides)
@@ -101,9 +105,21 @@ fun MediaItemCard(
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     MetadataTexts(displaySettings)
+                    if (playbackProgress != null && playbackProgress > 0) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        ProgressBar(playbackProgress)
+                    }
                 }
             },
             unFocusedOverlay = {
+                if (playbackProgress != null && playbackProgress > 0) {
+                    ProgressBar(
+                        progress = playbackProgress,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(8.dp)
+                    )
+                }
                 if (media.mediaType == MediaEntity.MEDIA_TYPE_VIDEO) {
                     val liveState = liveVideoState
                     if (liveState != null) {
@@ -185,6 +201,26 @@ private fun DisabledCard(
             LiveVideoUnFocusedOverlay(it)
         }
     }
+}
+
+@Composable
+private fun ProgressBar(progress: Float, modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .fillMaxWidth()
+            .height(3.dp)
+            .clip(RoundedCornerShape(2.dp))
+            .background(Color(0xFF5A5A5A))
+            .clipToBounds()
+            .drawWithCache {
+                onDrawBehind {
+                    drawRect(
+                        Color(0xFFEBEBEB),
+                        size = size.copy(width = size.width * progress)
+                    )
+                }
+            }
+    )
 }
 
 @Composable
@@ -302,11 +338,16 @@ fun VideoCardPreview() = EluvioThemePreview {
         name = "NFT Media Item"
         mediaType = MediaEntity.MEDIA_TYPE_VIDEO
         imageAspectRatio = AspectRatio.WIDE
+        displaySettings = DisplaySettingsEntity().apply {
+            title = name
+            subtitle = "The Grand Arena"
+            headers = realmListOf("8pm Central", "Stage D", "Lorem Ipsum", "Dolor Sit Amet")
+        }
     }
     Column(modifier = Modifier.padding(10.dp)) {
-        MediaItemCard(media)
+        MediaItemCard(media, playbackProgress = 0.4f)
         Spacer(modifier = Modifier.height(10.dp))
-        MediaItemCard(media, modifier = Modifier.requestInitialFocus())
+        MediaItemCard(media, playbackProgress = 0.4f, modifier = Modifier.requestInitialFocus())
     }
 }
 

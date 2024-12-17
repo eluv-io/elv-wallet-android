@@ -11,6 +11,7 @@ import app.eluvio.wallet.data.entities.v2.search.FilterValueEntity
 import app.eluvio.wallet.data.entities.v2.search.SearchFilter
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.data.stores.MediaPropertyStore
+import app.eluvio.wallet.data.stores.PlaybackStore
 import app.eluvio.wallet.data.stores.PropertySearchStore
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.network.dto.v2.SearchRequest
@@ -36,6 +37,7 @@ import kotlin.time.Duration.Companion.milliseconds
 class PropertySearchViewModel @Inject constructor(
     private val propertyStore: MediaPropertyStore,
     private val searchStore: PropertySearchStore,
+    private val playbackStore: PlaybackStore,
     savedStateHandle: SavedStateHandle
 ) : BaseViewModel<PropertySearchViewModel.State>(State(), savedStateHandle) {
 
@@ -256,7 +258,7 @@ class PropertySearchViewModel @Inject constructor(
             .subscribeBy { results ->
                 updateState {
                     val sections = results.flatMap { section ->
-                        section.toDynamicSections(permissionContext)
+                        section.toDynamicSections(permissionContext, playbackStore)
                     }.ifEmpty {
                         // Show a message when no results are found
                         messageResult("No results found")

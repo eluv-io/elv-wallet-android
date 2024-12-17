@@ -246,11 +246,16 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
 
     override fun onPause() {
         super.onPause()
-        exoPlayer?.currentPosition?.let { currentPosition ->
-            if (shouldStorePlaybackPosition(currentPosition)) {
-                playbackStore.setPlaybackPosition(mediaItemId, currentPosition)
+        exoPlayer?.let { exoPlayer ->
+            if (shouldStorePlaybackPosition(exoPlayer.currentPosition)) {
+                Log.d("Saving playback position ${exoPlayer.currentPosition}")
+                playbackStore.setPlaybackPosition(
+                    mediaItemId,
+                    exoPlayer.currentPosition,
+                    exoPlayer.contentDuration
+                )
             } else {
-                playbackStore.setPlaybackPosition(mediaItemId, 0)
+                playbackStore.setPlaybackPosition(mediaItemId, 0, exoPlayer.contentDuration)
             }
         }
         playerView?.onPause()

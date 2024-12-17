@@ -362,6 +362,7 @@ private fun DynamicPageLayoutPreview() = EluvioThemePreview {
                                 name = "Media 1"
                                 mediaType = "image"
                             },
+                            playbackProgress = null,
                         ),
                         DynamicPageLayoutState.CarouselItem.RedeemableOffer(
                             permissionContext = PermissionContext(propertyId = "property1"),

@@ -13,6 +13,7 @@ import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.data.permissions.PermissionContextResolver
 import app.eluvio.wallet.data.permissions.PermissionResolver
 import app.eluvio.wallet.data.stores.ContentStore
+import app.eluvio.wallet.data.stores.PlaybackStore
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.screens.destinations.MediaGridDestination
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState
@@ -28,6 +29,7 @@ import javax.inject.Inject
 class MediaGridViewModel @Inject constructor(
     private val permissionContextResolver: PermissionContextResolver,
     private val contentStore: ContentStore,
+    private val playbackStore: PlaybackStore,
     savedStateHandle: SavedStateHandle
 ) : BaseViewModel<MediaGridViewModel.State>(State(), savedStateHandle) {
 
@@ -87,7 +89,8 @@ class MediaGridViewModel @Inject constructor(
         }
         val items = section.items.toCarouselItems(
             permissionContext,
-            SimpleDisplaySettings(displayFormat = DisplayFormat.GRID)
+            SimpleDisplaySettings(displayFormat = DisplayFormat.GRID),
+            playbackStore
         )
         return Flowable.just(State(title = section.displaySettings?.title, items = items))
     }
@@ -154,7 +157,9 @@ class MediaGridViewModel @Inject constructor(
                         DynamicPageLayoutState.CarouselItem.Media(
                             // TODO: potential bug? we are losing info about the containing list/collection
                             permissionContext = permissionContext.copy(mediaItemId = mediaEntity.id),
-                            entity = mediaEntity
+                            entity = mediaEntity,
+                            // Note: if a playback position is saved for LIVE, it'll also show.
+                            playbackProgress = playbackStore.getPlaybackProgress(mediaEntity.id)
                         )
                     }
             }

@@ -15,6 +15,7 @@ import app.eluvio.wallet.data.entities.v2.permissions.showAlternatePage
 import app.eluvio.wallet.data.entities.v2.permissions.showPurchaseOptions
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.data.stores.MediaPropertyStore
+import app.eluvio.wallet.data.stores.PlaybackStore
 import app.eluvio.wallet.data.stores.PropertySearchStore
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.navigation.asPush
@@ -44,6 +45,7 @@ class PropertyDetailViewModel @Inject constructor(
     private val propertyStore: MediaPropertyStore,
     private val propertySearchStore: PropertySearchStore,
     private val videoOptionsFetcher: VideoOptionsFetcher,
+    private val playbackStore: PlaybackStore,
     savedStateHandle: SavedStateHandle
 ) : BaseViewModel<DynamicPageLayoutState>(DynamicPageLayoutState()) {
 
@@ -296,7 +298,7 @@ class PropertyDetailViewModel @Inject constructor(
                     .also { if (it) Log.v("Hiding unauthorized section ${section.id}") }
             }
             .flatMap { section ->
-                section.toDynamicSections(pagePermissionContext, filters)
+                section.toDynamicSections(pagePermissionContext, playbackStore, filters)
             }
     }
 }

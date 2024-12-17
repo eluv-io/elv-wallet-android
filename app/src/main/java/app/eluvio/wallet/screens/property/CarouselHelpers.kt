@@ -8,6 +8,7 @@ import app.eluvio.wallet.data.entities.v2.SectionItemEntity
 import app.eluvio.wallet.data.entities.v2.display.DisplaySettings
 import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
 import app.eluvio.wallet.data.permissions.PermissionContext
+import app.eluvio.wallet.data.stores.PlaybackStore
 import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.screens.destinations.MediaGridDestination
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState.CarouselItem
@@ -25,16 +26,14 @@ private const val VIEW_ALL_THRESHOLD = 5
  */
 fun MediaPageSectionEntity.toDynamicSections(
     parentPermissionContext: PermissionContext,
+    playbackStore: PlaybackStore,
     filters: PropertySearchFiltersEntity? = null,
 ): List<DynamicPageLayoutState.Section> {
     return when (type) {
         MediaPageSectionEntity.TYPE_AUTOMATIC,
         MediaPageSectionEntity.TYPE_MANUAL,
         MediaPageSectionEntity.TYPE_SEARCH -> listOf(
-            this.toCarouselSection(
-                parentPermissionContext,
-                filters,
-            )
+            this.toCarouselSection(parentPermissionContext, filters, playbackStore)
         )
 
         MediaPageSectionEntity.TYPE_HERO -> this.toHeroSections()
@@ -42,7 +41,7 @@ fun MediaPageSectionEntity.toDynamicSections(
             // For now, just swap out container sections with their sub-sections.
             // In the future we'll want to add proper support for containers with filtering.
             subSections.flatMap {
-                it.toDynamicSections(parentPermissionContext, filters)
+                it.toDynamicSections(parentPermissionContext, playbackStore, filters)
             }
         }
 
@@ -53,9 +52,10 @@ fun MediaPageSectionEntity.toDynamicSections(
 private fun MediaPageSectionEntity.toCarouselSection(
     parentPermissionContext: PermissionContext,
     filters: PropertySearchFiltersEntity? = null,
+    playbackStore: PlaybackStore,
 ): DynamicPageLayoutState.Section.Carousel {
     val permissionContext = parentPermissionContext.copy(sectionId = id)
-    val items = items.toCarouselItems(permissionContext, displaySettings)
+    val items = items.toCarouselItems(permissionContext, displaySettings, playbackStore)
     val displayLimit = displaySettings?.displayLimit?.takeIf { it > 0 } ?: items.size
     val showViewAll = items.size > displayLimit || items.size > VIEW_ALL_THRESHOLD
     val filterAttribute = filters?.attributes?.get(primaryFilter)
@@ -107,6 +107,7 @@ private fun MediaPageSectionEntity.toHeroSections(): List<DynamicPageLayoutState
 fun List<SectionItemEntity>.toCarouselItems(
     parentPermissionContext: PermissionContext,
     sectionDisplaySettings: DisplaySettings?,
+    playbackStore: PlaybackStore,
 ): List<CarouselItem> {
     return mapNotNull { item ->
         val bannerImage = item.bannerImageUrl?.url
@@ -148,7 +149,8 @@ fun List<SectionItemEntity>.toCarouselItems(
                 CarouselItem.Media(
                     permissionContext = permissionContext.copy(mediaItemId = item.media!!.id),
                     entity = item.media!!,
-                    displayOverrides = displayOverrides
+                    displayOverrides = displayOverrides,
+                    playbackProgress = playbackStore.getPlaybackProgress(item.media!!.id),
                 )
             }
 

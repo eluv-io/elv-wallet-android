@@ -69,6 +69,7 @@ data class DynamicPageLayoutState(
         data class Media(
             override val permissionContext: PermissionContext,
             val entity: MediaEntity,
+            val playbackProgress: Float?,
             val displayOverrides: DisplaySettings? = null,
         ) : CarouselItem
 

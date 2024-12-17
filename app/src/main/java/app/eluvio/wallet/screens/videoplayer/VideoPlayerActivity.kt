@@ -23,6 +23,7 @@ import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.data.stores.PlaybackStore
 import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.screens.destinations.VideoPlayerActivityDestination
+import app.eluvio.wallet.screens.videoplayer.ui.VideoInfoPane
 import app.eluvio.wallet.util.crypto.Base58
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.mapNotNull
@@ -31,7 +32,8 @@ import com.ramcosta.composedestinations.annotation.ActivityDestination
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Maybe
-import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
@@ -48,11 +50,17 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
     @Inject
     lateinit var playbackStore: PlaybackStore
 
-    private var disposable: Disposable? = null
+    private var disposables = CompositeDisposable()
 
     private var playerView: PlayerView? = null
     private var exoPlayer: ExoPlayer? = null
     private var liveIndicator: View? = null
+    private var infoButton: View? = null
+    private var infoPane: VideoInfoPane? = null
+
+    // List of buttons that aren't handled by exoplayer, and we need to handle manually.
+    private val customControllerButtons: List<View>
+        get() = listOfNotNull(liveIndicator, infoButton)
 
     private val backPressedCallback = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() {
@@ -83,6 +91,15 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             exoPlayer?.playWhenReady = true
         }
 
+        infoPane = findViewById(R.id.video_player_info_pane)
+        infoPane?.setOnRestartClickListener {
+            exoPlayer?.seekTo(0)
+            exoPlayer?.playWhenReady = true
+            infoPane?.isVisible = false
+        }
+        infoButton = findViewById(R.id.video_player_info_button)
+        infoButton?.setOnClickListener { showInfoPane() }
+
         exoPlayer = ExoPlayer.Builder(this)
             .setAudioAttributes(AudioAttributes.DEFAULT,  /* handleAudioFocus= */true)
             .build()
@@ -97,6 +114,9 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             setControllerVisibilityListener(PlayerView.ControllerVisibilityListener { visibility ->
                 backPressedCallback.isEnabled = visibility == View.VISIBLE
                 Log.v("Controller visibility changed: $visibility. Handling back press: ${backPressedCallback.isEnabled}")
+                if (visibility == View.VISIBLE) {
+                    infoPane?.isVisible = false
+                }
             })
             player = exoPlayer
             showController()
@@ -110,7 +130,8 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
         findViewById<DefaultTimeBar>(androidx.media3.ui.R.id.exo_progress)
             ?.setKeyTimeIncrement(5000)
 
-        disposable = Maybe.fromCallable { navArgs.deeplinkhack_contract }
+
+        Maybe.fromCallable { navArgs.deeplinkhack_contract }
             .flatMap { base58contract ->
                 // Assume we own a token for this contract. If we don't, we'll just be stuck loading forever.
                 contentStore.observeWalletData()
@@ -133,11 +154,28 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
                 Log.w("Found media item id from deeplink hack: $it")
                 fakeMediaItemId = it
             }
-            .defaultIfEmpty("done with fake stuff, time to load video")
-            .flatMap {
-                // this is all we really need if it wasn't for all the fake stuff
-                videoOptionsFetcher.fetchVideoOptions(mediaItemId, navArgs.propertyId)
-            }
+            .ignoreElement()
+            .subscribeBy(
+                onComplete = {
+                    loadVideo(mediaItemId)
+                    loadMetadata(mediaItemId)
+                },
+                onError = {
+                    Log.e("VideoPlayerFragment: Error fetching video options", it)
+                    Toast.makeText(
+                        this,
+                        "Error loading video. Try again later.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    finish()
+                }
+            )
+            .addTo(disposables)
+    }
+
+    private fun loadVideo(mediaItemId: String) {
+        // this is all we really need if it wasn't for all the fake stuff
+        videoOptionsFetcher.fetchVideoOptions(mediaItemId, navArgs.propertyId)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeBy(
                 onSuccess = {
@@ -155,6 +193,16 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
                     finish()
                 }
             )
+            .addTo(disposables)
+    }
+
+    private fun loadMetadata(mediaItemId: String) {
+        contentStore.observeMediaItem(mediaItemId)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeBy {
+                infoPane?.setDisplaySettings(it.requireDisplaySettings())
+            }
+            .addTo(disposables)
     }
 
     override fun onEvents(player: Player, events: Player.Events) {
@@ -212,12 +260,29 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
         playerView = null
         exoPlayer?.release()
         exoPlayer = null
-        disposable.safeDispose()
+        disposables.safeDispose()
+        disposables = CompositeDisposable()
         super.onDestroy()
     }
 
     @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (infoPane?.isVisible == true) {
+            Log.d("Forwarding key event to info pane")
+            if (event.keyCode == KeyEvent.KEYCODE_BACK) {
+                infoPane?.visibility = View.GONE
+                playerView?.showController()
+                return true
+            }
+            return infoPane?.dispatchKeyEvent(event) == true
+        }
+        // Capture ENTER key events on custom buttons
+        if (event.keyCode in listOf(KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_DPAD_CENTER)) {
+            if (currentFocus in customControllerButtons) {
+                Log.d("Non-exoplayer button focused, forwarding key event to view")
+                return currentFocus?.dispatchKeyEvent(event) == true
+            }
+        }
         return playerView?.dispatchKeyEvent(event) == true || super.dispatchKeyEvent(event)
     }
 
@@ -242,5 +307,10 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
         val duration = (exoPlayer?.duration ?: 0).milliseconds
         val endThreshold = 15.seconds
         return duration - position > endThreshold
+    }
+
+    private fun showInfoPane() {
+        playerView?.hideController()
+        infoPane?.animateShow()
     }
 }

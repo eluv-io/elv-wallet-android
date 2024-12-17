@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/video_player_info_pane"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom"
+    android:layout_marginHorizontal="48dp"
+    android:layout_marginVertical="45dp">
+
+    <TextView
+        style="@style/ExoStyledControls.TimeText.Position"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/video_player_info_pane_inner"
+        android:background="@drawable/info_tag_bg_selected"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="1dp"
+        android:text="Info" />
+
+    <RelativeLayout
+        android:id="@+id/video_player_info_pane_inner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/round_corner_medium"
+        android:backgroundTint="#A6000000"
+        android:padding="20dp">
+
+        <ImageView
+            android:id="@+id/video_player_info_thumbnail"
+            android:layout_width="wrap_content"
+            android:layout_height="100dp"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="20dp"
+            android:contentDescription="@null" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="70dp"
+            android:layout_toStartOf="@id/video_player_info_play_from_beginning"
+            android:layout_toEndOf="@id/video_player_info_thumbnail"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/video_player_info_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                tools:text="Title" />
+
+            <TextView
+                android:id="@+id/video_player_info_subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                tools:text="Subtitle" />
+        </LinearLayout>
+
+        <!--  This button always appears in a "selected" state.  -->
+        <!--  If we add more selectable elements to this pane, this will need to be refactored  -->
+        <Button
+            android:id="@+id/video_player_info_play_from_beginning"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/round_corner_medium"
+            android:backgroundTint="#ffffff"
+            android:drawableStart="@drawable/lb_ic_play"
+            android:drawableTint="#000000"
+            android:paddingStart="10dp"
+            android:paddingEnd="18dp"
+            android:text="Play from Beginning"
+            android:textColor="#000000" />
+    </RelativeLayout>
+</RelativeLayout>

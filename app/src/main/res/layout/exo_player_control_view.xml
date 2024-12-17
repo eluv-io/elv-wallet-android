@@ -29,6 +29,7 @@ so be mindful of pruning the view hierarchy-->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:gravity="center"
             android:orientation="horizontal">
 
             <!-- Keep this to make sure play button hides with the rest of the elements -->
@@ -36,7 +37,6 @@ so be mindful of pruning the view hierarchy-->
                 android:id="@id/exo_center_controls"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
                 android:background="@android:color/transparent"
                 android:clipToPadding="false"
                 android:gravity="center"
@@ -55,7 +55,8 @@ so be mindful of pruning the view hierarchy-->
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:layout_marginStart="10dp" />
+                android:layout_marginStart="10dp"
+                android:nextFocusDown="@id/exo_bottom_bar" />
 
         </LinearLayout>
 
@@ -99,6 +100,18 @@ so be mindful of pruning the view hierarchy-->
                     android:paddingVertical="1dp"
                     android:text="LIVE"
                     android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/video_player_info_button"
+                    style="@style/ExoStyledControls.TimeText.Position"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:background="@drawable/info_tag_bg"
+                    android:nextFocusUp="@id/exo_play_pause"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="1dp"
+                    android:text="Info" />
             </LinearLayout>
 
             <View

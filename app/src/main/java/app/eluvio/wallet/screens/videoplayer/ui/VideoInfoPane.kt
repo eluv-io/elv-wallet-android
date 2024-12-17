@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import app.eluvio.wallet.R
 import app.eluvio.wallet.data.AspectRatio
@@ -36,7 +37,9 @@ class VideoInfoPane @JvmOverloads constructor(
 
     fun animateShow() {
         isVisible = true
-        restartButton.requestFocus()
+        if (restartButton.isVisible) {
+            restartButton.requestFocus()
+        }
         alpha = 0f
         translationY = height.toFloat()
         animate()
@@ -52,5 +55,9 @@ class VideoInfoPane @JvmOverloads constructor(
         val (url, ratio) = display.thumbnailUrlAndRatio ?: (null to AspectRatio.WIDE)
         thumbnail.load(url)
         thumbnail.layoutParams.width = (thumbnail.layoutParams.height * ratio).toInt()
+    }
+
+    fun setRestartButtonEnabled(enabled: Boolean) {
+        restartButton.isInvisible = !enabled
     }
 }

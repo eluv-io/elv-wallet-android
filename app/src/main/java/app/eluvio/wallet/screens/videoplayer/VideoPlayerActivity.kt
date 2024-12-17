@@ -214,6 +214,7 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
         val exoPlayer = exoPlayer ?: return
         val isLive = exoPlayer.isCurrentMediaItemLive
         liveIndicator?.isVisible = isLive
+        infoPane?.setRestartButtonEnabled(!isLive)
         if (isLive) {
             /**
              * [ExoPlayer.getCurrentLiveOffset] didn't work as expected, so just using proximity to end of seekbar instead.

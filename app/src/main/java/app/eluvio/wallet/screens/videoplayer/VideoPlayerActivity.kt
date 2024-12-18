@@ -241,17 +241,20 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
 
     override fun onResume() {
         super.onResume()
+        Log.d("onResume")
         playerView?.onResume()
+        exoPlayer?.prepare()
     }
 
     override fun onPause() {
         super.onPause()
         exoPlayer?.let { exoPlayer ->
-            if (shouldStorePlaybackPosition(exoPlayer.currentPosition)) {
-                Log.d("Saving playback position ${exoPlayer.currentPosition}")
+            val currentPosition = exoPlayer.currentPosition
+            if (shouldStorePlaybackPosition(currentPosition)) {
+                Log.d("Saving playback position $currentPosition")
                 playbackStore.setPlaybackPosition(
                     mediaItemId,
-                    exoPlayer.currentPosition,
+                    currentPosition,
                     exoPlayer.contentDuration
                 )
             } else {
@@ -259,10 +262,12 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             }
         }
         playerView?.onPause()
-        playerView?.player?.pause()
+        // Stop player to release resources, instead of just pausing.
+        playerView?.player?.stop()
     }
 
     override fun onDestroy() {
+        Log.d("onDestroy")
         playerView = null
         exoPlayer?.release()
         exoPlayer = null

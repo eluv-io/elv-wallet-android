@@ -70,11 +70,16 @@ fun VideoPlayer(
         update = {
             when (lifecycle) {
                 Lifecycle.Event.ON_PAUSE -> {
+                    Log.d("Compose VideoPlayer onPause")
                     it.onPause()
-                    exoPlayer.pause()
+                    // .pause doesn't release resources (decoders) so we call .stop
+                    exoPlayer.stop()
                 }
 
                 Lifecycle.Event.ON_RESUME -> {
+                    Log.d("Compose VideoPlayer onResume")
+                    exoPlayer.playWhenReady = true
+                    exoPlayer.prepare()
                     it.onResume()
                 }
 
@@ -87,6 +92,7 @@ fun VideoPlayer(
         val observer = LifecycleEventObserver { _, event ->
             lifecycle = event
         }
+        lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
             exoPlayer.release()

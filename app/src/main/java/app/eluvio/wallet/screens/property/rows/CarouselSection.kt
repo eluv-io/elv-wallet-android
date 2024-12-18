@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -129,7 +130,8 @@ fun CarouselSection(
                         startPadding
                     )
                 }
-                val hasFilterRow = false // item.filterAttribute != null // TODO: Re-enable section filters
+                val hasFilterRow =
+                    false // item.filterAttribute != null // TODO: Re-enable section filters
                 if (hasFilterRow) {
                     FilterSelectorRow(
                         selectedValue = selectedFilter?.second,
@@ -232,6 +234,14 @@ private fun Logo(displaySettings: DisplaySettings) {
     displaySettings.logoUrl ?: return
 
     val focusManager = LocalFocusManager.current
+    // A hack to avoid moving focus during measure phase.
+    var triggerMoveFocusRight by remember { mutableStateOf(false) }
+    LaunchedEffect(triggerMoveFocusRight) {
+        if (triggerMoveFocusRight) {
+            focusManager.moveFocus(FocusDirection.Right)
+            triggerMoveFocusRight = false
+        }
+    }
     // There's a bug where the entire row is skipped over when the logo is present because the first
     // focusable child is offset to the right. To work around this, we add a dummy surface to make
     // sure the row is considered in focus resolution.
@@ -246,8 +256,12 @@ private fun Logo(displaySettings: DisplaySettings) {
             .alpha(0f)
             .onFocusChanged {
                 if (it.isFocused) {
-                    // Immediately throw focus to the card row
-                    focusManager.moveFocus(FocusDirection.Right)
+                    // Throw focus to the card row.
+                    // In some cases, this callback happens during the measure phase, and trying
+                    // to call moveFocus right now will throw an exception.
+                    // Instead, we set a flag to trigger the moveFocus in a LaunchedEffect, which
+                    // will run after the layout phase.
+                    triggerMoveFocusRight = true
                 }
             },
         content = {}

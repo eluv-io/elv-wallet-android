@@ -18,7 +18,6 @@ private val supportedSectionItemTypes =
     setOf(
         "media",
         "item_purchase",
-        "visual",
         "visual_only",
         TYPE_PROPERTY_LINK,
         TYPE_SUBPROPERTY_LINK,

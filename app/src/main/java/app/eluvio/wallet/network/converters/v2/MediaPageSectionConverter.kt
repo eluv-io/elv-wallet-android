@@ -15,7 +15,16 @@ private const val TYPE_PAGE_LINK = "page_link"
 private const val TYPE_EXTERNAL_LINK = "external_link"
 
 private val supportedSectionItemTypes =
-    setOf("media", "item_purchase", TYPE_PROPERTY_LINK, TYPE_SUBPROPERTY_LINK, TYPE_PAGE_LINK, TYPE_EXTERNAL_LINK)
+    setOf(
+        "media",
+        "item_purchase",
+        "visual",
+        "visual_only",
+        TYPE_PROPERTY_LINK,
+        TYPE_SUBPROPERTY_LINK,
+        TYPE_PAGE_LINK,
+        TYPE_EXTERNAL_LINK,
+    )
 
 fun MediaPageSectionDto.toEntity(baseUrl: String): MediaPageSectionEntity {
     val dto = this

@@ -39,5 +39,8 @@ fun CarouselItem.onClickDirection(): Direction? {
             tokenId = tokenId,
             offerId = offerId
         )
+
+        // VisualOnly items don't react to clicks
+        is CarouselItem.VisualOnly -> null
     }
 }

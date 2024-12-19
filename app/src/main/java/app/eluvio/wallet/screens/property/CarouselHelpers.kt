@@ -161,7 +161,10 @@ fun List<SectionItemEntity>.toCarouselItems(
                 )
             }
 
-            else -> null
+            else -> CarouselItem.VisualOnly(
+                permissionContext = permissionContext,
+                displaySettings = item.displaySettings,
+            )
         }
 
         // Wrap in a banner if necessary, otherwise return as-is

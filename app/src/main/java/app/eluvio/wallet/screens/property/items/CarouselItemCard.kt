@@ -90,6 +90,11 @@ fun CarouselItemCard(carouselItem: CarouselItem, cardHeight: Dp, modifier: Modif
             onClick = onClick,
             modifier
         )
+
+        is CarouselItem.VisualOnly -> {
+            // We currently only support Banners for VisualOnly.
+            // So this should be handled in the BannerWrapper case.
+        }
     }
 }
 

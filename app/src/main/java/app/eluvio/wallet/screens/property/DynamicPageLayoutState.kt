@@ -108,6 +108,12 @@ data class DynamicPageLayoutState(
             val displaySettings: DisplaySettings?,
         ) : CarouselItem
 
+        @Immutable
+        data class VisualOnly(
+            override val permissionContext: PermissionContext,
+            val displaySettings: DisplaySettings?,
+        ) : CarouselItem
+
         /**
          * Any type of item can appear inside a section with display_type="banner".
          * In that case it will (should) have a "banner_image" defined and we'll display that

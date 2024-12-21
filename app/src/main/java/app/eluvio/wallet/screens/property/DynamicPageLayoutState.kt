@@ -3,6 +3,7 @@ package app.eluvio.wallet.screens.property
 import android.os.Parcelable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.media3.exoplayer.source.MediaSource
 import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.entities.RedeemableOfferEntity
@@ -38,11 +39,20 @@ data class DynamicPageLayoutState(
 
         // TODO: maybe combine Title and Description into a single "Text" Row type,
         //  but then we'd have to start passing around predefined styles or something
+        // Update: Text section now exists, but was written in a hurry.
+        // Migrate Title and Description to Text in the future
         @Immutable
         data class Title(override val sectionId: String, val text: AnnotatedString) : Section
 
         @Immutable
         data class Description(override val sectionId: String, val text: AnnotatedString) : Section
+
+        @Immutable
+        data class Text(
+            override val sectionId: String,
+            val text: AnnotatedString,
+            val textStyle: TextStyle
+        ) : Section
 
         // Note: This has nothing to do with BannerWrapper and we should probably just remove this
         // section type.

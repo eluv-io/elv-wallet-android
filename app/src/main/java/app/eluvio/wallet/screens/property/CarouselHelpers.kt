@@ -1,6 +1,7 @@
 package app.eluvio.wallet.screens.property
 
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.sp
 import app.eluvio.wallet.data.entities.v2.DisplayFormat
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
 import app.eluvio.wallet.data.entities.v2.PropertySearchFiltersEntity
@@ -13,6 +14,8 @@ import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.screens.destinations.MediaGridDestination
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState.CarouselItem
 import app.eluvio.wallet.screens.property.mediagrid.GridContentOverride
+import app.eluvio.wallet.theme.DefaultTypography
+import app.eluvio.wallet.theme.carousel_48
 import app.eluvio.wallet.util.logging.Log
 
 /**
@@ -38,9 +41,17 @@ fun MediaPageSectionEntity.toDynamicSections(
 
         MediaPageSectionEntity.TYPE_HERO -> this.toHeroSections()
         MediaPageSectionEntity.TYPE_CONTAINER -> {
+            // Create a title row if it exists
+            val titleRow = listOfNotNull(displaySettings?.title?.let {
+                DynamicPageLayoutState.Section.Text(
+                    id,
+                    AnnotatedString("\n${it}"),
+                    DefaultTypography.carousel_48.copy(fontSize = 22.sp),
+                )
+            })
             // For now, just swap out container sections with their sub-sections.
             // In the future we'll want to add proper support for containers with filtering.
-            subSections.flatMap {
+            titleRow + subSections.flatMap {
                 it.toDynamicSections(parentPermissionContext, playbackStore, filters)
             }
         }

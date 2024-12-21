@@ -37,66 +37,71 @@ fun EluvioTypography(): Typography {
 
 // Custom typography types, matching figma names
 val Typography.title_62: TextStyle
-    get() = eluvioTextStlye(
+    get() = eluvioTextStyle(
         size = 31.sp,
         fontWeight = FontWeight.SemiBold,
     )
 val Typography.body_32: TextStyle
-    get() = eluvioTextStlye(
+    get() = eluvioTextStyle(
         size = 16.sp,
         fontWeight = FontWeight.Normal,
     )
 
 val Typography.carousel_48: TextStyle
-    get() = eluvioTextStlye(
+    get() = eluvioTextStyle(
         size = 24.sp,
         fontWeight = FontWeight.Normal,
     )
 val Typography.carousel_36: TextStyle
-    get() = eluvioTextStlye(
+    get() = eluvioTextStyle(
         size = 18.sp,
         fontWeight = FontWeight.Normal,
     )
 
 val Typography.header_53: TextStyle
-    get() = eluvioTextStlye(
+    get() = eluvioTextStyle(
         size = 26.sp,
         fontWeight = FontWeight.Normal,
     )
 val Typography.header_30: TextStyle
-    get() = eluvioTextStlye(
+    get() = eluvioTextStyle(
         size = 15.sp,
         fontWeight = FontWeight.Normal,
     )
 
 val Typography.button_28: TextStyle
-    get() = eluvioTextStlye(
+    get() = eluvioTextStyle(
         size = 14.sp,
         fontWeight = FontWeight.SemiBold,
     )
 val Typography.button_24: TextStyle
-    get() = eluvioTextStlye(
+    get() = eluvioTextStyle(
         size = 12.sp,
         fontWeight = FontWeight.SemiBold,
     )
 
 val Typography.label_40: TextStyle
-    get() = eluvioTextStlye(
+    get() = eluvioTextStyle(
         size = 20.sp,
         fontWeight = FontWeight.Medium,
     )
 val Typography.label_37: TextStyle
-    get() = eluvioTextStlye(
+    get() = eluvioTextStyle(
         size = 18.sp,
         fontWeight = FontWeight.Bold,
     )
 val Typography.label_24: TextStyle
-    get() = eluvioTextStlye(
+    get() = eluvioTextStyle(
         size = 12.sp,
         fontWeight = FontWeight.Medium,
     )
 
-private fun eluvioTextStlye(size: TextUnit, fontWeight: FontWeight): TextStyle {
+/**
+ * Dummy object to give access to TextStyle outside of a Compose context.
+ */
+val DefaultTypography = Typography()
+
+private fun eluvioTextStyle(size: TextUnit, fontWeight: FontWeight): TextStyle {
     return TextStyle(
         fontSize = size,
         fontFamily = interFontFamily,

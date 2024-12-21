@@ -72,6 +72,7 @@ import app.eluvio.wallet.screens.destinations.PropertyDetailDestination
 import app.eluvio.wallet.screens.property.rows.BannerSection
 import app.eluvio.wallet.screens.property.rows.CarouselSection
 import app.eluvio.wallet.screens.property.rows.DescriptionSection
+import app.eluvio.wallet.screens.property.rows.TextSection
 import app.eluvio.wallet.screens.property.rows.TitleSection
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.util.compose.icons.Eluvio
@@ -140,7 +141,10 @@ fun LazyListScope.sections(
                 is DynamicPageLayoutState.Section.Carousel -> CarouselSection(item = section, modifier)
 
                 is DynamicPageLayoutState.Section.Description -> DescriptionSection(item = section, modifier)
+
                 is DynamicPageLayoutState.Section.Title -> TitleSection(item = section, modifier)
+
+                is DynamicPageLayoutState.Section.Text -> TextSection(item = section, modifier)
             }
         }
     }

@@ -16,6 +16,9 @@ import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState
 import app.eluvio.wallet.theme.label_24
 
+/**
+ * @deprecated Migrate to [TextSection]
+ */
 @Composable
 fun DescriptionSection(item: DynamicPageLayoutState.Section.Description, modifier: Modifier = Modifier) {
     var isClickable by remember { mutableStateOf(false) }

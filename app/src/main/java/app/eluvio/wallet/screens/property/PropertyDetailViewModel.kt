@@ -78,8 +78,20 @@ class PropertyDetailViewModel @Inject constructor(
         }
         .switchMap { (property, page) ->
             Flowables.interval(period = 1.minutes, initialDelay = 0.seconds)
-                .switchMap {
+                .switchMap { tick ->
                     propertyStore.observeSections(property, page, forceRefresh = true)
+                        .onErrorResumeNext { error ->
+                            if (tick == 0L) {
+                                // It's possible we can avoid throwing in this case, if we have a Realm cache,
+                                // but we're not checking for that currently.
+                                Log.e("Error on first section fetch, throwing error", error)
+                                Flowable.error(error)
+                            } else {
+                                // Ignore errors on subsequent fetches, just wait for the next poll.
+                                Log.e("Error on non-first section fetch, ignoring.", error)
+                                Flowable.empty()
+                            }
+                        }
                 }
                 .map { sections -> sections.associateBy { section -> section.id } }
                 .map { sections -> page to sections }

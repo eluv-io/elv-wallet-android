@@ -11,6 +11,7 @@ import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.di.ApiProvider
 import app.eluvio.wallet.navigation.asReplace
 import app.eluvio.wallet.screens.destinations.VideoPlayerActivityDestination
+import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.realm.millis
 import app.eluvio.wallet.util.rx.mapNotNull
 import app.eluvio.wallet.util.rx.timer
@@ -92,7 +93,8 @@ class UpcomingVideoViewModel @Inject constructor(
             ?.let { startTime ->
                 (startTime.millis - System.currentTimeMillis()).milliseconds
             }
-        return if (remainingTime != null && remainingTime.inWholeSeconds > 0) {
+        return if (remainingTime != null) {
+            Log.d("Queueing navigation to video player in $remainingTime")
             Flowables.timer(remainingTime)
                 .doOnNext {
                     navigateTo(

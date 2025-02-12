@@ -63,6 +63,7 @@ fun ImageCard(
             contentScale = ContentScale.Crop,
             contentDescription = contentDescription,
             modifier = Modifier
+                .matchParentSize()
                 .align(Alignment.Center)
                 .dimContent(dim = dimOnFocus && isFocused)
         )

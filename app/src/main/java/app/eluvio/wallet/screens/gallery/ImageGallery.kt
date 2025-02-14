@@ -1,11 +1,15 @@
 package app.eluvio.wallet.screens.gallery
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -22,15 +26,19 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.tv.foundation.lazy.list.TvLazyRow
 import androidx.tv.foundation.lazy.list.itemsIndexed
 import androidx.tv.material3.ClickableSurfaceDefaults
+import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
+import androidx.tv.material3.Text
 import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.screens.common.ShimmerImage
-import app.eluvio.wallet.util.compose.requestOnce
 import app.eluvio.wallet.theme.EluvioThemePreview
+import app.eluvio.wallet.theme.title_62
+import app.eluvio.wallet.util.compose.requestOnce
 import app.eluvio.wallet.util.subscribeToState
 import com.ramcosta.composedestinations.annotation.Destination
 
@@ -52,6 +60,23 @@ private fun ImageGallery(state: ImageGalleryViewModel.State) {
             contentDescription = image.name,
             Modifier.fillMaxSize()
         )
+        if (state.images.size == 1 && !image.name.isNullOrEmpty()) {
+            // Only show caption in "single image" mode.
+            Box(
+                contentAlignment = Alignment.BottomStart,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Text(
+                    text = image.name,
+                    style = MaterialTheme.typography.title_62.copy(fontSize = 22.sp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xB2000000))
+                        .padding(vertical = 22.dp, horizontal = 80.dp)
+                )
+            }
+
+        }
     }
     var focusRequestedOnce by remember { mutableStateOf(false) }
 
@@ -108,5 +133,52 @@ private fun ImageGallery(state: ImageGalleryViewModel.State) {
 @Composable
 @Preview(device = Devices.TV_720p)
 private fun ImageGalleryPreview() = EluvioThemePreview {
-    ImageGallery(ImageGalleryViewModel.State())
+    ImageGallery(
+        ImageGalleryViewModel.State(
+            listOf(
+                ImageGalleryViewModel.State.GalleryImage(
+                    url = "",
+                    name = ""
+                ),
+                ImageGalleryViewModel.State.GalleryImage(
+                    url = "",
+                    name = ""
+                ),
+                ImageGalleryViewModel.State.GalleryImage(
+                    url = "",
+                    name = ""
+                ),
+            )
+        )
+    )
+}
+
+@Composable
+@Preview(device = Devices.TV_720p)
+private fun SingleImageNoTitlePreview() = EluvioThemePreview {
+    ImageGallery(
+        ImageGalleryViewModel.State(
+            listOf(
+                ImageGalleryViewModel.State.GalleryImage(
+                    url = "",
+                    name = ""
+                ),
+            )
+        )
+    )
+}
+
+@Composable
+@Preview(device = Devices.TV_720p)
+private fun SingleImageWithTitlePreview() = EluvioThemePreview {
+    ImageGallery(
+        ImageGalleryViewModel.State(
+            listOf(
+                ImageGalleryViewModel.State.GalleryImage(
+                    url = "",
+                    name = "This is a caption for the photo"
+                ),
+            )
+        )
+    )
 }

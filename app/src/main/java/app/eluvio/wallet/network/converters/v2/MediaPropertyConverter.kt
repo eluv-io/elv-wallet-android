@@ -20,7 +20,7 @@ fun MediaPropertyDto.toEntity(baseUrl: String): MediaPropertyEntity? {
     val dto = this
     return MediaPropertyEntity().apply {
         id = dto.id
-        name = dto.displayTitle?.ifEmpty { null } ?: dto.name
+        name = dto.title?.ifEmpty { null } ?: dto.name
         headerLogoUrl = (dto.tvHeaderLogo ?: dto.headerLogo)?.toUrl(baseUrl)
         // We can't handle properties without images
         image = dto.image?.toUrl(baseUrl) ?: return null

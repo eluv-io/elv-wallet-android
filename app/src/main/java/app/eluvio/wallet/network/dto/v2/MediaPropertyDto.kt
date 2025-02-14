@@ -20,7 +20,7 @@ data class MediaPropertyDto(
     @field:Json(name = "image_tv")
     val discoverPageBgImage: AssetLinkDto?,
     val name: String,
-    val displayTitle: String?,
+    val title: String?,
     @field:Json(name = "main_page")
     val mainPage: MediaPageDto,
     val show_property_selection: Boolean?,

@@ -1,9 +1,11 @@
 package app.eluvio.wallet.network.interceptors
 
 import android.os.Build
+import android.util.Base64
 import app.eluvio.wallet.BuildConfig
 import app.eluvio.wallet.data.AuthenticationService
 import app.eluvio.wallet.data.SignOutHandler
+import app.eluvio.wallet.data.stores.FabricConfigStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.network.api.Auth0Api
 import app.eluvio.wallet.network.api.RefreshTokenRequest
@@ -31,6 +33,7 @@ class AccessTokenInterceptor @Inject constructor(
     private val auth0Api: Auth0Api,
     private val authenticationService: Lazy<AuthenticationService>,
     private val signOutHandler: SignOutHandler,
+    private val configStore: FabricConfigStore,
 ) : Interceptor, Authenticator {
 
     private val userAgent = if (BuildConfig.DEBUG) {
@@ -42,6 +45,22 @@ class AccessTokenInterceptor @Inject constructor(
 
     /** URLs that contain these paths should not get special handling for expired tokens. */
     private val authRequestPaths = setOf("wlt/login/jwt", "wlt/sign/eth")
+
+    private var staticToken: String? = null
+
+    init {
+        configStore.observeFabricConfiguration()
+            .map { it.qspace.id }
+            .distinctUntilChanged()
+            .subscribeBy { qsapceId ->
+                staticToken = Base64.encodeToString(
+                    "{\"qspace_id\": \"${qsapceId}\"}".toByteArray(),
+                    Base64.NO_WRAP
+                )
+                log("Updated static token: $staticToken")
+            }
+            .unsaved()
+    }
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request().withHeaders()
@@ -73,7 +92,7 @@ class AccessTokenInterceptor @Inject constructor(
                 builder.authToken(walletToken)
             }
         } else {
-            tokenStore.fabricToken.get()?.let { fabricToken ->
+            (tokenStore.fabricToken.get() ?: staticToken)?.let { fabricToken ->
                 builder.authToken(fabricToken)
             }
         }

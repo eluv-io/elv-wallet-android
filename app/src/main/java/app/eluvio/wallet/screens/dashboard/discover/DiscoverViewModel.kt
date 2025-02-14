@@ -84,7 +84,10 @@ class DiscoverViewModel @Inject constructor(
 
     fun onPropertyClicked(property: MediaPropertyEntity) {
         val direction = PropertyDetailDestination(property.id)
-        if (tokenStore.isLoggedIn && tokenStore.loginProvider == property.loginProvider) {
+        val skipLogin = property.loginInfo?.skipLogin == true
+        val loggedInWithSameProvider =
+            tokenStore.isLoggedIn && tokenStore.loginProvider == property.loginProvider
+        if (skipLogin || loggedInWithSameProvider) {
             navigateTo(direction.asPush())
         } else {
             Log.d("User not signed in, navigating to authFlow and saving propertyId: ${property.id}")

@@ -42,7 +42,10 @@ data class LoginInfoDto(
 )
 
 @JsonClass(generateAdapter = true)
-data class LoginSettingsDto(val provider: String?)
+data class LoginSettingsDto(
+    val provider: String?,
+    val disable_login: Boolean?,
+)
 
 @JsonClass(generateAdapter = true)
 data class LoginStylingDto(

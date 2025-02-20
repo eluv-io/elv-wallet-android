@@ -23,7 +23,7 @@ data class NftDto(
 
 @JsonClass(generateAdapter = true)
 data class NftMetadataDto(
-    val image: String,
+    val image: String?,
     val display_name: String?,
     // Careful adding other elements here! The server doesn't sanitize falsy values here,
     // so objects/arrays/numbers/booleans can show up in the JSON as "", which will break Moshi.

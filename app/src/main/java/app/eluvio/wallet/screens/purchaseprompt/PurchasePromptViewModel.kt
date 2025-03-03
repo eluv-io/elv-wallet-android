@@ -233,6 +233,7 @@ class PurchasePromptViewModel @Inject constructor(
                     .putOpt(
                         "permissionItemIds",
                         permissionSettings?.permissionItemIds
+                            ?.filter { it.isNotEmpty() }
                             ?.takeIf { it.isNotEmpty() }
                             ?.let { JSONArray(it) }
                     )

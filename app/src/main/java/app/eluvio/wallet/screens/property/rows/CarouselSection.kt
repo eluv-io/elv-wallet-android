@@ -30,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -45,7 +46,9 @@ import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -102,9 +105,12 @@ fun CarouselSection(
             )
         }
         Row(modifier = modifier) {
+            // We want to align the logo with the cards row, but they are in separate containers,
+            // so we need to measure the row and use that to set the padding on the logo.
+            var logoTopPaddingPx by remember { mutableFloatStateOf(0.0f) }
             val showLogo = display.logoUrl != null
             if (showLogo) {
-                Logo(display)
+                Logo(display, logoTopPaddingPx)
             }
             Column(
                 Modifier
@@ -188,6 +194,7 @@ fun CarouselSection(
                         filteredItems,
                         startPadding,
                         modifier = exitFocusModifier
+                            .onGloballyPositioned { logoTopPaddingPx = it.boundsInParent().top }
                     )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -230,7 +237,7 @@ private fun SectionItems(
 }
 
 @Composable
-private fun Logo(displaySettings: DisplaySettings) {
+private fun Logo(displaySettings: DisplaySettings, topPaddingPx: Float) {
     displaySettings.logoUrl ?: return
 
     val focusManager = LocalFocusManager.current
@@ -271,15 +278,7 @@ private fun Logo(displaySettings: DisplaySettings) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
-            .then(
-                if (displaySettings.logoText != null) {
-                    Modifier.padding(top = 40.dp)
-                } else {
-                    Modifier
-                        .padding(top = 16.dp)
-                        .height(CAROUSEL_CARD_HEIGHT)
-                }
-            )
+            .padding(top = with(LocalDensity.current) { topPaddingPx.toDp() })
             .width(95.dp)
     ) {
         AsyncImage(

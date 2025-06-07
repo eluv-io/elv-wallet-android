@@ -8,7 +8,7 @@ import com.ramcosta.composedestinations.spec.Direction
  * to navigate between them.
  */
 data class SignInNavArgs(
-    val provider: LoginProviders = LoginProviders.AUTH0,
+    val provider: LoginProviders = LoginProviders.ORY,
     val propertyId: String? = null,
     // Where the auth flow should navigate to once successfully signed in
     val onSignedInDirection: Direction? = null

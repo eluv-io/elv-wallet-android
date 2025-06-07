@@ -10,7 +10,7 @@ enum class LoginProviders(override val value: String) : RealmEnum {
             return value
                 ?.let { entries.firstOrNull { it.value == value } }
                 // Default to Auth0 if no provider is defined
-                ?: AUTH0
+                ?: ORY
         }
     }
 }

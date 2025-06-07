@@ -19,7 +19,7 @@ class PropertyLoginInfoRealmEntity : EmbeddedRealmObject {
 
     @Ignore
     var loginProvider: LoginProviders by realmEnum(::_loginProvider)
-    private var _loginProvider: String = LoginProviders.AUTH0.value
+    private var _loginProvider: String = LoginProviders.ORY.value
 
     var skipLogin: Boolean = false
 

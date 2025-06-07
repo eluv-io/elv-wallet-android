@@ -43,7 +43,7 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
 
     @Ignore
     val loginProvider: LoginProviders
-        get() = loginInfo?.loginProvider ?: LoginProviders.AUTH0
+        get() = loginInfo?.loginProvider ?: LoginProviders.ORY
 
     var permissionStates = realmDictionaryOf<PermissionStatesEntity?>()
 

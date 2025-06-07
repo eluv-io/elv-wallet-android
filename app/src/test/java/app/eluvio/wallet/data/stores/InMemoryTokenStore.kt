@@ -32,7 +32,7 @@ open class InMemoryTokenStore : TokenStore {
 
     private val lpPref = Pref<LoginProviders>()
     override var loginProvider: LoginProviders
-        get() = lpPref.get() ?: LoginProviders.AUTH0
+        get() = lpPref.get() ?: LoginProviders.ORY
         set(value) = lpPref.set(value)
 
     override fun update(vararg operations: StoreOperation) {

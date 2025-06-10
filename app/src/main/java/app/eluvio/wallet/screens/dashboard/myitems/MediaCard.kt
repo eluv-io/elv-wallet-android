@@ -30,6 +30,7 @@ import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
+import androidx.tv.material3.SurfaceDefaults
 import androidx.tv.material3.Text
 import app.eluvio.wallet.R
 import app.eluvio.wallet.screens.common.ShimmerImage
@@ -141,6 +142,10 @@ private fun SurfaceWrapper(
         )
     } else {
         Surface(
+            colors = SurfaceDefaults.colors(
+                containerColor = Color.Transparent,
+                contentColor = Color(0xFF7A7A7A),
+            ),
             modifier = modifier.aspectRatio(0.65f),
             content = content
         )

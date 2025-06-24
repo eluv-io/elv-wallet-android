@@ -21,7 +21,12 @@ jobs:
         cache: gradle
 
     - name: Create Secrets File
-      run: echo "AUTH0_CLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }}" > secrets/secrets.properties
+      run: |
+        echo "
+        AUTH0_CLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }}
+        MUX_ENV_KEY_MAIN=${{ secrets.MUX_ENV_KEY_MAIN }}
+        MUX_ENV_KEY_DEMO=${{ secrets.MUX_ENV_KEY_DEMO }}
+        " > secrets/secrets.properties
 
     - name: Decode Keystore
       run: echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > ${{ github.workspace }}/keystore.jks

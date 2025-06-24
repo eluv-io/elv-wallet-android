@@ -1,7 +1,9 @@
 @file:JvmName("StringUtils")
+
 package app.eluvio.wallet.util
 
 import app.eluvio.wallet.util.crypto.Base58
+import java.security.MessageDigest
 
 fun String.toHexByteArray(): ByteArray {
     check(length % 2 == 0) { "Must have an even length" }
@@ -25,3 +27,10 @@ fun ByteArray.hexToString(): String {
 
 val String.base58: String
     get() = Base58.encode(this.toHexByteArray())
+
+@OptIn(ExperimentalStdlibApi::class)
+val String.sha256: String
+    get() = MessageDigest
+        .getInstance("SHA-256")
+        .digest(toByteArray())
+        .toHexString()

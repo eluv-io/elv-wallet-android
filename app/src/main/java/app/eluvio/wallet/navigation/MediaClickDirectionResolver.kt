@@ -68,6 +68,7 @@ private fun clickWithPermissionContext(
             MediaEntity.MEDIA_TYPE_VIDEO,
         ) -> VideoPlayerActivityDestination(
             mediaItemId = media.id,
+            mediaTitle = media.requireDisplaySettings().title,
             propertyId = permissionContext.propertyId
         )
 

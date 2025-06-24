@@ -32,6 +32,7 @@ fun MediaPropertyDto.toEntity(baseUrl: String): MediaPropertyEntity? {
             .toRealmListOrEmpty()
 
         loginInfo = dto.login?.toEntity(baseUrl)
+        tenantId = dto.tenant?.id
 
         permissionStates = dto.toPermissionStateEntities()
         rawPermissions = dto.permissions?.toContentPermissionsEntity()

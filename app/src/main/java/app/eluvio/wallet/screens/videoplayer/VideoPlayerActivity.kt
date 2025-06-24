@@ -7,6 +7,7 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentActivity
 import androidx.media3.common.AudioAttributes
@@ -19,8 +20,12 @@ import androidx.media3.ui.PlayerView
 import app.eluvio.wallet.R
 import app.eluvio.wallet.data.VideoOptionsFetcher
 import app.eluvio.wallet.data.entities.MediaEntity
+import app.eluvio.wallet.data.entities.v2.MediaPropertyEntity
 import app.eluvio.wallet.data.stores.ContentStore
+import app.eluvio.wallet.data.stores.EnvironmentStore
+import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.PlaybackStore
+import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.screens.destinations.VideoPlayerActivityDestination
 import app.eluvio.wallet.screens.videoplayer.ui.VideoInfoPane
@@ -28,11 +33,18 @@ import app.eluvio.wallet.util.crypto.Base58
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.mapNotNull
 import app.eluvio.wallet.util.rx.safeDispose
+import app.eluvio.wallet.util.sha256
+import com.mux.stats.sdk.core.model.CustomerData
+import com.mux.stats.sdk.core.model.CustomerPlayerData
+import com.mux.stats.sdk.core.model.CustomerVideoData
+import com.mux.stats.sdk.core.model.CustomerViewData
+import com.mux.stats.sdk.muxstats.monitorWithMuxData
 import com.ramcosta.composedestinations.annotation.ActivityDestination
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.kotlin.Singles
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
 import javax.inject.Inject
@@ -49,6 +61,15 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
 
     @Inject
     lateinit var playbackStore: PlaybackStore
+
+    @Inject
+    lateinit var propertyStore: MediaPropertyStore
+
+    @Inject
+    lateinit var tokenStore: TokenStore
+
+    @Inject
+    lateinit var envStore: EnvironmentStore
 
     private var disposables = CompositeDisposable()
 
@@ -105,7 +126,6 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             .build()
             .apply {
                 addListener(this@VideoPlayerActivity)
-                playWhenReady = true
             }
         playerView = findViewById<PlayerView>(R.id.video_player_view)?.apply {
             setShowSubtitleButton(true)
@@ -175,11 +195,25 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
 
     private fun loadVideo(mediaItemId: String) {
         // this is all we really need if it wasn't for all the fake stuff
-        videoOptionsFetcher.fetchVideoOptions(mediaItemId, navArgs.propertyId)
+        Singles.zip(
+            videoOptionsFetcher.fetchVideoOptions(mediaItemId, navArgs.propertyId),
+            propertyStore
+                .observeMediaProperty(navArgs.propertyId ?: "", forceRefresh = false)
+                .firstOrError(),
+            envStore.observeSelectedEnvironment().firstOrError()
+        )
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeBy(
-                onSuccess = {
-                    exoPlayer?.setMediaSource(it.toMediaSource())
+                onSuccess = { (videoOptions, property, env) ->
+                    val customerData = createCustomerData(property, videoOptions.uri)
+                    exoPlayer?.monitorWithMuxData(
+                        this@VideoPlayerActivity,
+                        env.muxEnvKey,
+                        customerData,
+                        playerView
+                    )
+                    exoPlayer?.setMediaSource(videoOptions.toMediaSource())
+                    exoPlayer?.playWhenReady = true
                     exoPlayer?.prepare()
                     exoPlayer?.seekTo(playbackStore.getPlaybackPosition(mediaItemId))
                 },
@@ -195,6 +229,54 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             )
             .addTo(disposables)
     }
+
+    private fun objectIdFromHash(versionHash: String?): String? {
+        if (versionHash == null || !versionHash.startsWith("hq__") && !versionHash.startsWith("tq__")) {
+            return null
+        }
+        val bytes = Base58.decode(versionHash.substringAfter("q__"))
+            // First 32 bytes are the "digest" and we don't need it.
+            .drop(32)
+            .dropWhile {
+                // Next is the "size", skip that too
+                it < 0
+            }
+            // The next byte is also part of "size".
+            .drop(1)
+            .toByteArray()
+
+        return "iq__${Base58.encode(bytes)}"
+    }
+
+    private fun createCustomerData(property: MediaPropertyEntity, videoUri: String) =
+        CustomerData().apply {
+            val uri = videoUri.toUri()
+            val pathParts = uri.pathSegments
+            val versionHash = pathParts.find { it.startsWith("hq__") }
+            val offering = pathParts.indexOf("rep")
+                .takeIf { it != -1 }
+                ?.let { repIndex ->
+                    // The "offering" can appear as rep/playout/{offering} or rep/channel/{offering}.
+                    // Either way, it's two parts after "rep".
+                    pathParts[repIndex + 2]
+                }
+
+            customerPlayerData = CustomerPlayerData().apply {
+                playerName = "Android-ExoPlayer"
+                subPropertyId = property.tenantId
+                viewerUserId = tokenStore.walletAddress.get()?.sha256
+            }
+            customerVideoData = CustomerVideoData().apply {
+                videoId = objectIdFromHash(versionHash)
+                videoVariantId = versionHash
+                videoVariantName = offering
+                videoTitle = navArgs.mediaTitle
+                videoCdn = uri.host
+            }
+            customerViewData = CustomerViewData().apply {
+                viewSessionId = uri.getQueryParameter("sid")
+            }
+        }
 
     private fun loadMetadata(mediaItemId: String) {
         contentStore.observeMediaItem(mediaItemId)

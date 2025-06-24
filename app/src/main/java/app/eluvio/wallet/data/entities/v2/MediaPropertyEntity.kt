@@ -41,6 +41,8 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
 
     var loginInfo: PropertyLoginInfoRealmEntity? = null
 
+    var tenantId: String? = null
+
     @Ignore
     val loginProvider: LoginProviders
         get() = loginInfo?.loginProvider ?: LoginProviders.ORY
@@ -75,6 +77,7 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         if (mainPage != other.mainPage) return false
         if (subpropertySelection != other.subpropertySelection) return false
         if (loginInfo != other.loginInfo) return false
+        if (tenantId != other.tenantId) return false
         if (permissionStates != other.permissionStates) return false
         if (resolvedPermissions != other.resolvedPermissions) return false
         if (rawPermissions != other.rawPermissions) return false
@@ -93,6 +96,7 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         result = 31 * result + (mainPage?.hashCode() ?: 0)
         result = 31 * result + subpropertySelection.hashCode()
         result = 31 * result + (loginInfo?.hashCode() ?: 0)
+        result = 31 * result + (tenantId?.hashCode() ?: 0)
         result = 31 * result + permissionStates.hashCode()
         result = 31 * result + (resolvedPermissions?.hashCode() ?: 0)
         result = 31 * result + (rawPermissions?.hashCode() ?: 0)
@@ -102,7 +106,7 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
     }
 
     override fun toString(): String {
-        return "MediaPropertyEntity(id='$id', name='$name', headerLogoUrl=$headerLogoUrl, image=$image, bgImageUrl=$bgImageUrl, mainPage=$mainPage, subpropertySelection=$subpropertySelection, loginInfo=$loginInfo, permissionStates=$permissionStates, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, propertyPermissions=$propertyPermissions, searchPermissions=$searchPermissions)"
+        return "MediaPropertyEntity(id='$id', name='$name', headerLogoUrl=$headerLogoUrl, image=$image, bgImageUrl=$bgImageUrl, mainPage=$mainPage, subpropertySelection=$subpropertySelection, loginInfo=$loginInfo, tenantId=$tenantId, permissionStates=$permissionStates, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, propertyPermissions=$propertyPermissions, searchPermissions=$searchPermissions)"
     }
 
     // Index can't be saved as part of the PropertyEntity object because it will get overridden

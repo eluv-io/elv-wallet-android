@@ -137,6 +137,7 @@ dependencies {
     implementation(libs.androidx.media3.okhttp)
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.media3.ui.leanback)
+    implementation(libs.muxstats)
 
     implementation(libs.timber)
 

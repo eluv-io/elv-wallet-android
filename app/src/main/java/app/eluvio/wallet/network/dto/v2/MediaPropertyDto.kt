@@ -28,12 +28,20 @@ data class MediaPropertyDto(
 
     val login: LoginInfoDto?,
 
+    val tenant: TenantDto?,
+
     // For each permission used in the property, holds whether or not the user is authorized for it.
     @field:Json(name = "permission_auth_state")
     override val permissionStates: Map<String, PermissionsStateDto>?,
 
     override val permissions: PermissionsDto?,
 ) : DtoWithPermissions, PermissionStateHolder
+
+@JsonClass(generateAdapter = true)
+data class TenantDto(
+    @field:Json(name = "tenant_id")
+    val id: String,
+)
 
 @JsonClass(generateAdapter = true)
 data class LoginInfoDto(

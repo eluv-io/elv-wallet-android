@@ -2,10 +2,15 @@ package app.eluvio.wallet.network.interceptors
 
 import app.eluvio.wallet.data.AuthenticationService
 import app.eluvio.wallet.data.SignOutHandler
+import app.eluvio.wallet.data.stores.FabricConfigStore
 import app.eluvio.wallet.data.stores.InMemoryTokenStore
 import app.eluvio.wallet.network.api.Auth0Api
 import app.eluvio.wallet.network.api.GetTokenResponse
 import app.eluvio.wallet.network.api.RefreshTokenRequest
+import app.eluvio.wallet.network.dto.FabricConfiguration
+import app.eluvio.wallet.network.dto.Network
+import app.eluvio.wallet.network.dto.QSpace
+import app.eluvio.wallet.network.dto.Services
 import app.eluvio.wallet.testing.ApiTestingRule
 import app.eluvio.wallet.testing.TestApi
 import app.eluvio.wallet.testing.TestLogRule
@@ -40,19 +45,43 @@ class AccessTokenInterceptorTest {
         fabricToken.set("expired_fabric_token")
     }
     private val auth0Api = mock<Auth0Api> {
-        on { refreshToken(any()) } doReturn Single.just(GetTokenResponse("id", "access", "refresh", "5"))
+        on { refreshToken(any()) } doReturn Single.just(
+            GetTokenResponse(
+                "id",
+                "access",
+                "refresh",
+                "5"
+            )
+        )
     }
     private val authService = mock<AuthenticationService> {
-        on { getFabricToken() } doReturn Single.just("new_fabric_token").doOnSuccess { tokenStore.fabricToken.set(it) }
+        on { getFabricToken() } doReturn Single.just("new_fabric_token")
+            .doOnSuccess { tokenStore.fabricToken.set(it) }
     }
     private val signOutHandler = mock<SignOutHandler>() {
         on { signOut(any(), any()) } doReturn Completable.complete()
+    }
+    private val configStore = mock<FabricConfigStore> {
+        on { observeFabricConfiguration() } doReturn Single.just(
+            FabricConfiguration(
+                "node1",
+                Network(
+                    Services(
+                        listOf(""),
+                        listOf(""),
+                        listOf(""),
+                    )
+                ),
+                QSpace("qspace_id", listOf("fakespace"))
+            )
+        ).toFlowable()
     }
     private val interceptor = AccessTokenInterceptor(
         tokenStore,
         auth0Api,
         { authService },
-        signOutHandler
+        signOutHandler,
+        configStore
     )
 
     private val server by lazy { apiTestingRule.server }

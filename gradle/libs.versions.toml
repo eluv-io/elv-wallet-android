@@ -62,6 +62,7 @@ androidx-media3-dash = { module = "androidx.media3:media3-exoplayer-dash", versi
 androidx-media3-okhttp = { module = "androidx.media3:media3-datasource-okhttp", version.ref = "media3" }
 androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "media3" }
 androidx-media3-ui-leanback = { module = "androidx.media3:media3-ui-leanback", version.ref = "media3" }
+muxstats = { module = "com.mux.stats.sdk.muxstats:data-media3", version.ref = "media3" }
 compose-destinations = { module = "io.github.raamcosta.compose-destinations:core", version.ref = "compose-destinations" }
 compose-destinations-ksp = { module = "io.github.raamcosta.compose-destinations:ksp", version.ref = "compose-destinations" }
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }

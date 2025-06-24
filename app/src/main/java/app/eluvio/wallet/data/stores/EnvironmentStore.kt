@@ -3,6 +3,7 @@ package app.eluvio.wallet.data.stores
 import android.content.Context
 import androidx.annotation.StringRes
 import androidx.datastore.preferences.rxjava3.RxPreferenceDataStoreBuilder
+import app.eluvio.wallet.BuildConfig
 import app.eluvio.wallet.R
 import app.eluvio.wallet.util.datastore.readWriteBoolPref
 import app.eluvio.wallet.util.datastore.readWriteStringPref
@@ -17,18 +18,21 @@ enum class Environment(
     @StringRes val prettyEnvName: Int,
     val configUrl: String,
     val walletUrl: String,
+    val muxEnvKey: String,
 ) {
     Main(
         networkName = "main",
         prettyEnvName = R.string.env_main_name,
         configUrl = "https://main.net955305.contentfabric.io/config",
-        walletUrl = "https://wallet.contentfabric.io"
+        walletUrl = "https://wallet.contentfabric.io",
+        muxEnvKey = BuildConfig.MUX_ENV_KEY_MAIN
     ),
     Demo(
         networkName = "demov3",
         prettyEnvName = R.string.env_demo_name,
         configUrl = "https://demov3.net955210.contentfabric.io/config",
-        walletUrl = "https://wallet.demov3.contentfabric.io"
+        walletUrl = "https://wallet.demov3.contentfabric.io",
+        muxEnvKey = BuildConfig.MUX_ENV_KEY_DEMO
     )
 }
 

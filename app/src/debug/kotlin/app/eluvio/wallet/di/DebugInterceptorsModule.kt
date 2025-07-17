@@ -79,5 +79,4 @@ object DebugInterceptorsModule {
             modifiedCommand
         }
     }
-
 }

@@ -42,15 +42,42 @@ object DebugInterceptorsModule {
                 return null
             }
         }
+
         return CurlInterceptor(
             configuration = Configuration(
                 headerModifiers = listOf(headerFilter)
             ),
             logger = object : Logger {
                 override fun log(message: String) {
-                    Timber.tag("OkHttp").w(message)
+                    Timber.tag("OkHttp").w(
+                        reorderHeaders(message)
+                    )
                 }
             }
         )
     }
+
+    private fun reorderHeaders(curlCommand: String): String {
+        val headerRegex = Regex("""-H\s+(['"][^'"]+['"])""")
+        val authHeaderRegex = Regex("""-H\s+(['"]Authorization:[^'"]+['"])""")
+
+        val allHeaders = headerRegex.findAll(curlCommand).map { it.value.trim() }.toList()
+        val authHeaders = allHeaders.filter { authHeaderRegex.matches(it) }
+        val nonAuthHeaders = allHeaders.filterNot { authHeaderRegex.matches(it) }
+
+        var modifiedCommand = curlCommand
+        allHeaders.forEach { header ->
+            modifiedCommand = modifiedCommand.replace(Regex("\\s*${Regex.escape(header)}\\s*"), " ")
+        }
+        modifiedCommand = modifiedCommand.replace(Regex("\\s+"), " ").trim()
+
+        val reorderedHeaders = (nonAuthHeaders + authHeaders).joinToString(" ")
+
+        return if (reorderedHeaders.isNotEmpty()) {
+            "$modifiedCommand $reorderedHeaders".trim()
+        } else {
+            modifiedCommand
+        }
+    }
+
 }

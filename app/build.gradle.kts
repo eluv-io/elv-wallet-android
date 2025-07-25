@@ -13,13 +13,13 @@ plugins {
 android {
     namespace = "app.eluvio.wallet"
     compileSdk = 34
-
+    val customBuildConfig = CustomBuildConfig.from(project.ext.properties)
     defaultConfig {
-        applicationId = "app.eluvio.wallet"
+        applicationId = customBuildConfig.applicationId
         minSdk = 23
         targetSdk = 34
-        versionCode = 29
-        versionName = "2.0"
+        versionCode = customBuildConfig.versionCode
+        versionName = customBuildConfig.versionName
         // Change version name to include CI build number and version code
         project.ext
             .takeIf { it.has("ci_build_number") }
@@ -27,6 +27,9 @@ android {
             ?.let { build ->
                 versionName = "v${versionName}_${versionCode}-b$build"
             }
+
+        resValue("string", "app_name", customBuildConfig.appName)
+        buildConfigField("String", "DEFAULT_PROPERTY_ID", customBuildConfig.defaultPropertyId)
     }
 
     buildTypes {
@@ -166,4 +169,39 @@ secrets {
 
 tasks.register("printVersion") {
     println(android.defaultConfig.versionName)
+}
+
+// Customize by using ./custom_build/build.sh, otherwise defaults to Eluvio Media Wallet values.
+data class CustomBuildConfig(
+    // Package name for the final APK/AAB
+    val applicationId: String,
+
+    // Application name appears under the app icon
+    val appName: String,
+    // Optional: If provided, skips the Discover page and launches the app directly to the specified Property.
+    val defaultPropertyId: String,
+
+    // Version data for Play Store
+    val versionCode: Int,
+    val versionName: String,
+) {
+    companion object {
+        fun from(properties: Map<String, Any?>): CustomBuildConfig {
+            val applicationId = properties["applicationId"]?.toString()?.ifEmpty { null }
+            val versionCode = properties["versionCode"]?.toString()?.ifEmpty { null }?.toIntOrNull()
+            val versionName = properties["versionName"]?.toString()?.ifEmpty { null }
+            val appName = properties["appName"]?.toString()?.ifEmpty { null }
+            val propertyId = properties["defaultPropertyId"]?.toString()
+                ?.ifEmpty { null }
+                ?.let { "\"$it\"" }
+
+            return CustomBuildConfig(
+                applicationId = applicationId ?: "app.eluvio.wallet",
+                appName = appName ?: "Media Wallet",
+                defaultPropertyId = propertyId ?: "null",
+                versionCode = versionCode ?: 29,
+                versionName = versionName ?: "2.0",
+            )
+        }
+    }
 }

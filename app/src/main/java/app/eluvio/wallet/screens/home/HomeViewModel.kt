@@ -1,7 +1,6 @@
 package app.eluvio.wallet.screens.home
 
 import androidx.lifecycle.SavedStateHandle
-import app.eluvio.wallet.BuildConfig
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.data.AuthenticationService
 import app.eluvio.wallet.data.entities.deeplink.DeeplinkRequestEntity
@@ -13,7 +12,6 @@ import app.eluvio.wallet.screens.NavGraphs
 import app.eluvio.wallet.screens.destinations.DashboardDestination
 import app.eluvio.wallet.screens.destinations.HomeDestination
 import app.eluvio.wallet.screens.destinations.NftClaimDestination
-import app.eluvio.wallet.screens.destinations.PropertyDetailDestination
 import app.eluvio.wallet.screens.destinations.VideoPlayerActivityDestination
 import app.eluvio.wallet.util.logging.Log
 import com.ramcosta.composedestinations.spec.Direction
@@ -53,12 +51,7 @@ class HomeViewModel @Inject constructor(
                 },
                 onComplete = {
                     // No Deeplink, proceed with normal flow
-                    val root = if (BuildConfig.DEFAULT_PROPERTY_ID != null) {
-                        PropertyDetailDestination(propertyId = BuildConfig.DEFAULT_PROPERTY_ID)
-                    } else {
-                        DashboardDestination
-                    }
-                    navigateTo(root.asNewRoot())
+                    navigateTo(DashboardDestination.asNewRoot())
                 },
                 onError = { }
             )

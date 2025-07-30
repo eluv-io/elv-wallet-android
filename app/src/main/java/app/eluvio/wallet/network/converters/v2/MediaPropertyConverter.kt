@@ -34,6 +34,9 @@ fun MediaPropertyDto.toEntity(baseUrl: String): MediaPropertyEntity? {
         loginInfo = dto.login?.toEntity(baseUrl)
         tenantId = dto.tenant?.id
 
+        startScreenBackground = dto.start_screen_background?.toUrl(baseUrl)
+        startScreenLogo = dto.start_screen_logo?.toUrl(baseUrl)
+
         permissionStates = dto.toPermissionStateEntities()
         rawPermissions = dto.permissions?.toContentPermissionsEntity()
         propertyPermissions = dto.permissions?.toPropertyPermissionsEntity()

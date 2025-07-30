@@ -2,6 +2,7 @@ package app.eluvio.wallet.screens.dashboard.discover
 
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
+import app.eluvio.wallet.BuildConfig
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.app.Events
 import app.eluvio.wallet.data.entities.v2.MediaPropertyEntity
@@ -24,19 +25,32 @@ class DiscoverViewModel @Inject constructor(
     private val propertyStore: MediaPropertyStore,
     private val tokenStore: TokenStore,
     savedStateHandle: SavedStateHandle
-) : BaseViewModel<DiscoverViewModel.State>(State(), savedStateHandle) {
+) : BaseViewModel<DiscoverViewModel.State>(
+    State(isLoggedIn = tokenStore.isLoggedIn),
+    savedStateHandle
+) {
 
     @Immutable
     data class State(
         val loading: Boolean = true,
+        val isLoggedIn: Boolean,
         val properties: List<MediaPropertyEntity> = emptyList(),
         val showRetryButton: Boolean = false,
+
+        // For custom, Property-specific builds only.
+        val singlePropertyMode: Boolean = BuildConfig.DEFAULT_PROPERTY_ID != null,
     )
 
     private val retryTrigger = PublishProcessor.create<Unit>()
 
     override fun onResume() {
         super.onResume()
+
+        tokenStore.loggedInObservable
+            .subscribeBy {
+                updateState { copy(isLoggedIn = it) }
+            }
+            .addTo(disposables)
 
         retryTrigger
             .doOnNext {
@@ -51,7 +65,14 @@ class DiscoverViewModel @Inject constructor(
             .combineLatest(tokenStore.loggedInObservable.distinctUntilChanged())
             .switchMap {
                 // Restart property observing when log-in state changes
-                propertyStore.observeDiscoverableProperties(true)
+                if (BuildConfig.DEFAULT_PROPERTY_ID != null) {
+                    propertyStore.observeMediaProperty(
+                        BuildConfig.DEFAULT_PROPERTY_ID,
+                        forceRefresh = true
+                    ).map { listOf(it) }
+                } else {
+                    propertyStore.observeDiscoverableProperties(true)
+                }
                     .doOnError {
                         Log.e("Error observing properties ${it.message}, offering retry")
                         fireEvent(Events.NetworkError)

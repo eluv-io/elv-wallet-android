@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -65,10 +66,12 @@ import app.eluvio.wallet.theme.borders
 import app.eluvio.wallet.theme.focusedBorder
 import app.eluvio.wallet.theme.label_40
 import app.eluvio.wallet.util.compose.RealisticDevices
+import app.eluvio.wallet.util.compose.requestInitialFocus
 import app.eluvio.wallet.util.compose.thenIf
 import app.eluvio.wallet.util.isKeyUpOf
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.subscribeToState
+import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -90,14 +93,57 @@ private fun Discover(
         contentAlignment = Alignment.Center,
         modifier = Modifier.fillMaxSize()
     ) {
-        DiscoverGrid(
-            state,
-            onPropertyFocused = { property ->
-                onBackgroundImageSet(property.bgImageWithFallback?.url)
-            },
-            onPropertyClicked = onPropertyClicked,
-            onRetryClicked = onRetryClicked
-        )
+        if (state.singlePropertyMode) {
+            SinglePropertyPage(
+                state,
+                onBackgroundImageSet = onBackgroundImageSet,
+                onPropertyClicked = onPropertyClicked,
+                onRetryClicked = onRetryClicked
+            )
+        } else {
+            DiscoverGrid(
+                state,
+                onPropertyFocused = { property ->
+                    onBackgroundImageSet(property.bgImageWithFallback?.url)
+                },
+                onPropertyClicked = onPropertyClicked,
+                onRetryClicked = onRetryClicked
+            )
+        }
+    }
+}
+
+@Composable
+fun SinglePropertyPage(
+    state: DiscoverViewModel.State,
+    onBackgroundImageSet: (String?) -> Unit,
+    onPropertyClicked: (MediaPropertyEntity) -> Unit,
+    onRetryClicked: () -> Unit
+) {
+    val property = state.properties.firstOrNull()
+    LaunchedEffect(property?.startScreenBackground) {
+        onBackgroundImageSet(property?.startScreenBackground?.url)
+    }
+    if (state.loading) {
+        EluvioLoadingSpinner(Modifier.padding(top = 100.dp))
+    } else if (property != null) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(40.dp)
+        ) {
+            AsyncImage(
+                property.startScreenLogo,
+                contentDescription = "${property.name} Logo",
+                modifier = Modifier.height(160.dp)
+            )
+            TvButton(
+                if (state.isLoggedIn) "Welcome Back" else "Sign In",
+                onClick = { onPropertyClicked(property) },
+                Modifier.requestInitialFocus()
+            )
+        }
+    } else if (state.showRetryButton) {
+        RetryButton(onRetryClicked, Modifier.padding(top = 100.dp))
     }
 }
 
@@ -106,7 +152,6 @@ private fun BoxWithConstraintsScope.DiscoverGrid(
     state: DiscoverViewModel.State,
     onPropertyFocused: (MediaPropertyEntity) -> Unit,
     onPropertyClicked: (MediaPropertyEntity) -> Unit,
-    modifier: Modifier = Modifier,
     onRetryClicked: () -> Unit
 ) {
     val width by rememberUpdatedState(maxWidth)
@@ -331,7 +376,9 @@ private fun RetryButton(onRetryClicked: () -> Unit, modifier: Modifier = Modifie
 private fun DiscoverPreview() = EluvioThemePreview {
     Discover(
         DiscoverViewModel.State(
-            loading = false, properties = (1..50).map {
+            loading = false,
+            isLoggedIn = false,
+            properties = (1..50).map {
                 MediaPropertyEntity().apply {
                     id = "$it"
                     name = "Property #$it"
@@ -348,7 +395,7 @@ private fun DiscoverPreview() = EluvioThemePreview {
 @Preview(device = RealisticDevices.TV_720p)
 private fun DiscoverLoadingPreview() = EluvioThemePreview {
     Discover(
-        DiscoverViewModel.State(loading = true),
+        DiscoverViewModel.State(loading = true, isLoggedIn = false),
         onBackgroundImageSet = {},
         onPropertyClicked = {},
         onRetryClicked = {},
@@ -359,7 +406,7 @@ private fun DiscoverLoadingPreview() = EluvioThemePreview {
 @Preview(device = RealisticDevices.TV_720p)
 private fun DiscoverEmptyPreview() = EluvioThemePreview {
     Discover(
-        DiscoverViewModel.State(loading = false),
+        DiscoverViewModel.State(loading = false, isLoggedIn = false),
         onBackgroundImageSet = {},
         onPropertyClicked = {},
         onRetryClicked = {},
@@ -370,7 +417,7 @@ private fun DiscoverEmptyPreview() = EluvioThemePreview {
 @Preview(device = RealisticDevices.TV_720p)
 private fun DiscoverRetryPreview() = EluvioThemePreview {
     Discover(
-        DiscoverViewModel.State(loading = false, showRetryButton = true),
+        DiscoverViewModel.State(loading = false, isLoggedIn = false, showRetryButton = true),
         onBackgroundImageSet = {},
         onPropertyClicked = {},
         onRetryClicked = {},

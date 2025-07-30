@@ -141,7 +141,7 @@ fun List<SectionItemEntity>.toCarouselItems(
         val permissionContext = parentPermissionContext.copy(sectionItemId = item.id)
         val result = when {
             // Filter out hidden items
-            item.isHidden -> null
+            item.isHidden || item.media?.isHidden == true -> null
 
             item.linkData?.externalLink != null -> item.linkData?.externalLink?.let {
                 CarouselItem.ExternalLink(

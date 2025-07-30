@@ -19,9 +19,14 @@ import app.eluvio.wallet.theme.carousel_48
 import app.eluvio.wallet.util.logging.Log
 
 /**
- * The maximum number of items to display in a carousel before showing a "View All" button.
+ * The maximum number of items to display in a carousel before showing a "View All" button for "carousel" sections.
  */
-private const val VIEW_ALL_THRESHOLD = 5
+private const val VIEW_ALL_THRESHOLD_CAROUSEL = 5
+/**
+ * The maximum number of items to display in a grid before showing a "View All" button for "grid" sections.
+ * This is set to a high value to avoid showing the "View All" button in most cases.
+ */
+private const val VIEW_ALL_THRESHOLD_GRID = 1000
 
 /**
  * Converts a [MediaPageSectionEntity] to a list of [DynamicPageLayoutState.Section]s.
@@ -68,7 +73,12 @@ private fun MediaPageSectionEntity.toCarouselSection(
     val permissionContext = parentPermissionContext.copy(sectionId = id)
     val items = items.toCarouselItems(permissionContext, displaySettings, playbackStore)
     val displayLimit = displaySettings?.displayLimit?.takeIf { it > 0 } ?: items.size
-    val showViewAll = items.size > displayLimit || items.size > VIEW_ALL_THRESHOLD
+    val viewAllThreshold = if (displaySettings?.displayFormat == DisplayFormat.GRID) {
+        VIEW_ALL_THRESHOLD_GRID
+    } else {
+        VIEW_ALL_THRESHOLD_CAROUSEL
+    }
+    val showViewAll = items.size > displayLimit || items.size > viewAllThreshold
     val filterAttribute = filters?.attributes?.get(primaryFilter)
 
     val gridContentOverride = this.items

@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -24,9 +26,12 @@ import app.eluvio.wallet.data.entities.v2.display.thumbnailUrlAndRatio
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.screens.common.ImageCard
 import app.eluvio.wallet.screens.common.MetadataTexts
+import app.eluvio.wallet.screens.common.ShimmerImage
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState
 import app.eluvio.wallet.theme.EluvioThemePreview
+import app.eluvio.wallet.theme.disabledItemAlpha
 import app.eluvio.wallet.theme.label_24
+import app.eluvio.wallet.util.compose.thenIf
 
 @Composable
 fun PageLinkCard(
@@ -38,21 +43,36 @@ fun PageLinkCard(
     val display = item.displaySettings
     val title = display?.title
     val (imageUrl, imageAspectRatio) = display?.thumbnailUrlAndRatio ?: (null to null)
-    Column(modifier.width(IntrinsicSize.Min)) {
-        ImageCard(
-            imageUrl = imageUrl,
-            contentDescription = title,
-            focusedOverlay = {
-                MetadataTexts(item.displaySettings)
-            },
-            onClick = onClick,
-            modifier = Modifier
-                .height(cardHeight)
-                .aspectRatio(
-                    imageAspectRatio ?: AspectRatio.WIDE,
-                    matchHeightConstraintsFirst = true
-                )
-        )
+    Column(
+        modifier
+            .width(IntrinsicSize.Min)
+            .thenIf(item.forceDisabled) {
+                alpha(MaterialTheme.colorScheme.disabledItemAlpha)
+            }
+    ) {
+        val cardModifier = Modifier
+            .height(cardHeight)
+            .aspectRatio(
+                imageAspectRatio ?: AspectRatio.WIDE,
+                matchHeightConstraintsFirst = true
+            )
+        if (item.forceDisabled) {
+            ShimmerImage(
+                imageUrl, contentDescription = title,
+                modifier = cardModifier
+                    .clip(MaterialTheme.shapes.medium)
+            )
+        } else {
+            ImageCard(
+                imageUrl = imageUrl,
+                contentDescription = title,
+                focusedOverlay = {
+                    MetadataTexts(item.displaySettings)
+                },
+                onClick = onClick,
+                modifier = cardModifier
+            )
+        }
         if (title != null) {
             Spacer(Modifier.height(10.dp))
             Text(
@@ -72,6 +92,7 @@ private fun SubpropertyCardPreview(modifier: Modifier = Modifier) = EluvioThemeP
         PageLinkCard(
             item = DynamicPageLayoutState.CarouselItem.PageLink(
                 permissionContext = PermissionContext(propertyId = "property1"),
+                forceDisabled = false,
                 propertyId = "subId",
                 pageId = null,
                 displaySettings = SimpleDisplaySettings(

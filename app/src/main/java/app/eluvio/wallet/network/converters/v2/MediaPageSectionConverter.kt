@@ -77,6 +77,8 @@ private fun SectionItemDto.toEntity(baseUrl: String): SectionItemEntity? {
         isPurchaseItem = dto.type == "item_purchase"
 
         displaySettings = dto.display?.toEntity(baseUrl)
+
+        disabled = dto.disabled == true
     }
 }
 

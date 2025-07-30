@@ -367,16 +367,18 @@ private fun DynamicPageLayoutPreview() = EluvioThemePreview {
                                 mediaType = "image"
                             },
                             playbackProgress = null,
+                            forceDisabled = false,
                         ),
                         DynamicPageLayoutState.CarouselItem.RedeemableOffer(
                             permissionContext = PermissionContext(propertyId = "property1"),
+                            forceDisabled = false,
                             offerId = "1",
                             name = "Offer 1",
                             fulfillmentState = RedeemableOfferEntity.FulfillmentState.AVAILABLE,
                             contractAddress = "0x123",
                             tokenId = "1",
                             imageUrl = "https://via.placeholder.com/150",
-                            animation = null
+                            animation = null,
                         )
                     )
                 )

@@ -11,6 +11,9 @@ import com.ramcosta.composedestinations.spec.Direction
  * Returns the [Direction] to navigate to when a carousel item is clicked, or null if no navigation.
  */
 fun CarouselItem.onClickDirection(): Direction? {
+    if (forceDisabled) {
+        return null;
+    }
     return when (this) {
         is CarouselItem.Media -> {
             // Delegate to the media entity

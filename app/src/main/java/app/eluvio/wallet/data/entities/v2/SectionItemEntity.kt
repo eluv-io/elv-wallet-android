@@ -38,6 +38,9 @@ class SectionItemEntity : RealmObject, EntityWithPermissions {
     var useMediaDisplaySettings: Boolean = true
     var displaySettings: DisplaySettingsEntity? = null
 
+    /** Display as disabled, unless hidden by permissions */
+    var disabled: Boolean = false
+
     @field:Ignore
     override var resolvedPermissions: VolatilePermissionSettings? = null
     override var rawPermissions: PermissionSettingsEntity? = null
@@ -45,7 +48,7 @@ class SectionItemEntity : RealmObject, EntityWithPermissions {
         get() = listOfNotNull(media)
 
     override fun toString(): String {
-        return "SectionItemEntity(id='$id', mediaType=$mediaType, media=$media, linkData=$linkData, isPurchaseItem=$isPurchaseItem, bannerImageUrl=$bannerImageUrl, useMediaDisplaySettings=$useMediaDisplaySettings, displaySettings=$displaySettings, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions)"
+        return "SectionItemEntity(id='$id', disabled='$disabled', mediaType=$mediaType, media=$media, linkData=$linkData, isPurchaseItem=$isPurchaseItem, bannerImageUrl=$bannerImageUrl, useMediaDisplaySettings=$useMediaDisplaySettings, displaySettings=$displaySettings, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -64,12 +67,14 @@ class SectionItemEntity : RealmObject, EntityWithPermissions {
         if (displaySettings != other.displaySettings) return false
         if (rawPermissions != other.rawPermissions) return false
         if (resolvedPermissions != other.resolvedPermissions) return false
+        if (disabled != other.disabled) return false
 
         return true
     }
 
     override fun hashCode(): Int {
         var result = id.hashCode()
+        result = 31 * result + disabled.hashCode()
         result = 31 * result + (mediaType?.hashCode() ?: 0)
         result = 31 * result + (media?.hashCode() ?: 0)
         result = 31 * result + (linkData?.hashCode() ?: 0)

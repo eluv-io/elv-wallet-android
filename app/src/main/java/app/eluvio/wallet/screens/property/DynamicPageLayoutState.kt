@@ -74,10 +74,12 @@ data class DynamicPageLayoutState(
 
     sealed interface CarouselItem {
         val permissionContext: PermissionContext
+        val forceDisabled: Boolean
 
         @Immutable
         data class Media(
             override val permissionContext: PermissionContext,
+            override val forceDisabled: Boolean,
             val entity: MediaEntity,
             val playbackProgress: Float?,
             val displayOverrides: DisplaySettings? = null,
@@ -86,6 +88,7 @@ data class DynamicPageLayoutState(
         @Immutable
         data class PageLink(
             override val permissionContext: PermissionContext,
+            override val forceDisabled: Boolean,
             // Property ID to link to
             val propertyId: String,
             // Page ID to link to
@@ -96,6 +99,7 @@ data class DynamicPageLayoutState(
         @Immutable
         data class ExternalLink(
             override val permissionContext: PermissionContext,
+            override val forceDisabled: Boolean,
             val url: String,
             val displaySettings: DisplaySettings?,
         ) : CarouselItem
@@ -103,6 +107,7 @@ data class DynamicPageLayoutState(
         @Immutable
         data class RedeemableOffer(
             override val permissionContext: PermissionContext,
+            override val forceDisabled: Boolean,
             val offerId: String,
             val name: String,
             val fulfillmentState: RedeemableOfferEntity.FulfillmentState,
@@ -115,12 +120,14 @@ data class DynamicPageLayoutState(
         @Immutable
         data class ItemPurchase(
             override val permissionContext: PermissionContext,
+            override val forceDisabled: Boolean,
             val displaySettings: DisplaySettings?,
         ) : CarouselItem
 
         @Immutable
         data class VisualOnly(
             override val permissionContext: PermissionContext,
+            override val forceDisabled: Boolean,
             val displaySettings: DisplaySettings?,
         ) : CarouselItem
 

@@ -31,6 +31,8 @@ data class MediaPageSectionDto(
 data class SectionItemDto(
     val id: String,
 
+    val disabled: Boolean?,
+
     val type: String,
     @field:Json(name = "media_type")
     val mediaType: String?,

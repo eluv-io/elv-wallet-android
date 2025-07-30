@@ -46,6 +46,7 @@ fun CarouselItemCard(carouselItem: CarouselItem, cardHeight: Dp, modifier: Modif
                 displayOverrides = carouselItem.displayOverrides,
                 cardHeight = cardHeight,
                 permissionContext = carouselItem.permissionContext,
+                forceDisabled = carouselItem.forceDisabled,
                 playbackProgress = carouselItem.playbackProgress,
             )
             Spacer(Modifier.height(10.dp))
@@ -104,6 +105,7 @@ private fun CarouselItemCardPreview() = EluvioThemePreview {
     CarouselItemCard(
         carouselItem = CarouselItem.Media(
             permissionContext = PermissionContext(propertyId = "property"),
+            forceDisabled = false,
             entity = MediaEntity().apply {
                 name = "this is a very very very very long title"
             },

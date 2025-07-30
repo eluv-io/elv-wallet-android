@@ -75,6 +75,7 @@ fun MediaItemCard(
     modifier: Modifier = Modifier,
     displayOverrides: DisplaySettings? = null,
     permissionContext: PermissionContext? = null,
+    forceDisabled: Boolean = false,
     onMediaItemClick: MediaClickHandler = defaultMediaItemClickHandler(LocalNavigator.current),
     cardHeight: Dp = 150.dp,
     shape: Shape = MaterialTheme.shapes.medium,
@@ -84,7 +85,7 @@ fun MediaItemCard(
     val liveVideoState by rememberLiveVideoState(media.liveVideoInfo)
     val displaySettings = media.requireDisplaySettings().withOverrides(displayOverrides)
     val (imageUrl, aspectRatio) = displaySettings.thumbnailUrlAndRatio ?: ("" to AspectRatio.SQUARE)
-    if (media.isDisabled) {
+    if (forceDisabled || media.isDisabled) {
         DisabledCard(imageUrl, media, liveVideoState, shape, cardHeight, aspectRatio, modifier)
     } else {
         val showPurchaseOptions =

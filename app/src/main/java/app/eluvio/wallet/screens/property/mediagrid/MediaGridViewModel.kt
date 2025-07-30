@@ -163,6 +163,7 @@ class MediaGridViewModel @Inject constructor(
                         DynamicPageLayoutState.CarouselItem.Media(
                             // TODO: potential bug? we are losing info about the containing list/collection
                             permissionContext = permissionContext.copy(mediaItemId = mediaEntity.id),
+                            forceDisabled = false,
                             entity = mediaEntity,
                             // Note: if a playback position is saved for LIVE, it'll also show.
                             playbackProgress = playbackStore.getPlaybackProgress(mediaEntity.id)

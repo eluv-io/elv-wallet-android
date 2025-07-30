@@ -22,6 +22,7 @@ import app.eluvio.wallet.util.logging.Log
  * The maximum number of items to display in a carousel before showing a "View All" button for "carousel" sections.
  */
 private const val VIEW_ALL_THRESHOLD_CAROUSEL = 5
+
 /**
  * The maximum number of items to display in a grid before showing a "View All" button for "grid" sections.
  * This is set to a high value to avoid showing the "View All" button in most cases.
@@ -147,6 +148,7 @@ fun List<SectionItemEntity>.toCarouselItems(
                     permissionContext = permissionContext,
                     url = it,
                     displaySettings = item.displaySettings,
+                    forceDisabled = item.disabled,
                 )
             }
 
@@ -158,6 +160,7 @@ fun List<SectionItemEntity>.toCarouselItems(
                     propertyId = item.linkData?.linkPropertyId ?: permissionContext.propertyId,
                     pageId = item.linkData?.linkPageId,
                     displaySettings = item.displaySettings,
+                    forceDisabled = item.disabled,
                 )
             }
 
@@ -172,6 +175,7 @@ fun List<SectionItemEntity>.toCarouselItems(
                     entity = item.media!!,
                     displayOverrides = displayOverrides,
                     playbackProgress = playbackStore.getPlaybackProgress(item.media!!.id),
+                    forceDisabled = item.disabled,
                 )
             }
 
@@ -179,12 +183,14 @@ fun List<SectionItemEntity>.toCarouselItems(
                 CarouselItem.ItemPurchase(
                     permissionContext = permissionContext,
                     displaySettings = item.displaySettings,
+                    forceDisabled = item.disabled,
                 )
             }
 
             else -> CarouselItem.VisualOnly(
                 permissionContext = permissionContext,
                 displaySettings = item.displaySettings,
+                forceDisabled = item.disabled,
             )
         }
 

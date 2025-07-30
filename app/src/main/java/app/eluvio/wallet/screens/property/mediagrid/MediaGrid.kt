@@ -155,6 +155,7 @@ private fun MediaGridPreview() = EluvioThemePreview {
             items = listOf(
                 CarouselItem.Media(
                     permissionContext = PermissionContext(propertyId = "property1"),
+                    forceDisabled = false,
                     entity = MediaEntity().apply {
                         id = "1"
                         name = "Media 1"
@@ -164,6 +165,7 @@ private fun MediaGridPreview() = EluvioThemePreview {
                 ),
                 CarouselItem.RedeemableOffer(
                     permissionContext = PermissionContext(propertyId = "property1"),
+                    forceDisabled = false,
                     offerId = "1",
                     name = "Offer 1",
                     fulfillmentState = RedeemableOfferEntity.FulfillmentState.AVAILABLE,

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.app.Events
+import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.entities.v2.DisplayFormat
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
 import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
@@ -37,7 +38,9 @@ class MediaGridViewModel @Inject constructor(
     data class State(
         val loading: Boolean = true,
         val title: String? = null,
-        val items: List<DynamicPageLayoutState.CarouselItem> = emptyList()
+        val items: List<DynamicPageLayoutState.CarouselItem> = emptyList(),
+        val bgColor: String? = null,
+        val bgImageUrl: FabricUrl? = null,
     )
 
     private val navArgs = MediaGridDestination.argsFrom(savedStateHandle)
@@ -58,20 +61,14 @@ class MediaGridViewModel @Inject constructor(
                 } else if (permissionContext.mediaItemId != null) {
                     observeMediaItems(resolved)
                 } else if (permissionContext.sectionId != null) {
-                    getSectionItem(resolved.section)
+                    getSectionItems(resolved.section)
                 } else {
                     Flowable.error(IllegalStateException("Media grid launched without mediaItemId or sectionId."))
                 }
             }
             .subscribeBy(
-                onNext = { stateUpdate ->
-                    updateState {
-                        copy(
-                            loading = false,
-                            title = stateUpdate.title,
-                            items = stateUpdate.items
-                        )
-                    }
+                onNext = { state ->
+                    updateState { state }
                 },
                 onError = {
                     // Required fields are missing
@@ -83,7 +80,7 @@ class MediaGridViewModel @Inject constructor(
             .addTo(disposables)
     }
 
-    private fun getSectionItem(section: MediaPageSectionEntity?): Flowable<State> {
+    private fun getSectionItems(section: MediaPageSectionEntity?): Flowable<State> {
         if (section == null) {
             return Flowable.error(RuntimeException("Section not found"))
         }
@@ -92,7 +89,16 @@ class MediaGridViewModel @Inject constructor(
             SimpleDisplaySettings(displayFormat = DisplayFormat.GRID),
             playbackStore
         )
-        return Flowable.just(State(title = section.displaySettings?.title, items = items))
+        val display = section.displaySettings
+        return Flowable.just(
+            State(
+                loading = false,
+                title = display?.title,
+                items = items,
+                bgColor = display?.inlineBackgroundColor,
+                bgImageUrl = display?.inlineBackgroundImageUrl,
+            )
+        )
     }
 
     /**
@@ -107,7 +113,7 @@ class MediaGridViewModel @Inject constructor(
             contentOverride.mediaItemsOverride,
             resolved.property.searchPermissions,
             resolved.property.permissionStates
-        ).map { State(title = contentOverride.title, items = it) }
+        ).map { State(loading = false, title = contentOverride.title, items = it) }
     }
 
     /**
@@ -126,7 +132,7 @@ class MediaGridViewModel @Inject constructor(
             mediaContainer.mediaItemsIds,
             mediaContainer.resolvedPermissions,
             resolved.property.permissionStates
-        ).map { State(title = mediaContainer.name, items = it) }
+        ).map { State(loading = false, title = mediaContainer.name, items = it) }
     }
 
     /**

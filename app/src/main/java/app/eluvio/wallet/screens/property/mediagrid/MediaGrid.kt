@@ -1,5 +1,6 @@
 package app.eluvio.wallet.screens.property.mediagrid
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -12,9 +13,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -33,7 +36,9 @@ import app.eluvio.wallet.screens.property.DynamicPageLayoutState.CarouselItem
 import app.eluvio.wallet.screens.property.items.CarouselItemCard
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.body_32
+import app.eluvio.wallet.util.compose.fromHex
 import app.eluvio.wallet.util.subscribeToState
+import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 
 @MainGraph
@@ -49,6 +54,8 @@ fun MediaGrid() {
     }
 }
 
+// Not sure why this lint error is flaring up, we're obviously using [BoxWithConstraintsScope.maxWidth]
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MediaGrid(state: MediaGridViewModel.State) {
@@ -65,12 +72,34 @@ private fun MediaGrid(state: MediaGridViewModel.State) {
                 horizPadding
             )
         }
+        val bgModifier: Modifier = remember(state.bgColor) {
+            // BgImage will be handled separately, so don't give the grid any bg modifier.
+            if (state.bgImageUrl != null) {
+                Modifier
+            } else if (state.bgColor != null) {
+                Modifier.background(Color.fromHex(state.bgColor))
+            } else {
+                // Default background gradient, if no customization is provided.
+                Modifier.background(
+                    Brush.linearGradient(listOf(Color(0xFF16151F), Color(0xFF0C0C10)))
+                )
+            }
+        }
+        if (state.bgImageUrl != null) {
+            AsyncImage(
+                state.bgImageUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                alignment = Alignment.TopStart,
+                modifier = Modifier.matchParentSize()
+            )
+        }
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(horizCardSpacing),
             verticalArrangement = Arrangement.spacedBy(22.dp),
             modifier = Modifier
                 .fillMaxSize()
-                .background(Brush.linearGradient(listOf(Color(0xFF16151F), Color(0xFF0C0C10))))
+                .then(bgModifier)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = horizPadding, vertical = Overscan.verticalPadding)
         ) {

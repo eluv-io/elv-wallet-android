@@ -47,4 +47,5 @@ data class DisplaySettingsDtoImpl(
     override val background_video: PlayableHashDto?,
 
     override val hide_on_tv: Boolean?,
+    override val full_bleed: Boolean?
 ) : DisplaySettingsDto

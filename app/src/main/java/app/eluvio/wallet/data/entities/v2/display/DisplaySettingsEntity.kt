@@ -42,8 +42,10 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
 
     override var hiddenOnTv: Boolean? = null
 
+    override var fullBleed: Boolean? = null
+
     override fun toString(): String {
-        return "DisplaySettingsEntity(title=$title, subtitle=$subtitle, headers=$headers, description=$description, forcedAspectRatio=$forcedAspectRatio, thumbnailLandscapeUrl=$thumbnailLandscapeUrl, thumbnailPortraitUrl=$thumbnailPortraitUrl, thumbnailSquareUrl=$thumbnailSquareUrl, displayLimit=$displayLimit, displayLimitType=$displayLimitType, _displayFormat='$_displayFormat', logoUrl=$logoUrl, logoText=$logoText, inlineBackgroundColor=$inlineBackgroundColor, inlineBackgroundImageUrl=$inlineBackgroundImageUrl, heroBackgroundImageUrl=$heroBackgroundImageUrl, heroBackgroundVideoHash=$heroBackgroundVideoHash, hiddenOnTv=$hiddenOnTv)"
+        return "DisplaySettingsEntity(title=$title, subtitle=$subtitle, headers=$headers, description=$description, forcedAspectRatio=$forcedAspectRatio, thumbnailLandscapeUrl=$thumbnailLandscapeUrl, thumbnailPortraitUrl=$thumbnailPortraitUrl, thumbnailSquareUrl=$thumbnailSquareUrl, displayLimit=$displayLimit, displayLimitType=$displayLimitType, _displayFormat='$_displayFormat', logoUrl=$logoUrl, logoText=$logoText, inlineBackgroundColor=$inlineBackgroundColor, inlineBackgroundImageUrl=$inlineBackgroundImageUrl, heroBackgroundImageUrl=$heroBackgroundImageUrl, heroBackgroundVideoHash=$heroBackgroundVideoHash, hiddenOnTv=$hiddenOnTv, fullBleed=$fullBleed)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -70,6 +72,7 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
         if (heroBackgroundImageUrl != other.heroBackgroundImageUrl) return false
         if (heroBackgroundVideoHash != other.heroBackgroundVideoHash) return false
         if (hiddenOnTv != other.hiddenOnTv) return false
+        if (fullBleed != other.fullBleed) return false
 
         return true
     }
@@ -93,6 +96,7 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
         result = 31 * result + (heroBackgroundImageUrl?.hashCode() ?: 0)
         result = 31 * result + (heroBackgroundVideoHash?.hashCode() ?: 0)
         result = 31 * result + (hiddenOnTv?.hashCode() ?: 0)
+        result = 31 * result + (fullBleed?.hashCode() ?: 0)
         return result
     }
 

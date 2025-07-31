@@ -14,6 +14,7 @@ import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.screens.destinations.MediaGridDestination
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState.CarouselItem
 import app.eluvio.wallet.screens.property.mediagrid.GridContentOverride
+import app.eluvio.wallet.screens.property.rows.BannerSection
 import app.eluvio.wallet.theme.DefaultTypography
 import app.eluvio.wallet.theme.carousel_48
 import app.eluvio.wallet.util.logging.Log
@@ -196,7 +197,7 @@ fun List<SectionItemEntity>.toCarouselItems(
 
         // Wrap in a banner if necessary, otherwise return as-is
         if (result != null && isBannerSection && bannerImage != null) {
-            result.asBanner(bannerImage)
+            result.asBanner(bannerImage, sectionDisplaySettings?.fullBleed == true)
         } else {
             result
         }

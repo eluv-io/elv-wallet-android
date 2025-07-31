@@ -31,6 +31,9 @@ interface DisplaySettings {
     val heroBackgroundVideoHash: String?
 
     val hiddenOnTv: Boolean?
+
+    /** Applies to "banner" items that should be displayed edge-to-edge on the screen. */
+    val fullBleed: Boolean?
 }
 
 /**
@@ -75,6 +78,7 @@ data class SimpleDisplaySettings(
     override val heroBackgroundImageUrl: FabricUrl? = null,
     override val heroBackgroundVideoHash: String? = null,
     override val hiddenOnTv: Boolean? = null,
+    override val fullBleed: Boolean? = null,
 ) : DisplaySettings {
     companion object {
         fun from(other: DisplaySettings?, forcedAspectRatio: Float? = null): SimpleDisplaySettings {
@@ -97,6 +101,7 @@ data class SimpleDisplaySettings(
                 heroBackgroundImageUrl = other?.heroBackgroundImageUrl,
                 heroBackgroundVideoHash = other?.heroBackgroundVideoHash,
                 hiddenOnTv = other?.hiddenOnTv,
+                fullBleed = other?.fullBleed,
             )
         }
     }
@@ -128,5 +133,6 @@ fun DisplaySettings.withOverrides(overrides: DisplaySettings?): DisplaySettings 
         heroBackgroundImageUrl = overrides.heroBackgroundImageUrl ?: default.heroBackgroundImageUrl,
         heroBackgroundVideoHash = overrides.heroBackgroundVideoHash ?: default.heroBackgroundVideoHash,
         hiddenOnTv = overrides.hiddenOnTv ?: default.hiddenOnTv,
+        fullBleed = overrides.fullBleed ?: default.fullBleed,
     )
 }

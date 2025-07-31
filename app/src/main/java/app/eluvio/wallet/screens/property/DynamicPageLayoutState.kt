@@ -141,7 +141,8 @@ data class DynamicPageLayoutState(
         @Immutable
         data class BannerWrapper(
             val delegate: CarouselItem,
-            val bannerImageUrl: String
+            val bannerImageUrl: String,
+            val fullBleed: Boolean,
         ) : CarouselItem by delegate
     }
 
@@ -157,9 +158,9 @@ data class DynamicPageLayoutState(
 /**
  * Convenience method to "convert" any CarouselItem to look like a banner.
  */
-fun CarouselItem.asBanner(bannerImageUrl: String): CarouselItem {
+fun CarouselItem.asBanner(bannerImageUrl: String, fullBleed: Boolean): CarouselItem {
     return when (this) {
-        is CarouselItem.BannerWrapper -> copy(bannerImageUrl = bannerImageUrl)
-        else -> CarouselItem.BannerWrapper(this, bannerImageUrl)
+        is CarouselItem.BannerWrapper -> copy(bannerImageUrl = bannerImageUrl, fullBleed = fullBleed)
+        else -> CarouselItem.BannerWrapper(this, bannerImageUrl, fullBleed)
     }
 }

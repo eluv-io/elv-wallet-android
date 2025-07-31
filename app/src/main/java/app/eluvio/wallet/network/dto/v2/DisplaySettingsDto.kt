@@ -27,4 +27,7 @@ interface DisplaySettingsDto {
     val background_video: PlayableHashDto?
 
     val hide_on_tv: Boolean?
+
+    /** Applies to "banner" items that should be displayed edge-to-edge on the screen. */
+    val full_bleed: Boolean?
 }

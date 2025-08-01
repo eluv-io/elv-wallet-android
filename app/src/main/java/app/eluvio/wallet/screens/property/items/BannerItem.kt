@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.requiredWidthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
@@ -40,7 +41,12 @@ fun BannerItem(
             containerColor = Color.Transparent,
             focusedContainerColor = Color.Transparent
         ),
-        modifier = modifier.requiredWidthIn(min = minWidth)
+        modifier = modifier
+            // Make full-bleed banners unfocusable. This could potentially cause issues if the
+            // banner is too tall and in the middle of the page, but we don't currently have such a
+            // use case, so this is fine for now.
+            .focusProperties { canFocus = !item.fullBleed }
+            .requiredWidthIn(min = minWidth)
     ) {
         AsyncImage(
             model = item.bannerImageUrl,

@@ -134,11 +134,17 @@ fun LazyListScope.sections(
 ) {
     sections.forEachIndexed { index, section ->
         item(contentType = section::class) {
-            val modifier = if (index == 0) Modifier.padding(top = firstItemPadding) else Modifier
+            val preferredTopPadding = if (index == 0) firstItemPadding else 0.dp
+            // For now, only CarouselSection can override the top padding, so we just pass it
+            // as a modifier for other sections.
+            val modifier = Modifier.padding(top = preferredTopPadding)
             when (section) {
                 is DynamicPageLayoutState.Section.Banner -> BannerSection(item = section, modifier)
 
-                is DynamicPageLayoutState.Section.Carousel -> CarouselSection(item = section, modifier)
+                is DynamicPageLayoutState.Section.Carousel -> CarouselSection(
+                    item = section,
+                    preferredTopPadding,
+                )
 
                 is DynamicPageLayoutState.Section.Description -> DescriptionSection(item = section, modifier)
 

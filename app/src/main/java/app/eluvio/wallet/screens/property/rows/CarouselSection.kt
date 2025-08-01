@@ -70,6 +70,7 @@ import app.eluvio.wallet.screens.property.items.CarouselItemCard
 import app.eluvio.wallet.theme.body_32
 import app.eluvio.wallet.theme.button_24
 import app.eluvio.wallet.theme.label_24
+import app.eluvio.wallet.util.cast
 import app.eluvio.wallet.util.compose.focusCapturingGroup
 import app.eluvio.wallet.util.compose.focusCapturingLazyList
 import app.eluvio.wallet.util.compose.focusTrap
@@ -84,7 +85,9 @@ val CAROUSEL_CARD_HEIGHT = 110.dp
 @Composable
 fun CarouselSection(
     item: DynamicPageLayoutState.Section.Carousel,
-    modifier: Modifier = Modifier
+    /** The list can suggest padding, but carousel might decide to not use it
+     * if the first element is a full-bleed banner. */
+    preferredTopPadding: Dp,
 ) {
     val display = item.displaySettings
     if (display == null || item.items.isEmpty()) {
@@ -104,7 +107,12 @@ fun CarouselSection(
                 modifier = Modifier.matchParentSize()
             )
         }
-        Row(modifier = modifier) {
+        // If the first item is a full-bleed banner, we want to remove the top padding.
+        val isFirstItemFullBleed = item.items.firstOrNull()
+            ?.cast<CarouselItem.BannerWrapper>()
+            ?.fullBleed == true
+        val topPadding = if (isFirstItemFullBleed) 0.dp else (preferredTopPadding + 16.dp)
+        Row(modifier = Modifier.padding(top = topPadding)) {
             // We want to align the logo with the cards row, but they are in separate containers,
             // so we need to measure the row and use that to set the padding on the logo.
             var logoTopPaddingPx by remember { mutableFloatStateOf(0.0f) }
@@ -117,8 +125,6 @@ fun CarouselSection(
                     .focusTrap(FocusDirection.Left, FocusDirection.Right)
                     .focusGroup() // Required to make focusRestorer() work down the line
             ) {
-                Spacer(modifier = Modifier.height(16.dp))
-
                 // Whether or not to add padding to the start of the row.
                 val startPadding = if (showLogo) 30.dp else Overscan.horizontalPadding
 

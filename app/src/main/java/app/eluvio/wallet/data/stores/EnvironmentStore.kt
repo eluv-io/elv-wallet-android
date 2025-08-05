@@ -45,6 +45,13 @@ class EnvironmentStore @Inject constructor(
     private val selectedEnvName = dataStore.readWriteStringPref("selected_env")
     val stagingFlag = dataStore.readWriteBoolPref("staging_flag")
 
+    init {
+        if (stagingFlag.get() == null) {
+            // If no value is already set, default to BuildConfig value.
+            stagingFlag.set(BuildConfig.DEFAULT_TO_STAGING_ENV)
+        }
+    }
+
     fun setSelectedEnvironment(environment: Environment) {
         selectedEnvName.set(environment.networkName)
     }

@@ -30,6 +30,7 @@ android {
 
         resValue("string", "app_name", customBuildConfig.appName)
         buildConfigField("String", "DEFAULT_PROPERTY_ID", customBuildConfig.defaultPropertyId)
+        buildConfigField("boolean", "DEFAULT_TO_STAGING_ENV", "${customBuildConfig.defaultToStaging}")
     }
 
     buildTypes {
@@ -184,6 +185,9 @@ data class CustomBuildConfig(
     // Version data for Play Store
     val versionCode: Int,
     val versionName: String,
+
+    // If true, the staging toggle will be on by default.
+    val defaultToStaging: Boolean,
 ) {
     companion object {
         fun from(properties: Map<String, Any?>): CustomBuildConfig {
@@ -194,6 +198,7 @@ data class CustomBuildConfig(
             val propertyId = properties["defaultPropertyId"]?.toString()
                 ?.ifEmpty { null }
                 ?.let { "\"$it\"" }
+            val defaultToStaging = properties["defaultToStaging"]?.toString()?.toBooleanStrictOrNull()
 
             return CustomBuildConfig(
                 applicationId = applicationId ?: "app.eluvio.wallet",
@@ -201,6 +206,7 @@ data class CustomBuildConfig(
                 defaultPropertyId = propertyId ?: "null",
                 versionCode = versionCode ?: 29,
                 versionName = versionName ?: "2.0",
+                defaultToStaging = defaultToStaging ?: false
             )
         }
     }

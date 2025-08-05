@@ -5,10 +5,10 @@ source ./config/custom.properties
 
 # Check if all required variables are set in config/custom.properties
 requiredVars=(
-  "applicationId"
-  "versionCode"
-  "versionName"
-  "appName"
+  "APPLICATION_ID"
+  "VERSION_CODE"
+  "VERSION_NAME"
+  "APP_NAME"
   "KEYSTORE_PASSWORD"
   "KEYSTORE_ALIAS")
 
@@ -44,11 +44,12 @@ cp ./config/androidtv/res/drawable-xhdpi/* ./../app/src/main/res/drawable-xhdpi/
 
 cd ..
 ./gradlew assembleDefaultRelease bundleDefaultRelease \
-  -PapplicationId="$applicationId" \
-  -PversionCode=$versionCode \
-  -PversionName="$versionName" \
-  -PappName="$appName" \
-  -PdefaultPropertyId="$defaultPropertyId" \
+  -PapplicationId="$APPLICATION_ID" \
+  -PversionCode=$VERSION_CODE \
+  -PversionName="$VERSION_NAME" \
+  -PappName="$APP_NAME" \
+  -PdefaultPropertyId="$DEFAULT_PROPERTY_ID" \
+  -PdefaultToStaging=$DEFAULT_TO_STAGING \
   -Pandroid.injected.signing.store.file=$keystoreFile \
   -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
   -Pandroid.injected.signing.key.alias=$KEYSTORE_ALIAS \

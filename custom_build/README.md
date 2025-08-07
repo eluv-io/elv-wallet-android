@@ -6,10 +6,25 @@ To create a custom build of the Wallet app, make sure to add the required files 
 ```
 
 ## TL;DR
+* Clone the repo.
 * Fill in all required values in the `custom.properties` file located in the `/config` folder.
 * Add [Icons](#icons).
 * Add a [Keystore](#keystore-and-signing).
 * Run `./build.sh` to create APK/AAB files.
+
+## Cloning the Repo
+Download or clone this repository to your local machine:
+```shell
+git clone git@github.com:eluv-io/elv-wallet-android.git
+```
+Navigate to the custom build folder.
+```shell
+cd elv-wallet-android/custom_build
+```
+Once all required values are set (see [TL;DR](#TLDR)), you are ready to run.
+```shell
+./build.sh
+```
 
 ## Icons
 Use [IconKitchen](https://icon.kitchen) to create your app icon and place the `android` and

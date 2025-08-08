@@ -3,6 +3,8 @@ name: Android CI
 on:
   push:
     branches: [ "main" ]
+  # Enable manual non-main branch builds from Github
+  workflow_dispatch:
 
 jobs:
   build:

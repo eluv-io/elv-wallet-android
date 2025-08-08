@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# capture verifyOnly flag
+verifyOnly=0
+if [ "$1" == "-v" ]; then
+  verifyOnly=1
+fi
+
+# Default JAVA_HOME if not set
+if [ -z "$JAVA_HOME" ]; then
+  export JAVA_HOME=/Applications/Android\ Studio.app/Contents/jbr/Contents/Home
+fi
+
 # Load custom build properties
 source ./config/custom.properties
 
@@ -37,13 +48,18 @@ if [ -z "$keystoreFile" ]; then
 fi
 keystoreFile=$(realpath "$keystoreFile")
 
+if [ $verifyOnly -eq 1 ]; then
+  echo "Config verification successful."
+  exit 0
+fi
+
 # copy icons
 rm -rf ./../app/src/main/res/mipmap*
 cp -r ./config/android/res ./../app/src/main
 cp ./config/androidtv/res/drawable-xhdpi/* ./../app/src/main/res/drawable-xhdpi/
 
 cd ..
-./gradlew assembleDefaultRelease bundleDefaultRelease \
+./gradlew assembleDefaultDebug assembleDefaultRelease bundleDefaultRelease \
   -PapplicationId="$APPLICATION_ID" \
   -PversionCode=$VERSION_CODE \
   -PversionName="$VERSION_NAME" \
@@ -58,5 +74,6 @@ cd ..
 # Make a copy of the generated APK and AAB files
 mkdir -p ./custom_build/build_output
 cp ./app/build/outputs/apk/default/release/app-default-release.apk ./custom_build/build_output/
+cp ./app/build/outputs/apk/default/debug/app-default-debug.apk ./custom_build/build_output/
 cp ./app/build/outputs/bundle/defaultRelease/app-default-release.aab ./custom_build/build_output/
-echo "Build completed successfully."
+echo "Build completed successfully. APK and AAB at: $(pwd)/custom_build/build_output"

@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.util.prefixIfNot
+
 @Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.com.android.application)
@@ -25,7 +27,7 @@ android {
             .takeIf { it.has("ci_build_number") }
             ?.get("ci_build_number")
             ?.let { build ->
-                versionName = "v${versionName}_${versionCode}-b$build"
+                versionName = "${versionName?.prefixIfNot("v")}_${versionCode}-b$build"
             }
 
         resValue("string", "app_name", customBuildConfig.appName)

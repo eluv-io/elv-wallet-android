@@ -1,0 +1,46 @@
+name: Custom Wallet Build
+
+on:
+  # Enable manual non-main branch builds from Github
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run custom builds script
+        working-directory: ./custom_build
+        run: ./build.sh
+
+      - name: Save version info
+        run: |
+          source ./custom_build/config/custom.properties
+          sha=$(git rev-parse --short ${{ github.sha }})
+          app_version=$(./gradlew -q printVersion -PversionName="$VERSION_NAME" -PversionCode=$VERSION_CODE -Pci_build_number=${{ github.run_number }})
+          apk_version=$(echo "$app_version-$sha")
+          echo "APK_VERSION=$apk_version" >> $GITHUB_ENV
+
+      - name: Rename APK/AAB
+        run: |
+          mv custom_build/build_output/app-default-debug.apk custom-wallet-debug-${{ env.APK_VERSION }}.apk
+          mv custom_build/build_output/app-default-release.apk custom-wallet-release-${{ env.APK_VERSION }}.apk
+          mv custom_build/build_output/app-default-release.aab custom-wallet-release-${{ env.APK_VERSION }}.aab
+
+      - name: Upload APK/AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: APK and AAB (${{ env.APK_VERSION }})
+          path: custom-wallet-*.a*

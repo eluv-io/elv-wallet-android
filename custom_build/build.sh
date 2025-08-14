@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Stop script on error
+set -e
+
 # capture verifyOnly flag
 verifyOnly=0
 if [ "$1" == "-v" ]; then
@@ -31,6 +34,11 @@ for var in "${requiredVars[@]}"; do
 done
 if [ ${#missingVars[@]} -ne 0 ]; then
   echo "Missing required variables in config/custom.properties: ${missingVars[*]}"
+  exit 1
+fi
+
+if ! [[ "$APPLICATION_ID" =~ ^([a-zA-Z_][a-zA-Z0-9_]*)(\.[a-zA-Z_][a-zA-Z0-9_]*)*$ ]]; then
+  echo "Invalid APPLICATION_ID package name: $APPLICATION_ID. Must be a valid Java package name (alphanumeric, underscores, and dots)."
   exit 1
 fi
 

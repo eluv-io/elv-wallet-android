@@ -10,7 +10,15 @@
 
 Use [IconKitchen](https://icon.kitchen) to create your app icon and place the `android` and
 `androidtv` folders you get from IconKitchen in the `/config` folder here.  
-(Make sure you also create an `Android TV Banner` using the IconKitchen tool).
+
+<details>
+<summary>
+Make sure you set IconKitchen to also create an `Android TV Banner`.
+
+`iOS` and `Web` are not needed, you can remove those.
+</summary>
+<img src="images/iconkitchen-banner.png"/>
+</details>
 
 ## Keystore and Signing
 

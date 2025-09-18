@@ -1,6 +1,5 @@
 package app.eluvio.wallet.network.api
 
-import app.eluvio.wallet.BuildConfig
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import io.reactivex.rxjava3.core.Single
@@ -10,9 +9,7 @@ import retrofit2.http.POST
 
 interface Auth0Api {
     @POST("oauth/device/code")
-    fun getAuth0ActivationData(
-        @Body request: Auth0Request = Auth0Request()
-    ): Single<DeviceActivationData>
+    fun getAuth0ActivationData(@Body request: Auth0Request): Single<DeviceActivationData>
 
     @POST("oauth/token")
     fun getToken(@Body request: GetTokenRequest): Single<Response<GetTokenResponse>>
@@ -23,7 +20,7 @@ interface Auth0Api {
 
 @JsonClass(generateAdapter = true)
 data class Auth0Request(
-    @field:Json(name = "client_id") val clientId: String = BuildConfig.AUTH0_CLIENT_ID,
+    @field:Json(name = "client_id") val clientId: String,
     @field:Json(name = "scope") val scope: String = "openid profile email offline_access",
 )
 
@@ -40,7 +37,7 @@ data class DeviceActivationData(
 @JsonClass(generateAdapter = true)
 data class GetTokenRequest(
     @field:Json(name = "grant_type") val grantType: String = "urn:ietf:params:oauth:grant-type:device_code",
-    @field:Json(name = "client_id") val clientId: String = BuildConfig.AUTH0_CLIENT_ID,
+    @field:Json(name = "client_id") val clientId: String,
     @field:Json(name = "device_code") val deviceCode: String,
 )
 
@@ -54,7 +51,7 @@ data class GetTokenResponse(
 
 @JsonClass(generateAdapter = true)
 data class RefreshTokenRequest(
-    @field:Json(name = "client_id") val clientId: String = BuildConfig.AUTH0_CLIENT_ID,
+    @field:Json(name = "client_id") val clientId: String,
     @field:Json(name = "grant_type") val grantType: String = "refresh_token",
     @field:Json(name = "refresh_token") val refreshToken: String,
 )

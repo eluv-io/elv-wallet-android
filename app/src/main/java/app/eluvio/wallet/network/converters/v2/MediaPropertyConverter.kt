@@ -62,6 +62,8 @@ private fun LoginInfoDto.toEntity(baseUrl: String): PropertyLoginInfoRealmEntity
         logoUrl = (dto.styling?.logoTv ?: dto.styling?.logo)?.toUrl(baseUrl)
         loginProvider = LoginProviders.from(dto.settings?.provider)
         skipLogin = dto.settings?.disable_login == true
+        auth0Domain = dto.settings?.auth0_domain
+        auth0ClientId = dto.settings?.auth0_native_client_id
     }
 }
 

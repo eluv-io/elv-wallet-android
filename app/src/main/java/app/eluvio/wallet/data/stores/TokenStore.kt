@@ -32,6 +32,9 @@ interface TokenStore {
     val loggedInObservable: Flowable<Boolean> get() = fabricToken.observe().map { it.isPresent }
     var loginProvider: LoginProviders
 
+    val auth0Domain: ReadWritePref<String>
+    val auth0ClientId: ReadWritePref<String>
+
     /**
      * Update multiple preferences at once.
      * This is more performant than updating them one by one.
@@ -74,6 +77,9 @@ class PreferenceTokenStore @Inject constructor(
     override var loginProvider: LoginProviders
         get() = LoginProviders.from(loginProviderStr.get())
         set(value) = loginProviderStr.set(value.value)
+
+    override val auth0Domain = dataStore.readWriteStringPref("auth0_domain")
+    override val auth0ClientId = dataStore.readWriteStringPref("auth0_client_id")
 
     /**
      * Update multiple preferences at once.

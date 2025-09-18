@@ -7,8 +7,10 @@ import app.eluvio.wallet.data.AuthenticationService
 import app.eluvio.wallet.data.SignOutHandler
 import app.eluvio.wallet.data.stores.FabricConfigStore
 import app.eluvio.wallet.data.stores.TokenStore
+import app.eluvio.wallet.di.Auth0
 import app.eluvio.wallet.network.api.Auth0Api
 import app.eluvio.wallet.network.api.RefreshTokenRequest
+import app.eluvio.wallet.util.Auth0Util
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.unsaved
 import dagger.Lazy
@@ -18,6 +20,7 @@ import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.Route
+import retrofit2.Retrofit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,10 +33,11 @@ import javax.inject.Singleton
 @Singleton
 class AccessTokenInterceptor @Inject constructor(
     private val tokenStore: TokenStore,
+    @Auth0 private val auth0Retrofit: Retrofit,
     private val auth0Api: Auth0Api,
     private val authenticationService: Lazy<AuthenticationService>,
     private val signOutHandler: SignOutHandler,
-    private val configStore: FabricConfigStore,
+    configStore: FabricConfigStore,
 ) : Interceptor, Authenticator {
 
     private val userAgent = if (BuildConfig.DEBUG) {
@@ -138,8 +142,18 @@ class AccessTokenInterceptor @Inject constructor(
                 }
 
             val newTokens = try {
-                auth0Api.refreshToken(RefreshTokenRequest(refreshToken = refreshToken))
-                    .blockingGet()
+                val (api, clientId) = Auth0Util.getApiInfo(
+                    tokenStore.auth0Domain.get(),
+                    tokenStore.auth0ClientId.get(),
+                    auth0Retrofit,
+                    auth0Api
+                )
+                api.refreshToken(
+                    RefreshTokenRequest(
+                        clientId = clientId,
+                        refreshToken = refreshToken
+                    )
+                ).blockingGet()
             } catch (e: Throwable) {
                 if (e is InterruptedException || e.cause is InterruptedException) {
                     // There's no point in retrying, since this call was canceled.

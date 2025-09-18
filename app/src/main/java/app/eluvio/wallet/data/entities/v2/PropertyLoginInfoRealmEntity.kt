@@ -17,6 +17,9 @@ class PropertyLoginInfoRealmEntity : EmbeddedRealmObject {
     var backgroundImageUrl: FabricUrlEntity? = null
     var logoUrl: FabricUrlEntity? = null
 
+    var auth0Domain: String? = null
+    var auth0ClientId: String? = null
+
     @Ignore
     var loginProvider: LoginProviders by realmEnum(::_loginProvider)
     private var _loginProvider: String = LoginProviders.ORY.value
@@ -24,7 +27,7 @@ class PropertyLoginInfoRealmEntity : EmbeddedRealmObject {
     var skipLogin: Boolean = false
 
     override fun toString(): String {
-        return "PropertyLoginInfoRealmEntity(backgroundImageUrl=$backgroundImageUrl, logoUrl=$logoUrl, _loginProvider='$_loginProvider', skipLogin=$skipLogin)"
+        return "PropertyLoginInfoRealmEntity(backgroundImageUrl=$backgroundImageUrl, logoUrl=$logoUrl, auth0Domain=$auth0Domain, auth0ClientId=$auth0ClientId, loginProvider=$loginProvider, _loginProvider='$_loginProvider', skipLogin=$skipLogin)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -35,6 +38,8 @@ class PropertyLoginInfoRealmEntity : EmbeddedRealmObject {
 
         if (backgroundImageUrl != other.backgroundImageUrl) return false
         if (logoUrl != other.logoUrl) return false
+        if (auth0Domain != other.auth0Domain) return false
+        if (auth0ClientId != other.auth0ClientId) return false
         if (_loginProvider != other._loginProvider) return false
         if (skipLogin != other.skipLogin) return false
 
@@ -44,6 +49,8 @@ class PropertyLoginInfoRealmEntity : EmbeddedRealmObject {
     override fun hashCode(): Int {
         var result = backgroundImageUrl?.hashCode() ?: 0
         result = 31 * result + (logoUrl?.hashCode() ?: 0)
+        result = 31 * result + (auth0Domain?.hashCode() ?: 0)
+        result = 31 * result + (auth0ClientId?.hashCode() ?: 0)
         result = 31 * result + _loginProvider.hashCode()
         result = 31 * result + skipLogin.hashCode()
         return result

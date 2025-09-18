@@ -9,11 +9,13 @@ import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.network.api.DeviceActivationData
 import app.eluvio.wallet.screens.signin.common.BaseLoginViewModel
+import app.eluvio.wallet.util.rx.Optional
 import app.eluvio.wallet.util.rx.mapNotNull
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.BackpressureStrategy
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Maybe
+import io.reactivex.rxjava3.core.Single
 import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -22,7 +24,7 @@ import kotlin.time.Duration.Companion.seconds
 class Auth0SignInViewModel @Inject constructor(
     private val deviceActivationStore: DeviceActivationStore,
     private val authenticationService: AuthenticationService,
-    propertyStore: MediaPropertyStore,
+    private val propertyStore: MediaPropertyStore,
     tokenStore: TokenStore,
     urlShortener: UrlShortener,
     savedStateHandle: SavedStateHandle
@@ -33,8 +35,20 @@ class Auth0SignInViewModel @Inject constructor(
     LoginProviders.AUTH0,
     savedStateHandle
 ) {
-    override fun fetchActivationData(): Flowable<DeviceActivationData> =
-        deviceActivationStore.observeActivationData().toFlowable(BackpressureStrategy.BUFFER)
+
+    private val loginInfo = propertyId?.let { propertyId ->
+        propertyStore
+            .observeMediaProperty(propertyId)
+            .firstOrError()
+            .map { Optional.of(it.loginInfo) }
+            .cache()
+    } ?: Single.just(Optional.empty())
+
+    override fun fetchActivationData(): Flowable<DeviceActivationData> {
+        return loginInfo.flatMapObservable {
+            deviceActivationStore.observeActivationData(it.orDefault(null))
+        }.toFlowable(BackpressureStrategy.BUFFER)
+    }
 
     override fun DeviceActivationData.getPollingInterval(): Duration = intervalSeconds.seconds
 
@@ -43,7 +57,9 @@ class Auth0SignInViewModel @Inject constructor(
     override fun DeviceActivationData.getCode(): String = userCode
 
     override fun DeviceActivationData.checkToken(): Maybe<*> =
-        deviceActivationStore.checkToken(deviceCode)
+        loginInfo.flatMap {
+            deviceActivationStore.checkToken(deviceCode, it.orDefault(null))
+        }
             .mapNotNull { it.body() }
             .flatMapSingle { authenticationService.getFabricToken() }
 }

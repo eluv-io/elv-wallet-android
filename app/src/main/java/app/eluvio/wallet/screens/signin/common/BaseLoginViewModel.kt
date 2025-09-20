@@ -12,8 +12,11 @@ import app.eluvio.wallet.screens.NavGraphs
 import app.eluvio.wallet.screens.common.generateQrCode
 import app.eluvio.wallet.screens.navArgs
 import app.eluvio.wallet.screens.signin.SignInNavArgs
+import app.eluvio.wallet.util.entity.getFirstAuthorizedPage
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.interval
+import app.eluvio.wallet.util.rx.unsaved
+import app.eluvio.wallet.util.timelog
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.disposables.Disposable
@@ -120,9 +123,55 @@ abstract class BaseLoginViewModel<ActivationData : Any>(
                 }
                 .retry()
                 .doOnSuccess { Log.d("Got a token $it") }
+                .doOnSuccess {
+                    // Kick off a bg fetch of all properties.
+                    // This is a slower operation so we're not going to wait for it,
+                    // and we'll allow it to outlive the ViewModel
+                    propertyStore.fetchMediaProperties()
+                        .doOnSubscribe {
+                            Log.d("Starting post-auth full property fetch.")
+                        }
+                        .subscribeBy(
+                            onComplete = {
+                                Log.d("Post-auth property fetch complete")
+                            },
+                            onError = {
+                                Log.d("Error fetching properties post-auth. Non critical.", it)
+                            }
+                        )
+                        .unsaved()
+                }
                 .flatMapCompletable {
+                    // Make sure property is actually fetched before we continue
+                    propertyStore.fetchMediaProperty(propertyId!!)
+                        .doOnSubscribe {
+                            timelog.d("stav: Re-fetching properties after activation...")
+                        }
+                        .doOnComplete {
+                            timelog.d("stav: ...done re-fetching properties after activation.")
+                        }
+                        // Now we can look up the Property in the cache and be sure it's not the one from before auth was complete.
+                        .andThen(propertyStore.observeMediaProperty(propertyId, false))
+                        .firstElement()
+                        .flatMapPublisher { property ->
+                            property
+                                .getFirstAuthorizedPage(currentPage = null, propertyStore)
+                                .map { page -> property to page }
+                        }
+                        .flatMapCompletable { (property, page) ->
+                            propertyStore.observeSections(property, page)
+                                // Assume that page Sections will never be zero
+                                .takeUntil { it.isNotEmpty() }
+                                .ignoreElements()
+                                .doOnSubscribe {
+                                    timelog.v("START pre-fetching sections")
+                                }
+                                .doOnComplete {
+                                    timelog.v("DONE pre-fetch sections")
+                                }
+                        }
                     // Re-fetch properties because all the permissions will be different now that we have a token
-                    propertyStore.fetchMediaProperties(clearOldProperties = true)
+//                    propertyStore.fetchMediaProperties(clearOldProperties = true)
                 }
                 .subscribeBy(
                     onComplete = {

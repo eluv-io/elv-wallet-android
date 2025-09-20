@@ -14,11 +14,14 @@ import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.realm.asFlowable
 import app.eluvio.wallet.util.realm.saveAsync
 import app.eluvio.wallet.util.realm.saveTo
+import app.eluvio.wallet.util.rx.doOnSuccessAsync
 import app.eluvio.wallet.util.rx.mapNotNull
+import app.eluvio.wallet.util.timelog
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.kotlin.zipWith
 import io.realm.kotlin.Realm
+import io.realm.kotlin.UpdatePolicy
 import io.realm.kotlin.ext.query
 import io.realm.kotlin.ext.toRealmDictionary
 import javax.inject.Inject
@@ -190,7 +193,10 @@ class MediaPropertyStore @Inject constructor(
             realmQuery = realm.query<MediaPageSectionEntity>(
                 "${MediaPageSectionEntity::id.name} IN $0",
                 sectionIds
-            ).asFlowable(),
+            ).asFlowable()
+                .doOnNext {
+                    timelog.v("db emit ${it.size} sections")
+                },
             fetchOperation = { sections, isFirst ->
                 val existingSections = if (forceRefresh && isFirst) {
                     emptySet()
@@ -202,6 +208,7 @@ class MediaPropertyStore @Inject constructor(
             }
         )
             .doOnNext { sections ->
+                timelog.i("start resolving section permissions")
                 sections.forEach { section ->
                     PermissionResolver.resolvePermissions(
                         section,
@@ -209,11 +216,12 @@ class MediaPropertyStore @Inject constructor(
                         property.permissionStates
                     )
                 }
+                timelog.i("DONE resolving section permissions")
             }
             .distinctUntilChanged()
     }
 
-    private fun fetchMediaProperty(propertyId: String): Completable {
+    fun fetchMediaProperty(propertyId: String): Completable {
         return apiProvider.getApi(MediaWalletV2Api::class)
             .flatMap { api -> api.getProperty(propertyId) }
             .doOnError { Log.e("Error fetching property", it) }
@@ -235,13 +243,30 @@ class MediaPropertyStore @Inject constructor(
         } else {
             apiProvider.getApi(MediaWalletV2Api::class)
                 .doOnSubscribe { Log.d("Fetching missing sections: $missingSections") }
-                .flatMap { api -> api.getSectionsById(propertyId, missingSections.toList()) }
+                .flatMap { api ->
+                    api.getSectionsById(propertyId, missingSections.toList())
+                        .doOnSubscribe {
+                            timelog.w("actually fetching sections")
+                        }
+                        .doFinally {
+                            timelog.w("done fetching sections")
+                        }
+                }
                 .doOnError { Log.e("Error fetching sections", it) }
                 .zipWith(apiProvider.getFabricEndpoint())
                 .map { (response, baseUrl) ->
                     response.contents.orEmpty().map { sectionDto -> sectionDto.toEntity(baseUrl) }
                 }
-                .saveTo(realm, clearTable = false)
+//                .saveTo(realm, clearTable = false)
+                .doOnSuccessAsync { list ->
+                    realm.saveAsync(list, false, UpdatePolicy.ALL)
+                        .doOnSubscribe {
+                            timelog.d("start saving sections")
+                        }
+                        .doOnComplete {
+                            timelog.d("done saving sections")
+                        }
+                }
                 .ignoreElement()
         }
     }

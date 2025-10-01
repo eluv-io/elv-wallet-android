@@ -33,6 +33,7 @@ android {
         resValue("string", "app_name", customBuildConfig.appName)
         buildConfigField("String", "DEFAULT_PROPERTY_ID", customBuildConfig.defaultPropertyId)
         buildConfigField("boolean", "DEFAULT_TO_STAGING_ENV", "${customBuildConfig.defaultToStaging}")
+        buildConfigField("boolean", "DISABLE_PURCHASE_PROMPTS", "${customBuildConfig.disablePurchasePrompts}")
     }
 
     buildTypes {
@@ -190,6 +191,10 @@ data class CustomBuildConfig(
 
     // If true, the staging toggle will be on by default.
     val defaultToStaging: Boolean,
+
+    // Don't show QR codes or links to direct users to purchase content.
+    // This is for stores that don't allow third party in-app purchases (Amazon).
+    val disablePurchasePrompts: Boolean,
 ) {
     companion object {
         fun from(properties: Map<String, Any?>): CustomBuildConfig {
@@ -201,14 +206,16 @@ data class CustomBuildConfig(
                 ?.ifEmpty { null }
                 ?.let { "\"$it\"" }
             val defaultToStaging = properties["defaultToStaging"]?.toString()?.toBooleanStrictOrNull()
+            val disablePurchasePrompts = properties["disablePurchasePrompts"]?.toString()?.toBooleanStrictOrNull()
 
             return CustomBuildConfig(
                 applicationId = applicationId ?: "app.eluvio.wallet",
                 appName = appName ?: "Media Wallet",
                 defaultPropertyId = propertyId ?: "null",
-                versionCode = versionCode ?: 31,
+                versionCode = versionCode ?: 33,
                 versionName = versionName ?: "2.0.1",
-                defaultToStaging = defaultToStaging ?: false
+                defaultToStaging = defaultToStaging ?: false,
+                disablePurchasePrompts = disablePurchasePrompts ?: false,
             )
         }
     }

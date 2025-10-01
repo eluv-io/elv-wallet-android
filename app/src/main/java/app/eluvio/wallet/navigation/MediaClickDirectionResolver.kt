@@ -1,5 +1,6 @@
 package app.eluvio.wallet.navigation
 
+import app.eluvio.wallet.BuildConfig
 import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.entities.v2.permissions.PermissionBehavior
 import app.eluvio.wallet.data.entities.v2.permissions.behaviorEnum
@@ -36,6 +37,8 @@ private fun clickWithPermissionContext(
     permissionContext: PermissionContext
 ): Direction? {
     return when {
+        BuildConfig.DISABLE_PURCHASE_PROMPTS && (media.showAlternatePage || media.showPurchaseOptions) -> null
+
         media.showAlternatePage -> {
             PurchasePromptDestination(permissionContext, pageOverride = media.resolvedPermissions?.alternatePageId)
         }

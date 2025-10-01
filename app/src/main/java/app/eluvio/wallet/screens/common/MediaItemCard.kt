@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import app.eluvio.wallet.BuildConfig
 import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.data.entities.LiveVideoInfoEntity
 import app.eluvio.wallet.data.entities.MediaEntity
@@ -98,8 +99,13 @@ fun MediaItemCard(
                 val padding = if (aspectRatio == AspectRatio.WIDE) 18.dp else 12.dp
                 Column(Modifier.padding(padding)) {
                     if (showPurchaseOptions) {
+                        val text = if (BuildConfig.DISABLE_PURCHASE_PROMPTS) {
+                            "You don't have access to this media"
+                        } else {
+                            "View purchase options"
+                        }
                         Text(
-                            text = "View purchase options".uppercase(),
+                            text = text.uppercase(),
                             style = MaterialTheme.typography.button_24,
                             fontWeight = FontWeight.Bold,
                         )

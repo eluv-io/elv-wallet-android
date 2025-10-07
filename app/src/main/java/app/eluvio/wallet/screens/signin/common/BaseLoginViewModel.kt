@@ -8,12 +8,12 @@ import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.navigation.asPush
-import app.eluvio.wallet.screens.NavGraphs
 import app.eluvio.wallet.screens.common.generateQrCode
-import app.eluvio.wallet.screens.navArgs
+import com.ramcosta.composedestinations.generated.navArgs
 import app.eluvio.wallet.screens.signin.SignInNavArgs
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.interval
+import com.ramcosta.composedestinations.generated.NavGraphs
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.disposables.Disposable
@@ -128,7 +128,7 @@ abstract class BaseLoginViewModel<ActivationData : Any>(
                     onComplete = {
                         Log.d("Activation complete and properties re-fetched, finishing auth flow.")
                         tokenStore.loginProvider = loginProvider
-                        navigateTo(NavigationEvent.PopTo(NavGraphs.authFlowGraph, true))
+                        navigateTo(NavigationEvent.PopTo(NavGraphs.authFlow, true))
                         navArgs.onSignedInDirection?.let { navigateTo(it.asPush()) }
                     }
                 )

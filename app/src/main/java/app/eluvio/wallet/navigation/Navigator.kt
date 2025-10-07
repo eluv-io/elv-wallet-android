@@ -5,10 +5,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.navigation.NavController
-import app.eluvio.wallet.screens.NavGraphs
-import com.ramcosta.composedestinations.navigation.navigate
-import com.ramcosta.composedestinations.navigation.popBackStack
-import com.ramcosta.composedestinations.navigation.popUpTo
+import com.ramcosta.composedestinations.generated.NavGraphs
+import com.ramcosta.composedestinations.utils.route
+import com.ramcosta.composedestinations.utils.toDestinationsNavigator
 
 typealias Navigator = (event: NavigationEvent) -> Unit
 
@@ -31,6 +30,7 @@ class ComposeNavigator(
     private val navController: NavController,
     private val onBackPressedDispatcherOwner: OnBackPressedDispatcherOwner,
 ) : Navigator {
+    private val destNavigator = navController.toDestinationsNavigator()
     override fun invoke(event: NavigationEvent) {
         when (event) {
             NavigationEvent.GoBack -> {
@@ -40,12 +40,12 @@ class ComposeNavigator(
             }
 
             is NavigationEvent.Push -> {
-                navController.navigate(event.direction)
+                destNavigator.navigate(event.direction)
             }
 
             is NavigationEvent.Replace -> {
-                navController.navigate(event.direction) {
-                    navController.currentDestination?.route?.let { currentRoute ->
+                destNavigator.navigate(event.direction) {
+                    navController.currentBackStackEntry?.route()?.let { currentRoute ->
                         popUpTo(currentRoute) {
                             inclusive = true
                         }
@@ -54,11 +54,11 @@ class ComposeNavigator(
             }
 
             is NavigationEvent.SetRoot -> {
-                navController.navigate(event.direction) { popUpTo(NavGraphs.root) }
+                destNavigator.navigate(event.direction) { popUpTo(NavGraphs.root) }
             }
 
             is NavigationEvent.PopTo -> {
-                navController.popBackStack(event.route, event.inclusive)
+                destNavigator.popBackStack(event.route, event.inclusive)
             }
         }
     }

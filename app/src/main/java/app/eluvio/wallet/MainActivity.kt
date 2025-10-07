@@ -24,10 +24,10 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.rememberNavController
 import app.eluvio.wallet.navigation.ComposeNavigator
 import app.eluvio.wallet.navigation.LocalNavigator
-import app.eluvio.wallet.screens.NavGraphs
 import app.eluvio.wallet.theme.EluvioTheme
 import app.eluvio.wallet.util.logging.Log
 import com.ramcosta.composedestinations.DestinationsNavHost
+import com.ramcosta.composedestinations.generated.NavGraphs
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

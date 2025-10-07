@@ -11,7 +11,7 @@ import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.data.stores.PlaybackStore
 import app.eluvio.wallet.navigation.asPush
-import app.eluvio.wallet.screens.destinations.MediaGridDestination
+import com.ramcosta.composedestinations.generated.destinations.MediaGridDestination
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState.CarouselItem
 import app.eluvio.wallet.screens.property.mediagrid.GridContentOverride
 import app.eluvio.wallet.screens.property.rows.BannerSection

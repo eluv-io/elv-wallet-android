@@ -19,8 +19,8 @@ import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.onClickDirection
 import app.eluvio.wallet.screens.common.generateQrCode
-import app.eluvio.wallet.screens.destinations.PropertyDetailDestination
-import app.eluvio.wallet.screens.navArgs
+import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
+import com.ramcosta.composedestinations.generated.navArgs
 import app.eluvio.wallet.util.crypto.Base58
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.Optional

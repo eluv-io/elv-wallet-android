@@ -40,8 +40,7 @@ import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.util.subscribeToState
 import com.ramcosta.composedestinations.annotation.Destination
 
-@MainGraph
-@Destination(navArgsDelegate = ${NAME}NavArgs::class)
+@Destination<MainGraph>(navArgs = ${NAME}NavArgs::class)
 @Composable
 fun ${NAME}() {
     hiltViewModel<${NAME}ViewModel>().subscribeToState { vm, state ->

@@ -59,8 +59,7 @@ import app.eluvio.wallet.util.subscribeToState
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 
-@MainGraph
-@Destination(navArgsDelegate = PurchasePromptNavArgs::class)
+@Destination<MainGraph>(navArgs = PurchasePromptNavArgs::class)
 @Composable
 fun PurchasePrompt() {
     hiltViewModel<PurchasePromptViewModel>().subscribeToState { vm, state ->

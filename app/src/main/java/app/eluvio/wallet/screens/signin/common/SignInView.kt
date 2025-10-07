@@ -34,7 +34,7 @@ import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.TvButton
 import app.eluvio.wallet.screens.common.generateQrCodeBlocking
-import app.eluvio.wallet.screens.destinations.MetamaskSignInDestination
+import com.ramcosta.composedestinations.generated.destinations.MetamaskSignInDestination
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.title_62
 import app.eluvio.wallet.util.compose.BooleanParameterProvider

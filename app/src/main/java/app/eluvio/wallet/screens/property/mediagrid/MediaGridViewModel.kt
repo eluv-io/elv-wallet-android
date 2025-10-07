@@ -16,7 +16,7 @@ import app.eluvio.wallet.data.permissions.PermissionResolver
 import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.data.stores.PlaybackStore
 import app.eluvio.wallet.navigation.NavigationEvent
-import app.eluvio.wallet.screens.destinations.MediaGridDestination
+import com.ramcosta.composedestinations.generated.destinations.MediaGridDestination
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState
 import app.eluvio.wallet.screens.property.toCarouselItems
 import app.eluvio.wallet.util.logging.Log

@@ -20,9 +20,9 @@ import app.eluvio.wallet.data.stores.PropertySearchStore
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.navigation.asReplace
-import app.eluvio.wallet.screens.destinations.PropertyDetailDestination
-import app.eluvio.wallet.screens.destinations.PropertySearchDestination
-import app.eluvio.wallet.screens.destinations.PurchasePromptDestination
+import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
+import com.ramcosta.composedestinations.generated.destinations.PropertySearchDestination
+import com.ramcosta.composedestinations.generated.destinations.PurchasePromptDestination
 import app.eluvio.wallet.screens.videoplayer.toMediaSource
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.Optional

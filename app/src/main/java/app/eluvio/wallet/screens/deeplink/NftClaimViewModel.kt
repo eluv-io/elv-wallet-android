@@ -7,9 +7,9 @@ import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.data.stores.NftClaimStore
 import app.eluvio.wallet.navigation.asReplace
 import app.eluvio.wallet.screens.dashboard.myitems.AllMediaProvider
-import app.eluvio.wallet.screens.destinations.LegacyNftDetailDestination
-import app.eluvio.wallet.screens.destinations.NftClaimDestination
-import app.eluvio.wallet.screens.destinations.NftDetailDestination
+import com.ramcosta.composedestinations.generated.destinations.LegacyNftDetailDestination
+import com.ramcosta.composedestinations.generated.destinations.NftClaimDestination
+import com.ramcosta.composedestinations.generated.destinations.NftDetailDestination
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.interval
 import dagger.hilt.android.lifecycle.HiltViewModel

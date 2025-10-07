@@ -8,8 +8,7 @@ import app.eluvio.wallet.screens.signin.common.SignInView
 import app.eluvio.wallet.util.subscribeToState
 import com.ramcosta.composedestinations.annotation.Destination
 
-@AuthFlowGraph
-@Destination(navArgsDelegate = SignInNavArgs::class)
+@Destination<AuthFlowGraph>(navArgs = SignInNavArgs::class)
 @Composable
 fun OrySignIn() {
     hiltViewModel<OrySignInViewModel>().subscribeToState { vm, state ->

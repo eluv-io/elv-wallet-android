@@ -5,21 +5,21 @@ plugins {
     alias(libs.plugins.com.android.application)
     alias(libs.plugins.org.jetbrains.kotlin.android)
     alias(libs.plugins.hilt)
-    kotlin("kapt")
     alias(libs.plugins.ksp)
     alias(libs.plugins.realm)
     alias(libs.plugins.gradle.secrets)
     alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
     namespace = "app.eluvio.wallet"
-    compileSdk = 34
+    compileSdk = 36
     val customBuildConfig = CustomBuildConfig.from(project.ext.properties)
     defaultConfig {
         applicationId = customBuildConfig.applicationId
         minSdk = 23
-        targetSdk = 34
+        targetSdk = 36
         versionCode = customBuildConfig.versionCode
         versionName = customBuildConfig.versionName
         // Change version name to include CI build number and version code
@@ -76,9 +76,6 @@ android {
         compose = true
         buildConfig = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
-    }
 }
 
 dependencies {
@@ -116,7 +113,7 @@ dependencies {
     debugImplementation(libs.ok2curl)
 
     implementation(libs.hilt.android)
-    kapt(libs.hilt.android.compiler)
+    ksp(libs.hilt.android.compiler)
 
     implementation(libs.rxandroid)
     // Because RxAndroid releases are few and far between, it is recommended you also
@@ -159,11 +156,6 @@ dependencies {
 
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.datastore.rxjava3)
-}
-
-// Allow references to generated code
-kapt {
-    correctErrorTypes = true
 }
 
 secrets {

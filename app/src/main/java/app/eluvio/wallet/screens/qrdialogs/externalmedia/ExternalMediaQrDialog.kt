@@ -37,10 +37,11 @@ import app.eluvio.wallet.theme.title_62
 import app.eluvio.wallet.util.compose.requestInitialFocus
 import app.eluvio.wallet.util.subscribeToState
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.RootGraph
 
-@Destination(
+@Destination<RootGraph>(
     style = FullscreenDialogStyle::class,
-    navArgsDelegate = ExternalMediaQrDialogNavArgs::class
+    navArgs = ExternalMediaQrDialogNavArgs::class
 )
 @Composable
 fun ExternalMediaQrDialog() {

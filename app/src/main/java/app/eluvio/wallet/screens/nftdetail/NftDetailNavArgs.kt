@@ -1,7 +1,7 @@
 package app.eluvio.wallet.screens.nftdetail
 
 import androidx.lifecycle.SavedStateHandle
-import app.eluvio.wallet.screens.navArgs
+import com.ramcosta.composedestinations.generated.navArgs
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,5 +16,5 @@ data class NftDetailNavArgs(
 @InstallIn(ViewModelComponent::class)
 object NavArgModule {
     @Provides
-    fun SavedStateHandle.provide(): NftDetailNavArgs = navArgs()
+    fun provide(handle: SavedStateHandle): NftDetailNavArgs = handle.navArgs()
 }

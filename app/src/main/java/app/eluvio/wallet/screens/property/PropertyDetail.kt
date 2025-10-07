@@ -9,8 +9,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 /**
  * See [DynamicPageLayout] for @Preview
  */
-@MainGraph
-@Destination(navArgsDelegate = PropertyDetailNavArgs::class)
+@Destination<MainGraph>(navArgs = PropertyDetailNavArgs::class)
 @Composable
 fun PropertyDetail() {
     hiltViewModel<PropertyDetailViewModel>().subscribeToState { _, state ->

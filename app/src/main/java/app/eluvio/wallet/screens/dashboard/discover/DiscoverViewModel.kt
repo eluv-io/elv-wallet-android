@@ -9,8 +9,8 @@ import app.eluvio.wallet.data.entities.v2.MediaPropertyEntity
 import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.asPush
-import app.eluvio.wallet.screens.destinations.PropertyDetailDestination
-import app.eluvio.wallet.screens.destinations.SignInRouterDestination
+import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
+import com.ramcosta.composedestinations.generated.destinations.SignInRouterDestination
 import app.eluvio.wallet.util.logging.Log
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Flowable

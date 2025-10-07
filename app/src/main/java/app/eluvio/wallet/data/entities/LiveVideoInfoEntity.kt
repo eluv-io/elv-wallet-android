@@ -3,7 +3,6 @@ package app.eluvio.wallet.data.entities
 import android.content.Context
 import android.text.format.DateFormat
 import app.eluvio.wallet.util.realm.millis
-import app.eluvio.wallet.util.realm.nowCompat
 import app.eluvio.wallet.util.realm.toDate
 import dagger.Module
 import dagger.Provides
@@ -29,7 +28,7 @@ class LiveVideoInfoEntity : EmbeddedRealmObject {
 
     @Ignore
     val eventStarted: Boolean
-        get() = (eventStartTime ?: RealmInstant.MIN) <= RealmInstant.nowCompat()
+        get() = (eventStartTime ?: RealmInstant.MIN) <= RealmInstant.now()
 
     var _streamStartTime: RealmInstant? = null
     var streamStartTime: RealmInstant?
@@ -40,12 +39,12 @@ class LiveVideoInfoEntity : EmbeddedRealmObject {
 
     @Ignore
     val streamStarted: Boolean
-        get() = (streamStartTime ?: RealmInstant.MIN) <= RealmInstant.nowCompat()
+        get() = (streamStartTime ?: RealmInstant.MIN) <= RealmInstant.now()
 
     var endTime: RealmInstant? = null
 
     @Ignore
-    val ended: Boolean get() = (endTime ?: RealmInstant.MAX) <= RealmInstant.nowCompat()
+    val ended: Boolean get() = (endTime ?: RealmInstant.MAX) <= RealmInstant.now()
 
     @Module
     @InstallIn(SingletonComponent::class)

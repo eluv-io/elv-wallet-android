@@ -1,20 +1,14 @@
 package app.eluvio.wallet.navigation
 
 import com.ramcosta.composedestinations.annotation.NavGraph
-import com.ramcosta.composedestinations.annotation.RootNavGraph
+import com.ramcosta.composedestinations.annotation.RootGraph
 
 /**
  * Define navigation graphs in the app.
  */
 
-@RootNavGraph(start = true)
-@NavGraph
-annotation class MainGraph(
-    val start: Boolean = false
-)
+@NavGraph<RootGraph>(start = true)
+annotation class MainGraph
 
-@RootNavGraph
-@NavGraph
-annotation class AuthFlowGraph(
-    val start: Boolean = false
-)
+@NavGraph<RootGraph>
+annotation class AuthFlowGraph

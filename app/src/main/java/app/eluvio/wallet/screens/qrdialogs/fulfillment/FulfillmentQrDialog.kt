@@ -37,8 +37,7 @@ import app.eluvio.wallet.theme.title_62
 import app.eluvio.wallet.util.subscribeToState
 import com.ramcosta.composedestinations.annotation.Destination
 
-@MainGraph
-@Destination(navArgsDelegate = FulfillmentQrDialogNavArgs::class)
+@Destination<MainGraph>(navArgs = FulfillmentQrDialogNavArgs::class)
 @Composable
 fun FulfillmentQrDialog() {
     hiltViewModel<FulfillmentQrDialogViewModel>().subscribeToState { vm, state ->

@@ -5,7 +5,7 @@ import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.di.ApiProvider
-import app.eluvio.wallet.screens.destinations.ImageGalleryDestination
+import com.ramcosta.composedestinations.generated.destinations.ImageGalleryDestination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy

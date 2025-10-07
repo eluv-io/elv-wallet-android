@@ -5,12 +5,11 @@ import app.eluvio.wallet.data.entities.v2.LoginProviders
 import app.eluvio.wallet.navigation.AuthFlowGraph
 import app.eluvio.wallet.navigation.LocalNavigator
 import app.eluvio.wallet.navigation.asReplace
-import app.eluvio.wallet.screens.destinations.Auth0SignInDestination
-import app.eluvio.wallet.screens.destinations.OrySignInDestination
+import com.ramcosta.composedestinations.generated.destinations.Auth0SignInDestination
+import com.ramcosta.composedestinations.generated.destinations.OrySignInDestination
 import com.ramcosta.composedestinations.annotation.Destination
 
-@AuthFlowGraph(start = true)
-@Destination(navArgsDelegate = SignInNavArgs::class)
+@Destination<AuthFlowGraph>(start = true, navArgs = SignInNavArgs::class)
 @Composable
 fun SignInRouter(navArgs: SignInNavArgs) {
     val navigator = LocalNavigator.current

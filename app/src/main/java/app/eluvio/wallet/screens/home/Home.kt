@@ -9,13 +9,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.util.subscribeToState
-import com.ramcosta.composedestinations.annotation.DeepLink
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.parameters.DeepLink
 
 // TODO: home is a bad name, this is just the log that decides where to go when app is opened
-@MainGraph(start = true)
-@Destination(
-    navArgsDelegate = DeeplinkArgs::class,
+@Destination<MainGraph>(
+    start = true,
+    navArgs = DeeplinkArgs::class,
     // Handles direct deep links
     deepLinks = [
         DeepLink(

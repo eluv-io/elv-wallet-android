@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
@@ -51,7 +52,6 @@ import app.eluvio.wallet.screens.dashboard.discover.Discover
 import app.eluvio.wallet.screens.dashboard.myitems.MyItems
 import app.eluvio.wallet.screens.dashboard.profile.Profile
 import app.eluvio.wallet.theme.EluvioThemePreview
-import app.eluvio.wallet.util.compose.focusRestorer
 import app.eluvio.wallet.util.compose.thenIf
 import app.eluvio.wallet.util.isKeyUpOf
 import app.eluvio.wallet.util.rememberToaster
@@ -63,8 +63,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import io.reactivex.rxjava3.processors.PublishProcessor
 import java.util.concurrent.TimeUnit
 
-@MainGraph
-@Destination
+@Destination<MainGraph>
 @Composable
 fun Dashboard() {
     hiltViewModel<DashboardViewModel>().subscribeToState { _, tabs ->

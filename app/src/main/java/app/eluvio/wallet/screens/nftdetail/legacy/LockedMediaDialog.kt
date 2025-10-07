@@ -23,8 +23,7 @@ import app.eluvio.wallet.theme.title_62
 import com.ramcosta.composedestinations.annotation.Destination
 
 
-@MainGraph
-@Destination(style = FullscreenDialogStyle::class)
+@Destination<MainGraph>(style = FullscreenDialogStyle::class)
 @Composable
 fun LockedMediaDialog(
     name: String,

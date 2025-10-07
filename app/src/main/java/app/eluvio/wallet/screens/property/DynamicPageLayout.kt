@@ -68,7 +68,7 @@ import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.navigation.asReplace
 import app.eluvio.wallet.screens.common.DelayedFullscreenLoader
 import app.eluvio.wallet.screens.common.VideoPlayer
-import app.eluvio.wallet.screens.destinations.PropertyDetailDestination
+import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
 import app.eluvio.wallet.screens.property.rows.BannerSection
 import app.eluvio.wallet.screens.property.rows.CarouselSection
 import app.eluvio.wallet.screens.property.rows.DescriptionSection

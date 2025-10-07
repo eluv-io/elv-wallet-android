@@ -64,8 +64,7 @@ import app.eluvio.wallet.util.subscribeToState
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 
-@MainGraph
-@Destination(navArgsDelegate = PropertySearchNavArgs::class)
+@Destination<MainGraph>(navArgs = PropertySearchNavArgs::class)
 @Composable
 fun PropertySearch() {
     var query by rememberSaveable { mutableStateOf("") }

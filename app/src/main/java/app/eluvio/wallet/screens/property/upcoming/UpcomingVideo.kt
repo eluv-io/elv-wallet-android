@@ -41,8 +41,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
-@MainGraph
-@Destination(navArgsDelegate = UpcomingVideoNavArgs::class)
+@Destination<MainGraph>(navArgs = UpcomingVideoNavArgs::class)
 @Composable
 fun UpcomingVideo() {
     hiltViewModel<UpcomingVideoViewModel>().subscribeToState { vm, state ->

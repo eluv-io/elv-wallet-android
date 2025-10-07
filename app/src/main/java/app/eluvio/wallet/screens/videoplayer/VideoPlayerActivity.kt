@@ -27,7 +27,6 @@ import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.PlaybackStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.MainGraph
-import app.eluvio.wallet.screens.destinations.VideoPlayerActivityDestination
 import app.eluvio.wallet.screens.videoplayer.ui.VideoInfoPane
 import app.eluvio.wallet.util.crypto.Base58
 import app.eluvio.wallet.util.logging.Log
@@ -40,6 +39,7 @@ import com.mux.stats.sdk.core.model.CustomerVideoData
 import com.mux.stats.sdk.core.model.CustomerViewData
 import com.mux.stats.sdk.muxstats.monitorWithMuxData
 import com.ramcosta.composedestinations.annotation.ActivityDestination
+import com.ramcosta.composedestinations.generated.destinations.VideoPlayerActivityDestination
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Maybe
@@ -51,8 +51,7 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-@MainGraph
-@ActivityDestination(navArgsDelegate = VideoPlayerArgs::class)
+@ActivityDestination<MainGraph>(navArgs = VideoPlayerArgs::class)
 @AndroidEntryPoint
 @UnstableApi
 class VideoPlayerActivity : FragmentActivity(), Player.Listener {

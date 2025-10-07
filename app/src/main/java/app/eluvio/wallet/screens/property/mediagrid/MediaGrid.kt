@@ -41,8 +41,7 @@ import app.eluvio.wallet.util.subscribeToState
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 
-@MainGraph
-@Destination(navArgsDelegate = MediaGridNavArgs::class)
+@Destination<MainGraph>(navArgs = MediaGridNavArgs::class)
 @Composable
 fun MediaGrid() {
     hiltViewModel<MediaGridViewModel>().subscribeToState { vm, state ->

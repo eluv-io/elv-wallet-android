@@ -10,7 +10,7 @@ import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.di.ApiProvider
 import app.eluvio.wallet.navigation.asReplace
-import app.eluvio.wallet.screens.destinations.VideoPlayerActivityDestination
+import com.ramcosta.composedestinations.generated.destinations.VideoPlayerActivityDestination
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.realm.millis
 import app.eluvio.wallet.util.rx.mapNotNull

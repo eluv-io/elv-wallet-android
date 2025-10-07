@@ -59,7 +59,7 @@ import app.eluvio.wallet.screens.common.MediaItemCard
 import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.common.WrapContentText
 import app.eluvio.wallet.screens.common.spacer
-import app.eluvio.wallet.screens.destinations.RedeemDialogDestination
+import com.ramcosta.composedestinations.generated.destinations.RedeemDialogDestination
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.LocalSurfaceScale
 import app.eluvio.wallet.theme.body_32
@@ -74,8 +74,7 @@ import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import io.realm.kotlin.ext.realmListOf
 
-@MainGraph
-@Destination(navArgsDelegate = LegacyNftDetailArgs::class)
+@Destination<MainGraph>(navArgs = LegacyNftDetailArgs::class)
 @Composable
 fun LegacyNftDetail() {
     val toaster = rememberToaster()

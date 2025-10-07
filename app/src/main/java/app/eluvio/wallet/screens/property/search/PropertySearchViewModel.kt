@@ -15,8 +15,8 @@ import app.eluvio.wallet.data.stores.PlaybackStore
 import app.eluvio.wallet.data.stores.PropertySearchStore
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.network.dto.v2.SearchRequest
-import app.eluvio.wallet.screens.destinations.PropertySearchDestination
-import app.eluvio.wallet.screens.navArgs
+import com.ramcosta.composedestinations.generated.destinations.PropertySearchDestination
+import com.ramcosta.composedestinations.generated.navArgs
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState
 import app.eluvio.wallet.screens.property.toDynamicSections
 import app.eluvio.wallet.util.logging.Log

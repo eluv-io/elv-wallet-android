@@ -5,7 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.data.stores.FulfillmentStore
 import app.eluvio.wallet.screens.common.generateQrCode
-import app.eluvio.wallet.screens.destinations.FulfillmentQrDialogDestination
+import com.ramcosta.composedestinations.generated.destinations.FulfillmentQrDialogDestination
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.mapNotNull
 import dagger.hilt.android.lifecycle.HiltViewModel

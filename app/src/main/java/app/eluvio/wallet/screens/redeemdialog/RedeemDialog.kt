@@ -45,8 +45,7 @@ import app.eluvio.wallet.util.compose.requestInitialFocus
 import app.eluvio.wallet.util.subscribeToState
 import com.ramcosta.composedestinations.annotation.Destination
 
-@MainGraph
-@Destination(navArgsDelegate = RedeemDialogNavArgs::class)
+@Destination<MainGraph>(navArgs = RedeemDialogNavArgs::class)
 @Composable
 fun RedeemDialog() {
     hiltViewModel<RedeemDialogViewModel>().subscribeToState { vm, state ->

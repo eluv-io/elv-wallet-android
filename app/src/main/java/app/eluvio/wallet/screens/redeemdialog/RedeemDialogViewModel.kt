@@ -13,8 +13,8 @@ import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.data.stores.FulfillmentStore
 import app.eluvio.wallet.di.ApiProvider
 import app.eluvio.wallet.navigation.asPush
-import app.eluvio.wallet.screens.destinations.FulfillmentQrDialogDestination
-import app.eluvio.wallet.screens.navArgs
+import com.ramcosta.composedestinations.generated.destinations.FulfillmentQrDialogDestination
+import com.ramcosta.composedestinations.generated.navArgs
 import app.eluvio.wallet.util.crypto.Base58
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.realm.toDate

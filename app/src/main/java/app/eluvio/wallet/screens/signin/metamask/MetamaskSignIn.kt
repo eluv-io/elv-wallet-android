@@ -34,8 +34,7 @@ import app.eluvio.wallet.util.compose.requestInitialFocus
 import app.eluvio.wallet.util.subscribeToState
 import com.ramcosta.composedestinations.annotation.Destination
 
-@AuthFlowGraph
-@Destination(navArgsDelegate = SignInNavArgs::class)
+@Destination<AuthFlowGraph>(navArgs = SignInNavArgs::class)
 @Composable
 fun MetamaskSignIn() {
     hiltViewModel<MetamaskSignInViewModel>().subscribeToState { vm, state ->

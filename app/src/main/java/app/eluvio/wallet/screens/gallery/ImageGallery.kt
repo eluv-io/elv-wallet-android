@@ -42,8 +42,7 @@ import app.eluvio.wallet.util.compose.requestOnce
 import app.eluvio.wallet.util.subscribeToState
 import com.ramcosta.composedestinations.annotation.Destination
 
-@MainGraph
-@Destination(navArgsDelegate = ImageGalleryNavArgs::class)
+@Destination<MainGraph>(navArgs = ImageGalleryNavArgs::class)
 @Composable
 fun ImageGallery() {
     hiltViewModel<ImageGalleryViewModel>().subscribeToState { vm, state ->

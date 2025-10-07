@@ -1,7 +1,7 @@
 package app.eluvio.wallet.screens.property.upcoming
 
 import androidx.lifecycle.SavedStateHandle
-import app.eluvio.wallet.screens.navArgs
+import com.ramcosta.composedestinations.generated.navArgs
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,5 +19,5 @@ data class UpcomingVideoNavArgs(
 @InstallIn(ViewModelComponent::class)
 object NavArgModule {
     @Provides
-    fun SavedStateHandle.provide(): UpcomingVideoNavArgs = navArgs()
+    fun provide(handle: SavedStateHandle): UpcomingVideoNavArgs = handle.navArgs()
 }

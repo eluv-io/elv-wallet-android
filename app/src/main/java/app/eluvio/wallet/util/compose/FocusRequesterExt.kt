@@ -54,7 +54,7 @@ fun Modifier.requestInitialFocus(focusRequester: FocusRequester? = null) = compo
  * called, but only once per composition/configuration.
  */
 @OptIn(ExperimentalComposeUiApi::class)
-fun Modifier.focusRestorer(oneTimeFallback: FocusRequester): Modifier = composed {
+fun Modifier.focusRestorer2(oneTimeFallback: FocusRequester): Modifier = composed {
     var ranOnce by rememberSaveable { mutableStateOf(false) }
     focusRestorer {
         if (!ranOnce) {

@@ -8,13 +8,15 @@ import app.eluvio.wallet.data.stores.DeeplinkStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.asNewRoot
 import app.eluvio.wallet.navigation.asPush
-import app.eluvio.wallet.screens.NavGraphs
-import app.eluvio.wallet.screens.destinations.DashboardDestination
-import app.eluvio.wallet.screens.destinations.HomeDestination
-import app.eluvio.wallet.screens.destinations.NftClaimDestination
-import app.eluvio.wallet.screens.destinations.VideoPlayerActivityDestination
+import app.eluvio.wallet.screens.signin.SignInNavArgs
 import app.eluvio.wallet.util.logging.Log
+import com.ramcosta.composedestinations.generated.NavGraphs
+import com.ramcosta.composedestinations.generated.destinations.DashboardDestination
+import com.ramcosta.composedestinations.generated.destinations.HomeDestination
+import com.ramcosta.composedestinations.generated.destinations.NftClaimDestination
+import com.ramcosta.composedestinations.generated.destinations.VideoPlayerActivityDestination
 import com.ramcosta.composedestinations.spec.Direction
+import com.ramcosta.composedestinations.utils.startDestination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.kotlin.addTo
@@ -80,7 +82,7 @@ class HomeViewModel @Inject constructor(
                     onError = {
                         Log.e("Failed to get fabric token", it)
                         // We failed to get a fabric token, so we need to re-authenticate.
-                        navigateTo(NavGraphs.authFlowGraph.asNewRoot())
+                        navigateTo(NavGraphs.authFlow(SignInNavArgs()).asNewRoot())
                     }
                 )
                 .addTo(disposables)

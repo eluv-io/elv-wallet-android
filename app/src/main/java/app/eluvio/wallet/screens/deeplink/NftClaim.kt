@@ -45,8 +45,7 @@ import app.eluvio.wallet.util.compose.requestOnce
 import app.eluvio.wallet.util.subscribeToState
 import com.ramcosta.composedestinations.annotation.Destination
 
-@MainGraph
-@Destination(navArgsDelegate = NftClaimNavArgs::class)
+@Destination<MainGraph>(navArgs = NftClaimNavArgs::class)
 @Composable
 fun NftClaim() {
     hiltViewModel<NftClaimViewModel>().subscribeToState { vm, state ->

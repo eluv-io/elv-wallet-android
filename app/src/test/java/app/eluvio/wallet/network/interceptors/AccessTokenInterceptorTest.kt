@@ -6,7 +6,6 @@ import app.eluvio.wallet.data.stores.FabricConfigStore
 import app.eluvio.wallet.data.stores.InMemoryTokenStore
 import app.eluvio.wallet.network.api.Auth0Api
 import app.eluvio.wallet.network.api.GetTokenResponse
-import app.eluvio.wallet.network.api.RefreshTokenRequest
 import app.eluvio.wallet.network.dto.FabricConfiguration
 import app.eluvio.wallet.network.dto.Network
 import app.eluvio.wallet.network.dto.QSpace
@@ -15,19 +14,17 @@ import app.eluvio.wallet.testing.ApiTestingRule
 import app.eluvio.wallet.testing.TestApi
 import app.eluvio.wallet.testing.TestLogRule
 import app.eluvio.wallet.testing.awaitTest
+import io.mockk.confirmVerified
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Single
 import okhttp3.mockwebserver.MockResponse
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.never
-import org.mockito.kotlin.stub
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
 import retrofit2.HttpException
+import retrofit2.Retrofit
 import retrofit2.create
 
 class AccessTokenInterceptorTest {
@@ -44,8 +41,8 @@ class AccessTokenInterceptorTest {
         // Always start with some fabric token (logged in state)
         fabricToken.set("expired_fabric_token")
     }
-    private val auth0Api = mock<Auth0Api> {
-        on { refreshToken(any()) } doReturn Single.just(
+    private val auth0Api = mockk<Auth0Api>() {
+        every { refreshToken(any()) } returns Single.just(
             GetTokenResponse(
                 "id",
                 "access",
@@ -54,15 +51,15 @@ class AccessTokenInterceptorTest {
             )
         )
     }
-    private val authService = mock<AuthenticationService> {
-        on { getFabricToken() } doReturn Single.just("new_fabric_token")
+    private val authService = mockk<AuthenticationService> {
+        every { getFabricToken() } returns Single.just("new_fabric_token")
             .doOnSuccess { tokenStore.fabricToken.set(it) }
     }
-    private val signOutHandler = mock<SignOutHandler>() {
-        on { signOut(any(), any()) } doReturn Completable.complete()
+    private val signOutHandler = mockk<SignOutHandler>() {
+        every { signOut(any(), any()) } returns Completable.complete()
     }
-    private val configStore = mock<FabricConfigStore> {
-        on { observeFabricConfiguration() } doReturn Single.just(
+    private val configStore = mockk<FabricConfigStore> {
+        every { observeFabricConfiguration() } returns Single.just(
             FabricConfiguration(
                 "node1",
                 Network(
@@ -78,6 +75,7 @@ class AccessTokenInterceptorTest {
     }
     private val interceptor = AccessTokenInterceptor(
         tokenStore,
+        Retrofit.Builder().baseUrl("http://localhost").build(),
         auth0Api,
         { authService },
         signOutHandler,
@@ -99,12 +97,14 @@ class AccessTokenInterceptorTest {
             .assertValue {
                 it == "success"
             }
-
         // New access/refresh token requested using old token
-        verify(auth0Api).refreshToken(RefreshTokenRequest(refreshToken = "old_refresh_token"))
+        verify {
+            auth0Api.refreshToken(match { it.refreshToken == "old_refresh_token" })
+        }
         // New fabric token generated
-        verify(authService).getFabricToken()
+        verify { authService.getFabricToken() }
         // New refresh token stored
+        confirmVerified(auth0Api)
         assert(tokenStore.refreshToken.get() == "refresh")
     }
 
@@ -124,7 +124,8 @@ class AccessTokenInterceptorTest {
             .values()
         assert(results.containsAll(listOf("success1", "success2")))
 
-        verify(auth0Api, times(1)).refreshToken(any())
+        verify(exactly = 1) { auth0Api.refreshToken(any()) }
+        confirmVerified(auth0Api)
     }
 
     // Refresh token is used up, can't refresh anymore
@@ -135,15 +136,16 @@ class AccessTokenInterceptorTest {
         server.enqueue(MockResponse().setResponseCode(401))
 
         // Fail the refresh token call
-        auth0Api.stub {
-            on { refreshToken(any()) } doReturn Single.error(RuntimeException("error"))
-        }
+        every {
+            auth0Api.refreshToken(any())
+        } returns Single.error(RuntimeException("error"))
 
         api.awaitTest().assertError {
             it is HttpException && it.code() == 401
         }
         // Signout called
-        verify(signOutHandler).signOut(any(), any())
+        verify { signOutHandler.signOut(any(), any()) }
+        confirmVerified(signOutHandler)
     }
 
     // Refresh in an unknown state. Give up without signing out. Maybe we'll have better luck next time.
@@ -154,16 +156,17 @@ class AccessTokenInterceptorTest {
         server.enqueue(MockResponse().setResponseCode(401))
 
         // Fail the refresh token call
-        auth0Api.stub {
-            on { refreshToken(any()) } doReturn Single.error(InterruptedException("interrupted"))
-        }
+        every {
+            auth0Api.refreshToken(any())
+        } returns Single.error(InterruptedException("interrupted"))
 
         api.awaitTest().assertError {
             it is HttpException && it.code() == 401
         }
 
         // Signout NOT called
-        verify(signOutHandler, never()).signOut(any(), any())
+        verify(exactly = 0) { signOutHandler.signOut(any(), any()) }
+        confirmVerified(signOutHandler)
     }
 
     // retrying too many times calls sign out
@@ -180,7 +183,8 @@ class AccessTokenInterceptorTest {
         }
 
         // Signout called
-        verify(signOutHandler).signOut(any(), any())
+        verify { signOutHandler.signOut(any(), any()) }
+        confirmVerified(signOutHandler)
     }
 
     @Test
@@ -194,6 +198,7 @@ class AccessTokenInterceptorTest {
         }
 
         // Signout called
-        verify(signOutHandler).signOut(any(), any())
+        verify { signOutHandler.signOut(any(), any()) }
+        confirmVerified(signOutHandler)
     }
 }

@@ -35,6 +35,9 @@ open class InMemoryTokenStore : TokenStore {
         get() = lpPref.get() ?: LoginProviders.ORY
         set(value) = lpPref.set(value)
 
+    override val auth0Domain: ReadWritePref<String> = Pref()
+    override val auth0ClientId: ReadWritePref<String> = Pref()
+
     override fun update(vararg operations: StoreOperation) {
         val noOpMap = mutablePreferencesOf()
         operations.forEach { it(noOpMap) }

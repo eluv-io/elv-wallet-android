@@ -69,7 +69,7 @@ abstract class BaseViewModel<State : Any>(
         }
     }
 
-    protected fun navigateTo(event: NavigationEvent) {
+    public fun navigateTo(event: NavigationEvent) {
         _navigationEvents.onNext(event)
     }
 

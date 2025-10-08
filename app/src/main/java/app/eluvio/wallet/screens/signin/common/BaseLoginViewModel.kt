@@ -9,11 +9,14 @@ import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.screens.common.generateQrCode
-import com.ramcosta.composedestinations.generated.navArgs
 import app.eluvio.wallet.screens.signin.SignInNavArgs
+import app.eluvio.wallet.util.entity.getFirstAuthorizedPage
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.interval
+import app.eluvio.wallet.util.rx.unsaved
 import com.ramcosta.composedestinations.generated.NavGraphs
+import com.ramcosta.composedestinations.generated.navArgs
+import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.disposables.Disposable
@@ -119,10 +122,13 @@ abstract class BaseLoginViewModel<ActivationData : Any>(
                     )
                 }
                 .retry()
-                .doOnSuccess { Log.d("Got a token $it") }
+                .doOnSuccess { token ->
+                    Log.d("Got a token $token")
+                    refreshAllPropertiesAsync()
+                }
                 .flatMapCompletable {
-                    // Re-fetch properties because all the permissions will be different now that we have a token
-                    propertyStore.fetchMediaProperties(clearOldProperties = true)
+                    // Make sure property is actually fetched before we continue
+                    prefetchPropertyAndSections()
                 }
                 .subscribeBy(
                     onComplete = {
@@ -133,5 +139,36 @@ abstract class BaseLoginViewModel<ActivationData : Any>(
                     }
                 )
                 .addTo(disposables)
+    }
+
+    // Kick off a bg fetch of all properties.
+    // This is a slower operation so we're not going to wait for it,
+    // and we'll allow it to outlive the ViewModel scope.
+    private fun refreshAllPropertiesAsync() {
+        propertyStore.fetchMediaProperties()
+            .subscribeBy(
+                onError = { error ->
+                    Log.d("Error fetching properties post-auth. Non critical.", error)
+                }
+            )
+            .unsaved()
+    }
+
+    private fun prefetchPropertyAndSections(): Completable {
+        return propertyStore.fetchMediaProperty(propertyId!!)
+            // Now we can look up the Property in the cache and be sure it's not the one from before auth was complete.
+            .andThen(propertyStore.observeMediaProperty(propertyId, false))
+            .firstElement()
+            .flatMapPublisher { property ->
+                property
+                    .getFirstAuthorizedPage(currentPage = null, propertyStore)
+                    .map { page -> property to page }
+            }
+            .flatMapCompletable { (property, page) ->
+                propertyStore.observeSections(property, page)
+                    // Assume that page Sections will never be zero
+                    .takeUntil { it.isNotEmpty() }
+                    .ignoreElements()
+            }
     }
 }

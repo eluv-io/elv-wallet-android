@@ -213,7 +213,7 @@ class MediaPropertyStore @Inject constructor(
             .distinctUntilChanged()
     }
 
-    private fun fetchMediaProperty(propertyId: String): Completable {
+    fun fetchMediaProperty(propertyId: String): Completable {
         return apiProvider.getApi(MediaWalletV2Api::class)
             .flatMap { api -> api.getProperty(propertyId) }
             .doOnError { Log.e("Error fetching property", it) }

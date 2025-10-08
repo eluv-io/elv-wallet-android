@@ -7,12 +7,10 @@ import app.eluvio.wallet.app.Events
 import app.eluvio.wallet.data.VideoOptionsFetcher
 import app.eluvio.wallet.data.entities.v2.MediaPageEntity
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
-import app.eluvio.wallet.data.entities.v2.MediaPropertyEntity
 import app.eluvio.wallet.data.entities.v2.PropertySearchFiltersEntity
 import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
 import app.eluvio.wallet.data.entities.v2.permissions.PermissionSettingsEntity
 import app.eluvio.wallet.data.entities.v2.permissions.showAlternatePage
-import app.eluvio.wallet.data.entities.v2.permissions.showPurchaseOptions
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.PlaybackStore
@@ -20,16 +18,19 @@ import app.eluvio.wallet.data.stores.PropertySearchStore
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.navigation.asReplace
-import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
-import com.ramcosta.composedestinations.generated.destinations.PropertySearchDestination
-import com.ramcosta.composedestinations.generated.destinations.PurchasePromptDestination
 import app.eluvio.wallet.screens.videoplayer.toMediaSource
+import app.eluvio.wallet.util.entity.CircularRedirectException
+import app.eluvio.wallet.util.entity.ShowPurchaseOptionsRedirectException
+import app.eluvio.wallet.util.entity.getFirstAuthorizedPage
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.Optional
 import app.eluvio.wallet.util.rx.asSharedState
 import app.eluvio.wallet.util.rx.combineLatest
 import app.eluvio.wallet.util.rx.interval
 import app.eluvio.wallet.util.rx.mapNotNull
+import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
+import com.ramcosta.composedestinations.generated.destinations.PropertySearchDestination
+import com.ramcosta.composedestinations.generated.destinations.PurchasePromptDestination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Maybe
@@ -52,8 +53,6 @@ class PropertyDetailViewModel @Inject constructor(
     private val navArgs = PropertyDetailDestination.argsFrom(savedStateHandle)
     private val propertyId = navArgs.propertyId
 
-    private val unauthorizedPageIds = mutableSetOf<String>()
-
     private val property = propertyStore.observeMediaProperty(propertyId)
         .asSharedState()
 
@@ -72,8 +71,7 @@ class PropertyDetailViewModel @Inject constructor(
             }
         }
         .switchMap { (property, page) ->
-            unauthorizedPageIds.clear()
-            getFirstAuthorizedPage(property, page)
+            property.getFirstAuthorizedPage(page, propertyStore)
                 .map { authorizedPage -> property to authorizedPage }
         }
         .switchMap { (property, page) ->
@@ -232,60 +230,6 @@ class PropertyDetailViewModel @Inject constructor(
     }
 
     /**
-     * Finds the first page we are authorized to view.
-     * @throws ShowPurchaseOptionsRedirectException when reaching a property/page that requires
-     *  displaying purchase options, since there's no valid [MediaPageEntity] in that case.
-     */
-    private fun getFirstAuthorizedPage(
-        property: MediaPropertyEntity,
-        currentPage: MediaPageEntity?
-    ): Flowable<MediaPageEntity> {
-        // Convenience function to handle redirects
-        fun redirect(redirectPageId: String) = propertyStore.observePage(property, redirectPageId)
-            .switchMap { nextPage ->
-                // Recursively check the next page
-                getFirstAuthorizedPage(property, nextPage)
-            }
-
-        return if (currentPage == null) {
-            // Check property permissions
-            val propertyRedirectPage = property.propertyPermissions?.getRedirectPageId()
-            if (propertyRedirectPage != null) {
-                redirect(propertyRedirectPage)
-            } else if (property.propertyPermissions?.showPurchaseOptions == true) {
-                Flowable.error(ShowPurchaseOptionsRedirectException(PermissionContext(property.id)))
-            } else {
-                // We're authorized to view the property, check the main page.
-                getFirstAuthorizedPage(property, property.mainPage)
-            }
-        } else if (currentPage.pagePermissions?.showPurchaseOptions == true) {
-            Flowable.error(
-                ShowPurchaseOptionsRedirectException(PermissionContext(property.id, currentPage.id))
-            )
-        } else {
-            when (val redirectPageId = currentPage.pagePermissions?.getRedirectPageId()) {
-                currentPage.id, in unauthorizedPageIds -> {
-                    // We already checked this page id, or this is a self-reference, so we know
-                    // we're not authorized to view it.
-                    Flowable.error(CircularRedirectException())
-                }
-
-                null -> {
-                    // No page to redirect to: we are authorized to render this page.
-                    Flowable.just(currentPage)
-                        .doOnNext { Log.i("Authorized to view page ${currentPage.id}") }
-                }
-
-                else -> {
-                    Log.w("Reached unauthorized page ${currentPage.id}, redirecting to $redirectPageId")
-                    unauthorizedPageIds += currentPage.id
-                    redirect(redirectPageId)
-                }
-            }
-        }
-    }
-
-    /**
      * If we are authorized to view this page/property, or redirect behavior isn't configured, returns null.
      */
     private fun PermissionSettingsEntity.getRedirectPageId(): String? {
@@ -314,11 +258,6 @@ class PropertyDetailViewModel @Inject constructor(
             }
     }
 }
-
-private class CircularRedirectException : IllegalStateException("Circular redirect detected")
-
-private class ShowPurchaseOptionsRedirectException(val permissionContext: PermissionContext) :
-    RuntimeException("Show purchase options detected")
 
 /**
  * Video backgrounds are iffy on different devices. We'll want to be smarter about when/if we enable them.

@@ -1,8 +1,10 @@
 package app.eluvio.wallet.screens.nftdetail.legacy
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -13,7 +15,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,11 +42,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.tv.foundation.PivotOffsets
-import androidx.tv.foundation.lazy.list.TvLazyColumn
-import androidx.tv.foundation.lazy.list.TvLazyRow
-import androidx.tv.foundation.lazy.list.items
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.MaterialTheme
@@ -59,7 +61,6 @@ import app.eluvio.wallet.screens.common.MediaItemCard
 import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.common.WrapContentText
 import app.eluvio.wallet.screens.common.spacer
-import com.ramcosta.composedestinations.generated.destinations.RedeemDialogDestination
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.LocalSurfaceScale
 import app.eluvio.wallet.theme.body_32
@@ -67,11 +68,13 @@ import app.eluvio.wallet.theme.label_24
 import app.eluvio.wallet.theme.onRedeemTagSurface
 import app.eluvio.wallet.theme.redeemTagSurface
 import app.eluvio.wallet.theme.title_62
+import app.eluvio.wallet.util.compose.FractionBringIntoViewSpec
 import app.eluvio.wallet.util.findActivity
 import app.eluvio.wallet.util.rememberToaster
 import app.eluvio.wallet.util.subscribeToState
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.generated.destinations.RedeemDialogDestination
 import io.realm.kotlin.ext.realmListOf
 
 @Destination<MainGraph>(navArgs = LegacyNftDetailArgs::class)
@@ -83,6 +86,7 @@ fun LegacyNftDetail() {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun LegacyNftDetail(state: LegacyNftDetailViewModel.State) {
     if (state.isEmpty()) {
@@ -108,35 +112,54 @@ private fun LegacyNftDetail(state: LegacyNftDetailViewModel.State) {
         )
     }
     Column {
-        TvLazyColumn(
-            pivotOffsets = PivotOffsets(0.6f),
-            modifier = Modifier
-                .focusRequester(lazyColumnFocusRequester)
-                .focusProperties { up = backButtonFocusRequester })
-        {
-            spacer(height = 32.dp)
-            item {
-                Text(
-                    text = state.title,
-                    style = MaterialTheme.typography.title_62,
-                    modifier = Modifier.padding(start = Overscan.horizontalPadding, end = 260.dp)
-                )
-                DescriptionText(text = state.subtitle)
-            }
-            item {
-                FeaturedMediaAndOffersRow(state)
-            }
+        val bivs = remember { FractionBringIntoViewSpec(parentFraction = 0.6f) }
+        CompositionLocalProvider(LocalBringIntoViewSpec provides bivs) {
+            LazyColumn(
+                modifier = Modifier
+                    .focusRequester(lazyColumnFocusRequester)
+                    .focusProperties { up = backButtonFocusRequester })
+            {
+                spacer(height = 32.dp)
+                item {
+                    Text(
+                        text = state.title,
+                        style = MaterialTheme.typography.title_62,
+                        modifier = Modifier.padding(
+                            start = Overscan.horizontalPadding,
+                            end = 260.dp
+                        )
+                    )
+                    DescriptionText(text = state.subtitle)
+                }
+                item {
+                    FeaturedMediaAndOffersRow(state)
+                }
 
-            state.sections.forEach { section ->
-                section.name
-                    .takeIf { it.isNotEmpty() }
-                    ?.let { sectionName ->
-                        item(
-                            key = "${section.id}_$sectionName",
-                            contentType = "section_name"
-                        ) {
+                state.sections.forEach { section ->
+                    section.name
+                        .takeIf { it.isNotEmpty() }
+                        ?.let { sectionName ->
+                            item(
+                                key = "${section.id}_$sectionName",
+                                contentType = "section_name"
+                            ) {
+                                Text(
+                                    sectionName,
+                                    style = MaterialTheme.typography.body_32,
+                                    modifier = Modifier.padding(
+                                        horizontal = Overscan.horizontalPadding,
+                                        vertical = 16.dp
+                                    )
+                                )
+                            }
+                        }
+                    // Only show collections that have at least one visible media item
+                    val collections = section.collections
+                        .filter { collection -> collection.media.any { !it.shouldBeHidden() } }
+                    items(collections, contentType = { "collection" }) { collection ->
+                        if (collection.name.isNotEmpty()) {
                             Text(
-                                sectionName,
+                                collection.name,
                                 style = MaterialTheme.typography.body_32,
                                 modifier = Modifier.padding(
                                     horizontal = Overscan.horizontalPadding,
@@ -144,26 +167,12 @@ private fun LegacyNftDetail(state: LegacyNftDetailViewModel.State) {
                                 )
                             )
                         }
+                        MediaItemsRow(collection.media)
                     }
-                // Only show collections that have at least one visible media item
-                val collections = section.collections
-                    .filter { collection -> collection.media.any { !it.shouldBeHidden() } }
-                items(collections, contentType = { "collection" }) { collection ->
-                    if (collection.name.isNotEmpty()) {
-                        Text(
-                            collection.name,
-                            style = MaterialTheme.typography.body_32,
-                            modifier = Modifier.padding(
-                                horizontal = Overscan.horizontalPadding,
-                                vertical = 16.dp
-                            )
-                        )
-                    }
-                    MediaItemsRow(collection.media)
                 }
-            }
 
-            spacer(height = 32.dp)
+                spacer(height = 32.dp)
+            }
         }
     }
 }
@@ -254,7 +263,7 @@ private fun DescriptionText(text: AnnotatedString) {
 
 @Composable
 private fun FeaturedMediaAndOffersRow(state: LegacyNftDetailViewModel.State) {
-    TvLazyRow(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
         spacer(width = 28.dp)
         items(state.featuredMedia) { item -> MediaItemCard(item, cardHeight = CARD_HEIGHT) }
         items(state.redeemableOffers) { item ->
@@ -277,7 +286,7 @@ private fun FeaturedMediaAndOffersRow(state: LegacyNftDetailViewModel.State) {
 private fun MediaItemsRow(media: List<MediaEntity>) {
     val items = media.filter { !it.shouldBeHidden() }
     if (items.isNotEmpty()) {
-        TvLazyRow(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
             spacer(width = 28.dp)
             items(items) { media ->
                 MediaItemCard(media, cardHeight = CARD_HEIGHT)

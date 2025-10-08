@@ -1,6 +1,8 @@
 package app.eluvio.wallet.screens.dashboard.discover
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -14,10 +16,17 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -41,14 +50,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.tv.foundation.PivotOffsets
-import androidx.tv.foundation.lazy.grid.TvGridCells
-import androidx.tv.foundation.lazy.grid.TvGridItemSpan
-import androidx.tv.foundation.lazy.grid.TvLazyGridState
-import androidx.tv.foundation.lazy.grid.TvLazyVerticalGrid
-import androidx.tv.foundation.lazy.grid.itemsIndexed
-import androidx.tv.foundation.lazy.grid.rememberTvLazyGridState
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
@@ -65,6 +67,7 @@ import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.borders
 import app.eluvio.wallet.theme.focusedBorder
 import app.eluvio.wallet.theme.label_40
+import app.eluvio.wallet.util.compose.FractionBringIntoViewSpec
 import app.eluvio.wallet.util.compose.RealisticDevices
 import app.eluvio.wallet.util.compose.requestInitialFocus
 import app.eluvio.wallet.util.compose.thenIf
@@ -147,6 +150,7 @@ fun SinglePropertyPage(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun BoxWithConstraintsScope.DiscoverGrid(
     state: DiscoverViewModel.State,
@@ -163,7 +167,7 @@ private fun BoxWithConstraintsScope.DiscoverGrid(
         val cardWidth = desiredCardWidth + cardSpacing
         (availableWidth / cardWidth).roundToInt()
     }
-    val scrollState = rememberTvLazyGridState()
+    val scrollState = rememberLazyGridState()
     val scope = rememberCoroutineScope()
 
     // The focus problems here were hard to solve, I got some hints from:
@@ -189,82 +193,84 @@ private fun BoxWithConstraintsScope.DiscoverGrid(
      */
     val onDemandFocusRestore = rememberSaveable { mutableStateOf<String?>(null) }
 
+    val bivs = remember { FractionBringIntoViewSpec(parentFraction = 0.45f) }
     val properties = state.properties
-    TvLazyVerticalGrid(
-        state = scrollState,
-        columns = TvGridCells.Fixed(columnCount),
-        horizontalArrangement = Arrangement.spacedBy(cardSpacing),
-        verticalArrangement = Arrangement.spacedBy(cardSpacing),
-        contentPadding = PaddingValues(horizontal = horizontalPadding),
-        pivotOffsets = PivotOffsets(0.45f),
-        modifier = Modifier
-            .fillMaxHeight()
-            .onFocusChanged {
-                if (it.hasFocus && lastClickedProperty.value == null) {
-                    // We're gaining focus, but don't have a last clicked property: this means we
-                    // are gaining focus back from an element on screen, rather than coming back
-                    // from a different screen.
-                    onDemandFocusRestore.value = currentFocusedProperty.value
-                }
-            }
-            .onPreviewKeyEvent {
-                val firstPropertyId = properties.firstOrNull()?.id
-                if (firstPropertyId != null && it.isKeyUpOf(Key.Back) && currentFocusedProperty.value != firstPropertyId) {
-                    // User clicked back while not focused on first item. Scroll to top and
-                    // trigger focus request.
-                    scope.launch {
-                        scrollState.animateScrollToItem(0)
+    CompositionLocalProvider(LocalBringIntoViewSpec provides bivs) {
+        LazyVerticalGrid(
+            state = scrollState,
+            columns = GridCells.Fixed(columnCount),
+            horizontalArrangement = Arrangement.spacedBy(cardSpacing),
+            verticalArrangement = Arrangement.spacedBy(cardSpacing),
+            contentPadding = PaddingValues(horizontal = horizontalPadding),
+            modifier = Modifier
+                .fillMaxHeight()
+                .onFocusChanged {
+                    if (it.hasFocus && lastClickedProperty.value == null) {
+                        // We're gaining focus, but don't have a last clicked property: this means we
+                        // are gaining focus back from an element on screen, rather than coming back
+                        // from a different screen.
+                        onDemandFocusRestore.value = currentFocusedProperty.value
                     }
-                    onDemandFocusRestore.value = firstPropertyId
-                    return@onPreviewKeyEvent true
                 }
-                false
-            }
-    ) {
-        item(contentType = { "header" }, span = { TvGridItemSpan(maxLineSpan) }) {
-            Image(
-                painter = painterResource(id = R.drawable.discover_logo),
-                contentDescription = "Eluvio Logo",
-                alignment = Alignment.CenterStart,
-                modifier = Modifier
-                    .padding(top = Overscan.verticalPadding)
-                    .height(105.dp)
-            )
-        }
-
-        if (state.loading) {
-            item(contentType = { "spinner" }, span = { TvGridItemSpan(maxLineSpan) }) {
-                EluvioLoadingSpinner(Modifier.padding(top = 100.dp))
-            }
-        } else if (state.properties.isNotEmpty()) {
-            itemsIndexed(
-                properties,
-                contentType = { _, _ -> "property_card" },
-                key = { _, property -> property.id }
-            ) { index, property ->
-                PropertyCard(
-                    index = index,
-                    property = property,
-                    scrollState = scrollState,
-                    lastClickedProperty = lastClickedProperty,
-                    currentFocusedProperty = currentFocusedProperty,
-                    onDemandFocusRestore = onDemandFocusRestore,
-                    onPropertyClicked = onPropertyClicked,
-                    onPropertyFocused = onPropertyFocused
+                .onPreviewKeyEvent {
+                    val firstPropertyId = properties.firstOrNull()?.id
+                    if (firstPropertyId != null && it.isKeyUpOf(Key.Back) && currentFocusedProperty.value != firstPropertyId) {
+                        // User clicked back while not focused on first item. Scroll to top and
+                        // trigger focus request.
+                        scope.launch {
+                            scrollState.animateScrollToItem(0)
+                        }
+                        onDemandFocusRestore.value = firstPropertyId
+                        return@onPreviewKeyEvent true
+                    }
+                    false
+                }
+        ) {
+            item(contentType = { "header" }, span = { GridItemSpan(maxLineSpan) }) {
+                Image(
+                    painter = painterResource(id = R.drawable.discover_logo),
+                    contentDescription = "Eluvio Logo",
+                    alignment = Alignment.CenterStart,
+                    modifier = Modifier
+                        .padding(top = Overscan.verticalPadding)
+                        .height(105.dp)
                 )
             }
-        } else if (state.showRetryButton) {
-            item(contentType = "button", span = { TvGridItemSpan(maxLineSpan) }) {
-                RetryButton(onRetryClicked, Modifier.padding(top = 100.dp))
+
+            if (state.loading) {
+                item(contentType = { "spinner" }, span = { GridItemSpan(maxLineSpan) }) {
+                    EluvioLoadingSpinner(Modifier.padding(top = 100.dp))
+                }
+            } else if (state.properties.isNotEmpty()) {
+                itemsIndexed(
+                    properties,
+                    contentType = { _, _ -> "property_card" },
+                    key = { _, property -> property.id }
+                ) { index, property ->
+                    PropertyCard(
+                        index = index,
+                        property = property,
+                        scrollState = scrollState,
+                        lastClickedProperty = lastClickedProperty,
+                        currentFocusedProperty = currentFocusedProperty,
+                        onDemandFocusRestore = onDemandFocusRestore,
+                        onPropertyClicked = onPropertyClicked,
+                        onPropertyFocused = onPropertyFocused
+                    )
+                }
+            } else if (state.showRetryButton) {
+                item(contentType = "button", span = { GridItemSpan(maxLineSpan) }) {
+                    RetryButton(onRetryClicked, Modifier.padding(top = 100.dp))
+                }
+            } else {
+                // Technically unreachable code, because [loading = (properties.isEmpty())]
+                item(span = { GridItemSpan(maxLineSpan) }, contentType = "label") {
+                    Text(stringResource(R.string.no_content_warning))
+                }
             }
-        } else {
-            // Technically unreachable code, because [loading = (properties.isEmpty())]
-            item(span = { TvGridItemSpan(maxLineSpan) }, contentType = "label") {
-                Text(stringResource(R.string.no_content_warning))
+            item(contentType = { "footer" }, span = { GridItemSpan(maxLineSpan) }) {
+                Spacer(Modifier.height(20.dp))
             }
-        }
-        item(contentType = { "footer" }, span = { TvGridItemSpan(maxLineSpan) }) {
-            Spacer(Modifier.height(20.dp))
         }
     }
 }
@@ -273,7 +279,7 @@ private fun BoxWithConstraintsScope.DiscoverGrid(
 private fun PropertyCard(
     index: Int,
     property: MediaPropertyEntity,
-    scrollState: TvLazyGridState,
+    scrollState: LazyGridState,
     lastClickedProperty: MutableState<String?>,
     currentFocusedProperty: MutableState<String?>,
     onDemandFocusRestore: MutableState<String?>,

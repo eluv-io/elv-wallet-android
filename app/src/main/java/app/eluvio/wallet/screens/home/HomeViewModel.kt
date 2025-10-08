@@ -16,7 +16,6 @@ import com.ramcosta.composedestinations.generated.destinations.HomeDestination
 import com.ramcosta.composedestinations.generated.destinations.NftClaimDestination
 import com.ramcosta.composedestinations.generated.destinations.VideoPlayerActivityDestination
 import com.ramcosta.composedestinations.spec.Direction
-import com.ramcosta.composedestinations.utils.startDestination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.kotlin.addTo
@@ -101,14 +100,6 @@ class HomeViewModel @Inject constructor(
         }?.let { navigateTo(it.asPush()) }
     }
 
-    private fun DeeplinkRequestEntity.toNftClaimDestination(): Direction? {
-        return NftClaimDestination(
-            marketplace = marketplace ?: return null,
-            sku = sku ?: return null,
-            signedEntitlementMessage = entitlement,
-            backLink = backLink
-        )
-    }
 
     private fun DeeplinkRequestEntity.toVideoPlayerDestination(): Direction {
         //TODO: fix this hack once we figure out what we actually want to do with ://play actions
@@ -117,4 +108,13 @@ class HomeViewModel @Inject constructor(
             deeplinkhack_contract = contract
         )
     }
+}
+
+fun DeeplinkRequestEntity.toNftClaimDestination(): Direction? {
+    return NftClaimDestination(
+        marketplace = marketplace ?: return null,
+        sku = sku ?: return null,
+        signedEntitlementMessage = entitlement,
+        backLink = backLink
+    )
 }

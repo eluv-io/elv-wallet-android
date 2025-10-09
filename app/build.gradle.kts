@@ -150,6 +150,7 @@ dependencies {
     testImplementation(libs.reflections)
     testImplementation(libs.okhttp.mockwebserver)
     testImplementation(libs.mockk)
+    testImplementation(kotlin("test"))
 
     implementation(libs.installReferrer)
 

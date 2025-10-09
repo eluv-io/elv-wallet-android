@@ -22,6 +22,7 @@ import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 import okhttp3.ResponseBody.Companion.toResponseBody
+import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 import retrofit2.Response
@@ -29,11 +30,14 @@ import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.seconds
 
 class Auth0SignInViewModelTest {
-    @get:Rule
-    val testLogRule = TestLogRule()
+    companion object {
+        @ClassRule
+        @JvmField
+        val rxSchedulerRule = RxSchedulerRule()
+    }
 
     @get:Rule
-    val rxSchedulerRule = RxSchedulerRule()
+    val testLogRule = TestLogRule()
 
     private val mediaProperty = MediaPropertyEntity().apply {
         id = "prop123"

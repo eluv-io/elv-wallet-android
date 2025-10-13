@@ -2,15 +2,13 @@ package app.eluvio.wallet.testing
 
 import io.reactivex.rxjava3.android.plugins.RxAndroidPlugins
 import io.reactivex.rxjava3.plugins.RxJavaPlugins
-import io.reactivex.rxjava3.schedulers.TestScheduler
+import io.reactivex.rxjava3.schedulers.Schedulers
 import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
 class RxSchedulerRule : TestRule {
-    val scheduler = TestScheduler(true)
-
-    fun triggerActions() = scheduler.triggerActions()
+    val scheduler = Schedulers.trampoline()
 
     override fun apply(
         base: Statement?,

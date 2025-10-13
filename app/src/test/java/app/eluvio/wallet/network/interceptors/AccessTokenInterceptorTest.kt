@@ -11,6 +11,7 @@ import app.eluvio.wallet.network.dto.Network
 import app.eluvio.wallet.network.dto.QSpace
 import app.eluvio.wallet.network.dto.Services
 import app.eluvio.wallet.testing.ApiTestingRule
+import app.eluvio.wallet.testing.MockBase64Rule
 import app.eluvio.wallet.testing.TestApi
 import app.eluvio.wallet.testing.TestLogRule
 import app.eluvio.wallet.testing.awaitTest
@@ -20,7 +21,10 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Single
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import okhttp3.mockwebserver.MockResponse
+import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 import retrofit2.HttpException
@@ -28,8 +32,15 @@ import retrofit2.Retrofit
 import retrofit2.create
 
 class AccessTokenInterceptorTest {
-    @get:Rule
-    val testLogRule = TestLogRule()
+    companion object {
+        @JvmField
+        @ClassRule
+        val testLogRule = TestLogRule()
+
+        @JvmField
+        @ClassRule
+        val base64Rule = MockBase64Rule()
+    }
 
     @get:Rule
     val apiTestingRule = ApiTestingRule(clientBuilder = {
@@ -75,7 +86,11 @@ class AccessTokenInterceptorTest {
     }
     private val interceptor = AccessTokenInterceptor(
         tokenStore,
-        Retrofit.Builder().baseUrl("http://localhost").build(),
+        Retrofit.Builder().baseUrl("http://localhost").client(
+            OkHttpClient.Builder().addInterceptor(
+                HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.NONE })
+                .build()
+        ).build(),
         auth0Api,
         { authService },
         signOutHandler,

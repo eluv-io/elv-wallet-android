@@ -32,7 +32,7 @@ okhttp = "5.2.0"
 okhttp-mockwebserver = "5.2.0"
 # Next version (2.1.0) and above, require Kotlin 2.0
 realm = "3.2.9"
-kotlinx-coroutines-rx3 = "1.10.2"
+kotlinx-coroutines = "1.10.2"
 gradle-secrets = "2.0.1"
 junit = "4.13.2"
 reflections = "0.10.2"
@@ -88,7 +88,8 @@ rxkotlin = { module = "io.reactivex.rxjava3:rxkotlin", version.ref = "rxkotlin" 
 gradle-secrets = { module = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin", version.ref = "gradle-secrets" }
 # Realm is deprecated, so we're using this community fork for new builds and kotlin 2.0+ support.
 realm = { module = "com.infomaniak.realm.kotlin:library-base", version.ref = "realm" }
-kotlinx-coroutines-rx3 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-rx3", version.ref = "kotlinx-coroutines-rx3" }
+kotlinx-coroutines-rx3 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-rx3", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 junit = { module = "junit:junit", version.ref = "junit" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-junit" }
 reflections = { module = "org.reflections:reflections", version.ref = "reflections" }

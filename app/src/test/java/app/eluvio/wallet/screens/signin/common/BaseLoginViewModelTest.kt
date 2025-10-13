@@ -35,7 +35,7 @@ import org.junit.Rule
 import org.junit.Test
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
 
 class BaseLoginViewModelTest {
     companion object {
@@ -77,7 +77,7 @@ class BaseLoginViewModelTest {
     ) {
         override fun fetchActivationData(): Flowable<String> = activationDataFlow
         override fun String.checkToken(): Maybe<*> = checkTokenMaybe
-        override fun String.getPollingInterval(): Duration = 1.seconds
+        override fun String.getPollingInterval(): Duration = 10.milliseconds
         override fun String.getQrUrl(): String = "http://qrcode.url/$this"
         override fun String.getCode(): String = "code-$this"
     }
@@ -99,7 +99,6 @@ class BaseLoginViewModelTest {
         // WHEN
         vm.onResume()
         activationDataSubject.onNext("activation1")
-        rxSchedulerRule.triggerActions()
 
         // THEN
         vm.state.test().assertValue { it.userCode == "code-activation1" }
@@ -112,7 +111,6 @@ class BaseLoginViewModelTest {
         // WHEN
         val vm = createViewModel()
         vm.onResume()
-        rxSchedulerRule.triggerActions()
 
         // THEN
         vm.state.test().assertValue {
@@ -150,11 +148,9 @@ class BaseLoginViewModelTest {
         vm.onResume()
         // 1. Activation data is fetched
         activationDataSubject.onNext("activation1")
-        rxSchedulerRule.scheduler.advanceTimeBy(2, TimeUnit.SECONDS)
-        rxSchedulerRule.triggerActions()
+        Completable.timer(100, TimeUnit.MILLISECONDS).blockingAwait()
         // 2. Polling starts, and checkToken succeeds
         checkTokenSubject.onNext("success_token")
-        rxSchedulerRule.triggerActions()
 
         // THEN
         // Prefetching logic is called

@@ -78,6 +78,7 @@ class AccessTokenInterceptor @Inject constructor(
     private fun Request.withHeaders(): Request {
         val builder = newBuilder()
         builder.header("User-Agent", userAgent)
+        builder.header("Eluvio-User-Agent", userAgent)
         builder.header("Accept", "*/*") // needed for link/file resolution from the fabric
         addAuthHeader(url.toString(), builder)
         return builder.build()

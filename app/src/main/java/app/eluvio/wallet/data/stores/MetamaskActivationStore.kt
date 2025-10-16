@@ -38,7 +38,7 @@ class MetamaskActivationStore @Inject constructor(
                     append("&pid=$propertyId")
                     append("&origin=Android TV Wallet")
                     if (loginProvider != "ory") append("&clear=")
-                    // append("&ttl=0.008") // For testing ~30sec token expiration
+                    append("&ttl=0.008") // For testing ~30sec token expiration
                     append("#/login")
                 }
                 api.generateMetamaskCode(MetamaskCodeRequest(dest))

@@ -1,6 +1,5 @@
 package app.eluvio.wallet.screens.signin
 
-import app.eluvio.wallet.data.entities.v2.LoginProviders
 import com.ramcosta.composedestinations.spec.Direction
 
 /**
@@ -8,8 +7,8 @@ import com.ramcosta.composedestinations.spec.Direction
  * to navigate between them.
  */
 data class SignInNavArgs(
-    val provider: LoginProviders = LoginProviders.ORY,
-    val propertyId: String? = null,
+    val provider: String,
+    val propertyId: String,
     // Where the auth flow should navigate to once successfully signed in
     val onSignedInDirection: Direction? = null
 )

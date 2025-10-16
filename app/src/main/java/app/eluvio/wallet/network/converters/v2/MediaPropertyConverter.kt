@@ -1,6 +1,5 @@
 package app.eluvio.wallet.network.converters.v2
 
-import app.eluvio.wallet.data.entities.v2.LoginProviders
 import app.eluvio.wallet.data.entities.v2.MediaPageEntity
 import app.eluvio.wallet.data.entities.v2.MediaPropertyEntity
 import app.eluvio.wallet.data.entities.v2.PropertyLoginInfoRealmEntity
@@ -60,10 +59,8 @@ private fun LoginInfoDto.toEntity(baseUrl: String): PropertyLoginInfoRealmEntity
         backgroundImageUrl =
             (dto.styling?.backgroundImageTv ?: dto.styling?.backgroundImageDesktop)?.toUrl(baseUrl)
         logoUrl = (dto.styling?.logoTv ?: dto.styling?.logo)?.toUrl(baseUrl)
-        loginProvider = LoginProviders.from(dto.settings?.provider)
+        loginProvider = if (dto.settings?.use_auth0 == true) "auth0_${dto.settings.auth0_domain}" else "ory"
         skipLogin = dto.settings?.disable_login == true
-        auth0Domain = dto.settings?.auth0_domain
-        auth0ClientId = dto.settings?.auth0_native_client_id
     }
 }
 

@@ -48,8 +48,8 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
     var startScreenLogo: FabricUrlEntity? = null
 
     @Ignore
-    val loginProvider: LoginProviders
-        get() = loginInfo?.loginProvider ?: LoginProviders.ORY
+    val loginProvider: String
+        get() = loginInfo?.loginProvider ?: "ory"
 
     var permissionStates = realmDictionaryOf<PermissionStatesEntity?>()
 
@@ -186,6 +186,10 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         @Provides
         @ElementsIntoSet
         fun provideEntities(): Set<KClass<out TypedRealmObject>> =
-            setOf(MediaPropertyEntity::class, PropertyOrderEntity::class, SubpropertySelectionEntity::class)
+            setOf(
+                MediaPropertyEntity::class,
+                PropertyOrderEntity::class,
+                SubpropertySelectionEntity::class
+            )
     }
 }

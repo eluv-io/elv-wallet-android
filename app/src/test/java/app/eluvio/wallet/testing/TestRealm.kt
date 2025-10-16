@@ -5,28 +5,44 @@ import io.realm.kotlin.RealmConfiguration
 import io.realm.kotlin.types.EmbeddedRealmObject
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.TypedRealmObject
+import org.junit.rules.TestWatcher
+import org.junit.runner.Description
 import org.reflections.Reflections
 import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
-import kotlin.reflect.KClass
 
-/**
- * Returns all entities we want to consider.
- */
-private val allEntityClasses: List<KClass<out TypedRealmObject>>
-    get() = Reflections(
-        ConfigurationBuilder()
-            .forPackage("app.eluvio.wallet")
-            .addUrls(ClasspathHelper.forJavaClassPath())
-    ).let {
-        it.getSubTypesOf(RealmObject::class.java) +
-                it.getSubTypesOf(EmbeddedRealmObject::class.java)
+class RealmTestRule : TestWatcher() {
+    companion object {
+        /**
+         * Returns all entities we want to consider.
+         */
+        val allEntityClasses: List<Class<out TypedRealmObject>>
+            get() = Reflections(
+                ConfigurationBuilder()
+                    .forPackage("app.eluvio.wallet")
+                    .addUrls(ClasspathHelper.forJavaClassPath())
+            ).let {
+                it.getSubTypesOf(RealmObject::class.java) +
+                        it.getSubTypesOf(EmbeddedRealmObject::class.java)
+            }
+                .sortedBy { it.name }
     }
-        .map { it.kotlin }
 
+    lateinit var realm: Realm
 
-fun testRealm(): Realm =
-    RealmConfiguration.Builder(allEntityClasses.toSet())
-        .name("test-realm")
+    private val config = RealmConfiguration.Builder(
+        allEntityClasses.map { it.kotlin }.toSet()
+    )
         .inMemory()
-        .build().let { Realm.open(it) }
+        .directory("./build/tmp")
+        .name("test-realm")
+        .build()
+
+    override fun starting(description: Description?) {
+        realm = Realm.open(config)
+    }
+
+    override fun finished(description: Description?) {
+        realm.close()
+    }
+}

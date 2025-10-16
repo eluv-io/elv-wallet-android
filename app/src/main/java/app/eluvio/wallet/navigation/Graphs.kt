@@ -9,6 +9,3 @@ import com.ramcosta.composedestinations.annotation.RootGraph
 
 @NavGraph<RootGraph>(start = true)
 annotation class MainGraph
-
-@NavGraph<RootGraph>
-annotation class AuthFlowGraph

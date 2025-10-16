@@ -23,7 +23,6 @@ jobs:
     - name: Create Secrets File
       run: |
         echo "
-        AUTH0_CLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }}
         MUX_ENV_KEY_MAIN=${{ secrets.MUX_ENV_KEY_MAIN }}
         MUX_ENV_KEY_DEMO=${{ secrets.MUX_ENV_KEY_DEMO }}
         " > secrets/secrets.properties

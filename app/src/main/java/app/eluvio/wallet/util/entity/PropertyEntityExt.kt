@@ -8,7 +8,7 @@ import app.eluvio.wallet.data.entities.v2.permissions.showPurchaseOptions
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.util.logging.Log
-import io.reactivex.rxjava3.core.Flowable
+import io.reactivex.rxjava3.core.Single
 
 /**
  * Finds the first page we are authorized to view.
@@ -19,12 +19,13 @@ fun MediaPropertyEntity.getFirstAuthorizedPage(
     currentPage: MediaPageEntity?,
     propertyStore: MediaPropertyStore,
     unauthorizedPageIds: MutableSet<String> = mutableSetOf()
-): Flowable<MediaPageEntity> {
+): Single<MediaPageEntity> {
     val property = this
 
     // Convenience function to handle redirects
     fun redirect(redirectPageId: String) = propertyStore.observePage(property, redirectPageId)
-        .switchMap { nextPage ->
+        .firstOrError()
+        .flatMap { nextPage ->
             // Recursively check the next page
             property.getFirstAuthorizedPage(nextPage, propertyStore, unauthorizedPageIds)
         }
@@ -42,13 +43,13 @@ fun MediaPropertyEntity.getFirstAuthorizedPage(
         if (propertyRedirectPage != null) {
             redirect(propertyRedirectPage)
         } else if (property.propertyPermissions?.showPurchaseOptions == true) {
-            Flowable.error(ShowPurchaseOptionsRedirectException(PermissionContext(property.id)))
+            Single.error(ShowPurchaseOptionsRedirectException(PermissionContext(property.id)))
         } else {
             // We're authorized to view the property, check the main page.
             property.getFirstAuthorizedPage(property.mainPage, propertyStore, unauthorizedPageIds)
         }
     } else if (currentPage.pagePermissions?.showPurchaseOptions == true) {
-        Flowable.error(
+        Single.error(
             ShowPurchaseOptionsRedirectException(PermissionContext(property.id, currentPage.id))
         )
     } else {
@@ -56,13 +57,13 @@ fun MediaPropertyEntity.getFirstAuthorizedPage(
             currentPage.id, in unauthorizedPageIds -> {
                 // We already checked this page id, or this is a self-reference, so we know
                 // we're not authorized to view it.
-                Flowable.error(CircularRedirectException())
+                Single.error(CircularRedirectException())
             }
 
             null -> {
                 // No page to redirect to: we are authorized to render this page.
-                Flowable.just(currentPage)
-                    .doOnNext { Log.i("Authorized to view page ${currentPage.id}") }
+                Single.just(currentPage)
+                    .doOnSuccess { Log.i("Authorized to view page ${currentPage.id}") }
             }
 
             else -> {

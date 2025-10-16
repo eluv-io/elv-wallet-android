@@ -203,15 +203,19 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
         )
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeBy(
-                onSuccess = { (videoOptions, property, env) ->
-                    val customerData = createCustomerData(property, videoOptions.uri)
-                    exoPlayer?.monitorWithMuxData(
-                        this@VideoPlayerActivity,
-                        env.muxEnvKey,
-                        customerData,
-                        playerView
-                    )
-                    exoPlayer?.setMediaSource(videoOptions.toMediaSource())
+                onSuccess = { (mediaSource, property, env) ->
+                    mediaSource.mediaItem.localConfiguration?.uri
+                        ?.toString()
+                        ?.let { uri ->
+                            val customerData = createCustomerData(property, uri)
+                            exoPlayer?.monitorWithMuxData(
+                                this@VideoPlayerActivity,
+                                env.muxEnvKey,
+                                customerData,
+                                playerView
+                            )
+                        }
+                    exoPlayer?.setMediaSource(mediaSource)
                     exoPlayer?.playWhenReady = true
                     exoPlayer?.prepare()
                     exoPlayer?.seekTo(playbackStore.getPlaybackPosition(mediaItemId))

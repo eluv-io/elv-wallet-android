@@ -1,22 +1,26 @@
 package app.eluvio.wallet.data
 
-import app.eluvio.wallet.data.entities.VideoOptionsEntity
+import android.content.Context
+import androidx.media3.exoplayer.source.MediaSource
 import app.eluvio.wallet.data.stores.ContentStore
-import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.di.ApiProvider
+import app.eluvio.wallet.di.TokenAwareHttpClient
 import app.eluvio.wallet.network.api.authd.VideoPlayoutApi
 import app.eluvio.wallet.network.api.fabric.AssetFetcherApi
-import app.eluvio.wallet.network.converters.toEntity
+import app.eluvio.wallet.screens.videoplayer.toMediaSource
+import dagger.hilt.android.qualifiers.ApplicationContext
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.kotlin.zipWith
+import okhttp3.OkHttpClient
 import javax.inject.Inject
 
 class VideoOptionsFetcher @Inject constructor(
     private val apiProvider: ApiProvider,
     private val contentStore: ContentStore,
-    private val tokenStore: TokenStore,
+    @param:ApplicationContext private val context: Context,
+    @param:TokenAwareHttpClient private val httpClient: OkHttpClient,
 ) {
-    fun fetchVideoOptions(mediaItemId: String, propertyId: String?): Single<VideoOptionsEntity> {
+    fun fetchVideoOptions(mediaItemId: String, propertyId: String?): Single<MediaSource> {
         return if (propertyId != null) {
             fetchVideoOptionsFromProperty(propertyId, mediaItemId)
         } else {
@@ -42,7 +46,7 @@ class VideoOptionsFetcher @Inject constructor(
     private fun fetchVideoOptionsFromProperty(
         propertyId: String,
         mediaItemId: String
-    ): Single<VideoOptionsEntity> {
+    ): Single<MediaSource> {
         return apiProvider.getApi(VideoPlayoutApi::class)
             .zipWith(apiProvider.getFabricEndpoint())
             .flatMap { (api, baseUrl) ->
@@ -50,7 +54,7 @@ class VideoOptionsFetcher @Inject constructor(
                     propertyId = propertyId,
                     mediaItemId = mediaItemId
                 ).map { response ->
-                    response.toEntity(baseUrl, tokenStore.fabricToken.get())
+                    response.toMediaSource(baseUrl, context, httpClient)
                         ?: throw RuntimeException("No supported video formats found in $response")
                 }
             }
@@ -58,18 +62,18 @@ class VideoOptionsFetcher @Inject constructor(
 
     // Calls an API that fetches video options for the latest available hash, instead of directly
     // going to the fabric with the hash we have.
-    fun fetchVideoOptionsFromHash(hash: String): Single<VideoOptionsEntity> {
+    fun fetchVideoOptionsFromHash(hash: String): Single<MediaSource> {
         return apiProvider.getApi(VideoPlayoutApi::class)
             .zipWith(apiProvider.getFabricEndpoint())
             .flatMap { (api, baseUrl) ->
                 api.getVideoOptions(hash).map { response ->
-                    response.toEntity(baseUrl, tokenStore.fabricToken.get())
+                    response.toMediaSource(baseUrl, context, httpClient)
                         ?: throw RuntimeException("No supported video formats found in $response")
                 }
             }
     }
 
-    fun fetchVideoOptionsFromPath(fabricPath: String): Single<VideoOptionsEntity> {
+    fun fetchVideoOptionsFromPath(fabricPath: String): Single<MediaSource> {
         return apiProvider.getApi(AssetFetcherApi::class)
             .flatMap {
                 it.getVideoOptions(fabricPath).map { response ->
@@ -77,7 +81,7 @@ class VideoOptionsFetcher @Inject constructor(
                     val pathDelimiter = if (url.contains("%2F")) "%2F" else "/"
                     val baseUrl = url.substringBeforeLast(pathDelimiter)
                     response.body()
-                        ?.toEntity(baseUrl, tokenStore.fabricToken.get())
+                        ?.toMediaSource(baseUrl, context, httpClient)
                         ?: throw RuntimeException("No supported video formats found from $url")
                 }
             }

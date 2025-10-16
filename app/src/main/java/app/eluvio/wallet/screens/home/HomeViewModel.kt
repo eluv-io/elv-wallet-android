@@ -8,9 +8,7 @@ import app.eluvio.wallet.data.stores.DeeplinkStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.asNewRoot
 import app.eluvio.wallet.navigation.asPush
-import app.eluvio.wallet.screens.signin.SignInNavArgs
 import app.eluvio.wallet.util.logging.Log
-import com.ramcosta.composedestinations.generated.NavGraphs
 import com.ramcosta.composedestinations.generated.destinations.DashboardDestination
 import com.ramcosta.composedestinations.generated.destinations.HomeDestination
 import com.ramcosta.composedestinations.generated.destinations.NftClaimDestination
@@ -72,7 +70,7 @@ class HomeViewModel @Inject constructor(
             tokenStore.wipe()
             tokenStore.idToken.set(deepLink.jwt)
 
-            authenticationService.getFabricTokenExternal()
+            authenticationService.getFabricTokenExternal(tenantId = null)
                 .subscribeBy(
                     onSuccess = {
                         Log.d("Successfully got fabric token from deeplink jwt: $it")
@@ -80,8 +78,8 @@ class HomeViewModel @Inject constructor(
                     },
                     onError = {
                         Log.e("Failed to get fabric token", it)
-                        // We failed to get a fabric token, so we need to re-authenticate.
-                        navigateTo(NavGraphs.authFlow(SignInNavArgs()).asNewRoot())
+                        // We failed to get a fabric token, so we just navigate to Discover.
+                        navigateTo(DashboardDestination.asNewRoot())
                     }
                 )
                 .addTo(disposables)

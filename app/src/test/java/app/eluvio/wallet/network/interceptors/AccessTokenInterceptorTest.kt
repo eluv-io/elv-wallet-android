@@ -1,17 +1,13 @@
 package app.eluvio.wallet.network.interceptors
 
-import app.eluvio.wallet.data.AuthenticationService
 import app.eluvio.wallet.data.SignOutHandler
 import app.eluvio.wallet.data.stores.FabricConfigStore
 import app.eluvio.wallet.data.stores.InMemoryTokenStore
-import app.eluvio.wallet.network.api.Auth0Api
-import app.eluvio.wallet.network.api.GetTokenResponse
-import app.eluvio.wallet.network.dto.FabricConfiguration
-import app.eluvio.wallet.network.dto.Network
-import app.eluvio.wallet.network.dto.QSpace
-import app.eluvio.wallet.network.dto.Services
+import app.eluvio.wallet.data.stores.Installation
+import app.eluvio.wallet.di.ApiProvider
+import app.eluvio.wallet.network.api.authd.AuthServicesApi
+import app.eluvio.wallet.network.api.authd.CsatResponse
 import app.eluvio.wallet.testing.ApiTestingRule
-import app.eluvio.wallet.testing.MockBase64Rule
 import app.eluvio.wallet.testing.TestApi
 import app.eluvio.wallet.testing.TestLogRule
 import app.eluvio.wallet.testing.awaitTest
@@ -20,27 +16,17 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.reactivex.rxjava3.core.Completable
+import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Single
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import okhttp3.mockwebserver.MockResponse
-import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
 import retrofit2.HttpException
-import retrofit2.Retrofit
 import retrofit2.create
 
 class AccessTokenInterceptorTest {
-    companion object {
-        @JvmField
-        @ClassRule
-        val testLogRule = TestLogRule()
-
-        @JvmField
-        @ClassRule
-        val base64Rule = MockBase64Rule()
-    }
+    @get:Rule
+    val testLogRule = TestLogRule()
 
     @get:Rule
     val apiTestingRule = ApiTestingRule(clientBuilder = {
@@ -52,48 +38,37 @@ class AccessTokenInterceptorTest {
         // Always start with some fabric token (logged in state)
         fabricToken.set("expired_fabric_token")
     }
-    private val auth0Api = mockk<Auth0Api>() {
-        every { refreshToken(any()) } returns Single.just(
-            GetTokenResponse(
-                "id",
-                "access",
+    private val authServicesApi = mockk<AuthServicesApi> {
+        every { refreshCsat(any()) } returns Single.just(
+            CsatResponse(
+                "fabricToken",
+                "addr",
                 "refresh",
-                "5"
+                "clusterToken",
+                9999,
+                "email"
             )
         )
     }
-    private val authService = mockk<AuthenticationService> {
-        every { getFabricToken() } returns Single.just("new_fabric_token")
-            .doOnSuccess { tokenStore.fabricToken.set(it) }
+    private val apiProvider = mockk<ApiProvider> {
+        every { getApi(AuthServicesApi::class) } returns Single.just(authServicesApi)
     }
-    private val signOutHandler = mockk<SignOutHandler>() {
+    private val signOutHandler = mockk<SignOutHandler> {
         every { signOut(any(), any()) } returns Completable.complete()
     }
-    private val configStore = mockk<FabricConfigStore> {
-        every { observeFabricConfiguration() } returns Single.just(
-            FabricConfiguration(
-                "node1",
-                Network(
-                    Services(
-                        listOf(""),
-                        listOf(""),
-                        listOf(""),
-                    )
-                ),
-                QSpace("qspace_id", listOf("fakespace"))
-            )
-        ).toFlowable()
+    private val installation = mockk<Installation> {
+        every { id } returns "installation_id"
     }
+
+    private val configStore = mockk<FabricConfigStore> {
+        every { observeFabricConfiguration() } returns Flowable.never()
+    }
+
     private val interceptor = AccessTokenInterceptor(
         tokenStore,
-        Retrofit.Builder().baseUrl("http://localhost").client(
-            OkHttpClient.Builder().addInterceptor(
-                HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.NONE })
-                .build()
-        ).build(),
-        auth0Api,
-        { authService },
         signOutHandler,
+        { apiProvider },
+        installation,
         configStore
     )
 
@@ -109,17 +84,13 @@ class AccessTokenInterceptorTest {
         server.enqueue(MockResponse().setBody("success"))
 
         api.awaitTest()
-            .assertValue {
-                it == "success"
-            }
+            .assertValue { it == "success" }
         // New access/refresh token requested using old token
         verify {
-            auth0Api.refreshToken(match { it.refreshToken == "old_refresh_token" })
+            authServicesApi.refreshCsat(match { it.refreshToken == "old_refresh_token" })
         }
-        // New fabric token generated
-        verify { authService.getFabricToken() }
         // New refresh token stored
-        confirmVerified(auth0Api)
+        confirmVerified(authServicesApi)
         assert(tokenStore.refreshToken.get() == "refresh")
     }
 
@@ -139,8 +110,8 @@ class AccessTokenInterceptorTest {
             .values()
         assert(results.containsAll(listOf("success1", "success2")))
 
-        verify(exactly = 1) { auth0Api.refreshToken(any()) }
-        confirmVerified(auth0Api)
+        verify(exactly = 1) { authServicesApi.refreshCsat(any()) }
+        confirmVerified(authServicesApi)
     }
 
     // Refresh token is used up, can't refresh anymore
@@ -152,7 +123,7 @@ class AccessTokenInterceptorTest {
 
         // Fail the refresh token call
         every {
-            auth0Api.refreshToken(any())
+            authServicesApi.refreshCsat(any())
         } returns Single.error(RuntimeException("error"))
 
         api.awaitTest().assertError {
@@ -172,7 +143,7 @@ class AccessTokenInterceptorTest {
 
         // Fail the refresh token call
         every {
-            auth0Api.refreshToken(any())
+            authServicesApi.refreshCsat(any())
         } returns Single.error(InterruptedException("interrupted"))
 
         api.awaitTest().assertError {

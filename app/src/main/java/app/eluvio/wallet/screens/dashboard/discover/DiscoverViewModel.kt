@@ -10,8 +10,8 @@ import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.asPush
 import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
-import com.ramcosta.composedestinations.generated.destinations.SignInRouterDestination
 import app.eluvio.wallet.util.logging.Log
+import com.ramcosta.composedestinations.generated.destinations.SignInDestination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.kotlin.addTo
@@ -107,13 +107,13 @@ class DiscoverViewModel @Inject constructor(
         val direction = PropertyDetailDestination(property.id)
         val skipLogin = property.loginInfo?.skipLogin == true
         val loggedInWithSameProvider =
-            tokenStore.isLoggedIn && tokenStore.loginProvider == property.loginProvider
+            tokenStore.isLoggedIn && tokenStore.loginProvider.get() == property.loginProvider
         if (skipLogin || loggedInWithSameProvider) {
             navigateTo(direction.asPush())
         } else {
             Log.d("User not signed in, navigating to authFlow and saving propertyId: ${property.id}")
             navigateTo(
-                SignInRouterDestination(
+                SignInDestination(
                     property.loginProvider,
                     property.id,
                     onSignedInDirection = direction

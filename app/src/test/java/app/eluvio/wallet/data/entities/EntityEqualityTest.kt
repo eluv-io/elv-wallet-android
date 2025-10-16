@@ -1,17 +1,13 @@
 package app.eluvio.wallet.data.entities
 
 
+import app.eluvio.wallet.testing.RealmTestRule
 import io.realm.kotlin.ext.realmDictionaryOf
 import io.realm.kotlin.ext.realmListOf
 import io.realm.kotlin.ext.toRealmList
-import io.realm.kotlin.types.EmbeddedRealmObject
 import io.realm.kotlin.types.RealmInstant
-import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.TypedRealmObject
 import org.junit.Test
-import org.reflections.Reflections
-import org.reflections.util.ClasspathHelper
-import org.reflections.util.ConfigurationBuilder
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import java.util.Date
@@ -29,7 +25,7 @@ class EntityEqualityTest {
     @Test
     fun `verify entities have SOME equals() implementation`() {
         /** Classes whose instances are never equal to each other. See [neverEqual] */
-        val neverEqual = allEntityClasses.filter { it.neverEqual }
+        val neverEqual = RealmTestRule.allEntityClasses.filter { it.neverEqual }
 
         assert(neverEqual.isEmpty()) {
             """
@@ -47,7 +43,7 @@ class EntityEqualityTest {
          */
         val missedFields = mutableMapOf<Class<*>, List<Field>>()
 
-        allEntityClasses
+        RealmTestRule.allEntityClasses
             // For the sake of cleaner output, ignore classes that are never equal
             .filterNot { it.neverEqual }
             .forEach { entityClass ->
@@ -73,20 +69,6 @@ class EntityEqualityTest {
             }
         }
     }
-
-    /**
-     * Returns all entities we want to consider.
-     */
-    private val allEntityClasses: List<Class<out TypedRealmObject>>
-        get() = Reflections(
-            ConfigurationBuilder()
-                .forPackage("app.eluvio.wallet")
-                .addUrls(ClasspathHelper.forJavaClassPath())
-        ).let {
-            it.getSubTypesOf(RealmObject::class.java) +
-                    it.getSubTypesOf(EmbeddedRealmObject::class.java)
-        }
-            .sortedBy { it.name }
 
     /**
      * Checks if 2 "blank / fresh" instances of this class aren't equal to each other.

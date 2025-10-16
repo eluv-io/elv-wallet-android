@@ -4,31 +4,26 @@ import app.eluvio.wallet.data.entities.v2.MediaPropertyEntity
 import app.eluvio.wallet.di.ApiProvider
 import app.eluvio.wallet.network.api.mwv2.MediaWalletV2Api
 import app.eluvio.wallet.network.dto.v2.MediaPropertyDto
-import app.eluvio.wallet.testing.RxSchedulerRule
+import app.eluvio.wallet.testing.RealmTestRule
 import app.eluvio.wallet.testing.TestLogRule
-import app.eluvio.wallet.testing.testRealm
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.reactivex.rxjava3.core.Single
 import io.realm.kotlin.ext.query
 import kotlinx.coroutines.test.runTest
-import org.junit.After
-import org.junit.ClassRule
+import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class MediaPropertyStoreTest {
-    companion object {
-        @ClassRule
-        @JvmField
-        val rxSchedulerRule = RxSchedulerRule()
+    @get:Rule
+    val testLogRule = TestLogRule()
 
-        @ClassRule
-        @JvmField
-        val testLogRule = TestLogRule()
-    }
+    @get:Rule
+    val realmRule = RealmTestRule()
+    private val realm get() = realmRule.realm
 
     private val api: MediaWalletV2Api = mockk {
         every { this@mockk.getProperty(any()) } returns Single.just(mockk())
@@ -38,14 +33,7 @@ class MediaPropertyStoreTest {
         every { getFabricEndpoint() } returns Single.just("http://fabric.url")
     }
 
-    private val realm = testRealm()
-
-    private var store = MediaPropertyStore(apiProvider, realm)
-
-    @After
-    fun tearDown() {
-        realm.writeBlocking { deleteAll() }
-    }
+    private val store by lazy { MediaPropertyStore(apiProvider, realm) }
 
     @Test
     fun `fetchMediaProperty fetches from api and saves to realm`() {

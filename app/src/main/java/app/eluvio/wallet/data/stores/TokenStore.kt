@@ -2,7 +2,7 @@ package app.eluvio.wallet.data.stores
 
 import android.content.Context
 import androidx.datastore.preferences.rxjava3.RxPreferenceDataStoreBuilder
-import app.eluvio.wallet.data.entities.v2.LoginProviders
+import app.eluvio.wallet.network.api.authd.CsatResponse
 import app.eluvio.wallet.util.datastore.ReadWritePref
 import app.eluvio.wallet.util.datastore.StoreOperation
 import app.eluvio.wallet.util.datastore.edit
@@ -18,10 +18,10 @@ import javax.inject.Singleton
 
 interface TokenStore {
     val idToken: ReadWritePref<String>
-    val accessToken: ReadWritePref<String>
     val refreshToken: ReadWritePref<String>
     val clusterToken: ReadWritePref<String>
     val fabricToken: ReadWritePref<String>
+
     // Only really needed when showing the Purchase Gate with a Metamask login, because in any other case we have a
     // clusterToken and the expiration can be extracted from the token itself.
     val fabricTokenExpiration: ReadWritePref<String>
@@ -30,10 +30,7 @@ interface TokenStore {
     val isLoggedIn: Boolean get() = fabricToken.get() != null
 
     val loggedInObservable: Flowable<Boolean> get() = fabricToken.observe().map { it.isPresent }
-    var loginProvider: LoginProviders
-
-    val auth0Domain: ReadWritePref<String>
-    val auth0ClientId: ReadWritePref<String>
+    val loginProvider: ReadWritePref<String>
 
     /**
      * Update multiple preferences at once.
@@ -47,6 +44,24 @@ interface TokenStore {
     fun wipe()
 }
 
+/**
+ * Save login information from a [CsatResponse] into the [TokenStore].
+ */
+fun TokenStore.login(csatResponse: CsatResponse) {
+    update(
+        fabricToken to csatResponse.fabricToken,
+        refreshToken to csatResponse.refreshToken,
+        fabricTokenExpiration to csatResponse.expiresAt?.toString(),
+        walletAddress to csatResponse.address,
+        clusterToken to csatResponse.clusterToken,
+        userEmail to csatResponse.email,
+
+        // idToken is what we get directly from Auth0 before we obtain the fabricToken from authd.
+        // Once we have a csatResponse, it's no longer needed.
+        idToken to null,
+    )
+}
+
 @Module
 @InstallIn(SingletonComponent::class)
 interface TokenStoreModule {
@@ -57,29 +72,18 @@ interface TokenStoreModule {
 
 @Singleton
 class PreferenceTokenStore @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) : TokenStore {
     private val dataStore = RxPreferenceDataStoreBuilder(context, "token_store").build()
 
     override val idToken = dataStore.readWriteStringPref("id_token")
-    override val accessToken = dataStore.readWriteStringPref("access_token")
     override val refreshToken = dataStore.readWriteStringPref("refresh_token")
-
     override val clusterToken = dataStore.readWriteStringPref("cluster_token")
-
     override val fabricToken = dataStore.readWriteStringPref("fabric_token")
     override val fabricTokenExpiration = dataStore.readWriteStringPref("fabric_token_expires_at")
-
     override val walletAddress = dataStore.readWriteStringPref("wallet_address")
     override val userEmail = dataStore.readWriteStringPref("user_email")
-
-    private val loginProviderStr = dataStore.readWriteStringPref("login_provider")
-    override var loginProvider: LoginProviders
-        get() = LoginProviders.from(loginProviderStr.get())
-        set(value) = loginProviderStr.set(value.value)
-
-    override val auth0Domain = dataStore.readWriteStringPref("auth0_domain")
-    override val auth0ClientId = dataStore.readWriteStringPref("auth0_client_id")
+    override val loginProvider = dataStore.readWriteStringPref("login_provider")
 
     /**
      * Update multiple preferences at once.

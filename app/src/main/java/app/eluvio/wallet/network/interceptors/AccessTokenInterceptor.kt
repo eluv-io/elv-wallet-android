@@ -3,14 +3,15 @@ package app.eluvio.wallet.network.interceptors
 import android.os.Build
 import android.util.Base64
 import app.eluvio.wallet.BuildConfig
-import app.eluvio.wallet.data.AuthenticationService
 import app.eluvio.wallet.data.SignOutHandler
 import app.eluvio.wallet.data.stores.FabricConfigStore
+import app.eluvio.wallet.data.stores.Installation
 import app.eluvio.wallet.data.stores.TokenStore
-import app.eluvio.wallet.di.Auth0
-import app.eluvio.wallet.network.api.Auth0Api
-import app.eluvio.wallet.network.api.RefreshTokenRequest
-import app.eluvio.wallet.util.Auth0Util
+import app.eluvio.wallet.data.stores.login
+import app.eluvio.wallet.di.ApiProvider
+import app.eluvio.wallet.network.api.authd.AuthServicesApi
+import app.eluvio.wallet.network.api.authd.RefreshCsatRequest
+import app.eluvio.wallet.util.Toaster
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.unsaved
 import dagger.Lazy
@@ -20,7 +21,8 @@ import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.Route
-import retrofit2.Retrofit
+import java.io.IOException
+import java.net.SocketTimeoutException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -33,10 +35,9 @@ import javax.inject.Singleton
 @Singleton
 class AccessTokenInterceptor @Inject constructor(
     private val tokenStore: TokenStore,
-    @Auth0 private val auth0Retrofit: Retrofit,
-    private val auth0Api: Auth0Api,
-    private val authenticationService: Lazy<AuthenticationService>,
     private val signOutHandler: SignOutHandler,
+    private val apiProvider: Lazy<ApiProvider>,
+    private val installation: Installation,
     configStore: FabricConfigStore,
 ) : Interceptor, Authenticator {
 
@@ -48,7 +49,7 @@ class AccessTokenInterceptor @Inject constructor(
     }
 
     /** URLs that contain these paths should not get special handling for expired tokens. */
-    private val authRequestPaths = setOf("wlt/login/jwt", "wlt/sign/eth")
+    private val authRequestPaths = setOf("wlt/login/jwt", "wlt/sign/csat", "wlt/refresh/csat")
 
     private var staticToken: String? = null
 
@@ -90,11 +91,13 @@ class AccessTokenInterceptor @Inject constructor(
     private fun addAuthHeader(requestUrl: String, builder: Request.Builder) {
         if (requestUrl.contains("wlt/login/jwt")) {
             tokenStore.idToken.get()?.let { idToken ->
+                log("injecting idToken into login/jwt: $idToken")
                 builder.authToken(idToken)
             }
-        } else if (requestUrl.contains("wlt/sign/eth")) {
-            tokenStore.clusterToken.get()?.let { walletToken ->
-                builder.authToken(walletToken)
+        } else if (requestUrl.contains("wlt/sign/csat")) {
+            tokenStore.clusterToken.get()?.let { clusterToken ->
+                log("injecting clusterToken into sign/csat: $clusterToken")
+                builder.authToken(clusterToken)
             }
         } else {
             (tokenStore.fabricToken.get() ?: staticToken)?.let { fabricToken ->
@@ -142,19 +145,27 @@ class AccessTokenInterceptor @Inject constructor(
                     return retry
                 }
 
-            val newTokens = try {
-                val (api, clientId) = Auth0Util.getApiInfo(
-                    tokenStore.auth0Domain.get(),
-                    tokenStore.auth0ClientId.get(),
-                    auth0Retrofit,
-                    auth0Api
-                )
-                api.refreshToken(
-                    RefreshTokenRequest(
-                        clientId = clientId,
-                        refreshToken = refreshToken
-                    )
-                ).blockingGet()
+            try {
+                val csatResponse = apiProvider.get()
+                    .getApi(AuthServicesApi::class)
+                    .flatMap { api ->
+                        api.refreshCsat(
+                            RefreshCsatRequest(
+                                refreshToken,
+                                installation.id,
+                                tokenStore.fabricToken.get()!!,
+                                // exp = 20 // Only for testing
+                            )
+                        )
+                    }
+                    .retry { count, error ->
+                        count < 5 && (error is SocketTimeoutException || error is IOException)
+                    }
+                    .blockingGet()
+
+                tokenStore.login(csatResponse)
+
+                return retry
             } catch (e: Throwable) {
                 if (e is InterruptedException || e.cause is InterruptedException) {
                     // There's no point in retrying, since this call was canceled.
@@ -170,24 +181,6 @@ class AccessTokenInterceptor @Inject constructor(
                     // there's nothing left to do but sign out.
                     return signOut()
                 }
-            }
-
-            try {
-                tokenStore.update(
-                    tokenStore.idToken to newTokens.idToken,
-                    tokenStore.accessToken to newTokens.accessToken,
-                    tokenStore.refreshToken to newTokens.refreshToken,
-                )
-
-                val newFabricToken = authenticationService.get().getFabricToken().blockingGet()
-                log("Successfully refreshed token. Retrying original request (new token=$newFabricToken)")
-                return retry
-            } catch (e: Throwable) {
-                // Either we failed to save the new refresh token, or we failed to convert it to
-                // a fabric token. In either case, there's no point in retrying anything, but
-                // the next call might be able to recover from this.
-                log("Failed to refresh token. Not retrying.", e)
-                return noRetry
             }
         }
     }

@@ -32,8 +32,16 @@ android {
 
         resValue("string", "app_name", customBuildConfig.appName)
         buildConfigField("String", "DEFAULT_PROPERTY_ID", customBuildConfig.defaultPropertyId)
-        buildConfigField("boolean", "DEFAULT_TO_STAGING_ENV", "${customBuildConfig.defaultToStaging}")
-        buildConfigField("boolean", "DISABLE_PURCHASE_PROMPTS", "${customBuildConfig.disablePurchasePrompts}")
+        buildConfigField(
+            "boolean",
+            "DEFAULT_TO_STAGING_ENV",
+            "${customBuildConfig.defaultToStaging}"
+        )
+        buildConfigField(
+            "boolean",
+            "DISABLE_PURCHASE_PROMPTS",
+            "${customBuildConfig.disablePurchasePrompts}"
+        )
     }
 
     buildTypes {
@@ -75,6 +83,10 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
     }
 }
 
@@ -198,8 +210,10 @@ data class CustomBuildConfig(
             val propertyId = properties["defaultPropertyId"]?.toString()
                 ?.ifEmpty { null }
                 ?.let { "\"$it\"" }
-            val defaultToStaging = properties["defaultToStaging"]?.toString()?.toBooleanStrictOrNull()
-            val disablePurchasePrompts = properties["disablePurchasePrompts"]?.toString()?.toBooleanStrictOrNull()
+            val defaultToStaging =
+                properties["defaultToStaging"]?.toString()?.toBooleanStrictOrNull()
+            val disablePurchasePrompts =
+                properties["disablePurchasePrompts"]?.toString()?.toBooleanStrictOrNull()
 
             return CustomBuildConfig(
                 applicationId = applicationId ?: "app.eluvio.wallet",

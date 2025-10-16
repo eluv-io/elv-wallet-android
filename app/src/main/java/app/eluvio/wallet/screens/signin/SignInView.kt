@@ -1,5 +1,8 @@
-package app.eluvio.wallet.screens.signin.common
+package app.eluvio.wallet.screens.signin
 
+import android.graphics.Bitmap
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -7,7 +10,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,33 +20,40 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import androidx.tv.material3.ClickableSurfaceDefaults
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import app.eluvio.wallet.R
 import app.eluvio.wallet.navigation.LocalNavigator
+import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.navigation.NavigationEvent
-import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.TvButton
 import app.eluvio.wallet.screens.common.generateQrCodeBlocking
-import com.ramcosta.composedestinations.generated.destinations.MetamaskSignInDestination
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.title_62
-import app.eluvio.wallet.util.compose.BooleanParameterProvider
 import app.eluvio.wallet.util.compose.RealisticDevices
 import app.eluvio.wallet.util.compose.requestOnce
+import app.eluvio.wallet.util.subscribeToState
 import coil.compose.AsyncImage
+import com.ramcosta.composedestinations.annotation.Destination
 
+
+@Destination<MainGraph>(navArgs = SignInNavArgs::class)
+@Composable
+fun SignIn() {
+    hiltViewModel<SignInViewModel>().subscribeToState { vm, state ->
+        SignInView(state, onRequestNewToken = vm::requestNewToken)
+    }
+}
 
 @Composable
-fun SignInView(state: LoginState, onRequestNewToken: () -> Unit, showMetamaskLink: Boolean) {
+fun SignInView(state: SignInViewModel.State, onRequestNewToken: () -> Unit) {
     AsyncImage(
         model = state.bgImageUrl,
         contentDescription = null,
@@ -88,21 +97,9 @@ fun SignInView(state: LoginState, onRequestNewToken: () -> Unit, showMetamaskLin
                 focusRequester.requestOnce()
                 Spacer(modifier = Modifier.width(10.dp))
                 val navigator = LocalNavigator.current
-                TvButton(text = "Back",
-                    onClick = { navigator(NavigationEvent.GoBack) })
-            }
-            if (showMetamaskLink) {
-                Spacer(modifier = Modifier.height(6.dp))
-                val navigator = LocalNavigator.current
                 TvButton(
-                    text = stringResource(R.string.metamask_sign_on_button),
-                    onClick = { navigator(MetamaskSignInDestination().asPush()) },
-                    colors = ClickableSurfaceDefaults.colors(
-                        containerColor = Color.Transparent,
-                        contentColor = Color(0xFF7B7B7B)
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    text = "Back",
+                    onClick = { navigator(NavigationEvent.GoBack) })
             }
         }
         Spacer(modifier = Modifier.weight(1f))
@@ -110,17 +107,35 @@ fun SignInView(state: LoginState, onRequestNewToken: () -> Unit, showMetamaskLin
 }
 
 @Composable
+private fun QrData(qrCode: Bitmap?, userCode: String?) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Text(
+            text = userCode ?: "",
+            style = MaterialTheme.typography.title_62
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        if (qrCode != null) {
+            Image(
+                bitmap = qrCode.asImageBitmap(),
+                contentDescription = "qr code",
+            )
+        }
+    }
+}
+
+@Composable
 @Preview(device = RealisticDevices.TV_720p)
-private fun SignInMetamaskPreview(
-    @PreviewParameter(BooleanParameterProvider::class) showMetamaskLink: Boolean
-) = EluvioThemePreview {
+private fun SignInViewPreview() = EluvioThemePreview {
     SignInView(
-        LoginState(
+        SignInViewModel.State(
             loading = false,
             qrCode = generateQrCodeBlocking("https://eluv.io/?code=1234567890"),
             userCode = "ABCDEF",
         ),
         onRequestNewToken = {},
-        showMetamaskLink = showMetamaskLink
     )
 }

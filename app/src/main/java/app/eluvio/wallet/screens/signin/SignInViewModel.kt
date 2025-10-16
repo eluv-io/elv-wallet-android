@@ -1,78 +1,78 @@
-package app.eluvio.wallet.screens.signin.common
+package app.eluvio.wallet.screens.signin
 
+import android.graphics.Bitmap
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
+import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.UrlShortener
-import app.eluvio.wallet.data.entities.v2.LoginProviders
 import app.eluvio.wallet.data.stores.MediaPropertyStore
+import app.eluvio.wallet.data.stores.DeviceActivationStore
 import app.eluvio.wallet.data.stores.TokenStore
-import app.eluvio.wallet.navigation.NavigationEvent
-import app.eluvio.wallet.navigation.asPush
+import app.eluvio.wallet.navigation.asReplace
+import app.eluvio.wallet.network.api.authd.ActivationCodeResponse
 import app.eluvio.wallet.screens.common.generateQrCode
-import app.eluvio.wallet.screens.signin.SignInNavArgs
 import app.eluvio.wallet.util.entity.getFirstAuthorizedPage
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.interval
 import app.eluvio.wallet.util.rx.unsaved
-import com.ramcosta.composedestinations.generated.NavGraphs
 import com.ramcosta.composedestinations.generated.navArgs
+import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Completable
-import io.reactivex.rxjava3.core.Flowable
-import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.kotlin.Flowables
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
-import kotlin.time.Duration
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Authentication is extremely similar between all providers, so this class does the heavy lifting
  * and only delegates the provider-specific logic to the subclasses.
  */
-abstract class BaseLoginViewModel<ActivationData : Any>(
+@HiltViewModel
+class SignInViewModel @Inject constructor(
     // Just for convenience, we always provide this, even if we don't use it (propertyId=null)
     private val propertyStore: MediaPropertyStore,
     private val tokenStore: TokenStore,
     private val urlShortener: UrlShortener,
-    private val loginProvider: LoginProviders,
+    private val deviceActivationStore: DeviceActivationStore,
     savedStateHandle: SavedStateHandle
-) : BaseViewModel<LoginState>(LoginState(), savedStateHandle) {
+) : BaseViewModel<SignInViewModel.State>(State(), savedStateHandle) {
+
+    @Immutable
+    data class State(
+        val propertyId: String = "",
+        val loading: Boolean = true,
+        val qrCode: Bitmap? = null,
+        val userCode: String? = null,
+        val bgImageUrl: FabricUrl? = null,
+        val logoUrl: FabricUrl? = null,
+    )
 
     private val navArgs = savedStateHandle.navArgs<SignInNavArgs>()
 
     // The bg image / logo will be fetched from the property, if available
-    protected val propertyId: String? = navArgs.propertyId
-
-    abstract fun fetchActivationData(): Flowable<ActivationData>
-
-    /**
-     * Check if token has been activated and handle the result.
-     * The [Maybe] should only emit a value when authentication is successful.
-     */
-    abstract fun ActivationData.checkToken(): Maybe<*>
-    abstract fun ActivationData.getPollingInterval(): Duration
-    abstract fun ActivationData.getQrUrl(): String
-    abstract fun ActivationData.getCode(): String
+    private val propertyId = navArgs.propertyId
 
     private var activationDataDisposable: Disposable? = null
     private var activationCompleteDisposable: Disposable? = null
 
     override fun onResume() {
         super.onResume()
+        updateState { copy(propertyId = propertyId) }
         observeActivationData()
 
-        propertyId?.let { propertyId ->
-            propertyStore.observeMediaProperty(propertyId, forceRefresh = false)
-                .subscribeBy { property ->
-                    updateState {
-                        copy(
-                            bgImageUrl = property.loginInfo?.backgroundImageUrl,
-                            logoUrl = property.loginInfo?.logoUrl
-                        )
-                    }
+        propertyStore.observeMediaProperty(propertyId, forceRefresh = false)
+            .subscribeBy { property ->
+                updateState {
+                    copy(
+                        bgImageUrl = property.loginInfo?.backgroundImageUrl,
+                        logoUrl = property.loginInfo?.logoUrl
+                    )
                 }
-                .addTo(disposables)
-        }
+            }
+            .addTo(disposables)
     }
 
     fun requestNewToken() {
@@ -81,12 +81,13 @@ abstract class BaseLoginViewModel<ActivationData : Any>(
 
     private fun observeActivationData() {
         activationDataDisposable?.dispose()
-        activationDataDisposable = fetchActivationData()
+        activationDataDisposable = deviceActivationStore
+            .observeActivationData(propertyId, navArgs.provider)
             .doOnNext {
                 observeActivationComplete(it)
             }
             .switchMapSingle { activationData ->
-                val url = activationData.getQrUrl()
+                val url = activationData.url
                 urlShortener.shorten(url)
                     .onErrorReturnItem(url)
                     .flatMap { generateQrCode(it) }
@@ -96,7 +97,7 @@ abstract class BaseLoginViewModel<ActivationData : Any>(
                 updateState {
                     copy(
                         qrCode = qrCode,
-                        userCode = activationData.getCode(),
+                        userCode = activationData.code,
                         loading = false
                     )
                 }
@@ -104,14 +105,14 @@ abstract class BaseLoginViewModel<ActivationData : Any>(
             .addTo(disposables)
     }
 
-    private fun observeActivationComplete(activationData: ActivationData) {
+    private fun observeActivationComplete(activationData: ActivationCodeResponse) {
         activationCompleteDisposable?.dispose()
         activationCompleteDisposable =
-            Flowables.interval(activationData.getPollingInterval())
+            Flowables.interval(5.seconds)
                 .doOnSubscribe {
-                    Log.d("starting to poll token for code=${activationData.getCode()}")
+                    Log.d("starting to poll token for code=${activationData.code}")
                 }
-                .flatMapMaybe { activationData.checkToken() }
+                .flatMapMaybe { deviceActivationStore.checkToken(activationData) }
                 .firstOrError(
                     // stop the interval as soon as [checkToken] returns a non-null value
                 )
@@ -133,9 +134,9 @@ abstract class BaseLoginViewModel<ActivationData : Any>(
                 .subscribeBy(
                     onComplete = {
                         Log.d("Activation complete and properties re-fetched, finishing auth flow.")
-                        tokenStore.loginProvider = loginProvider
-                        navigateTo(NavigationEvent.PopTo(NavGraphs.authFlow, true))
-                        navArgs.onSignedInDirection?.let { navigateTo(it.asPush()) }
+                        tokenStore.update(tokenStore.loginProvider to navArgs.provider)
+
+                        navArgs.onSignedInDirection?.let { navigateTo(it.asReplace()) }
                     }
                 )
                 .addTo(disposables)
@@ -155,11 +156,11 @@ abstract class BaseLoginViewModel<ActivationData : Any>(
     }
 
     private fun prefetchPropertyAndSections(): Completable {
-        return propertyStore.fetchMediaProperty(propertyId!!)
+        return propertyStore.fetchMediaProperty(propertyId)
             // Now we can look up the Property in the cache and be sure it's not the one from before auth was complete.
             .andThen(propertyStore.observeMediaProperty(propertyId, false))
             .firstElement()
-            .flatMapPublisher { property ->
+            .flatMapSingle { property ->
                 property
                     .getFirstAuthorizedPage(currentPage = null, propertyStore)
                     .map { page -> property to page }

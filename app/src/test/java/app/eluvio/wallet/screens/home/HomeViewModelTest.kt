@@ -7,33 +7,23 @@ import app.eluvio.wallet.data.stores.DeeplinkStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.asNewRoot
 import app.eluvio.wallet.navigation.asPush
-import app.eluvio.wallet.testing.RxSchedulerRule
 import app.eluvio.wallet.testing.TestLogRule
 import com.ramcosta.composedestinations.generated.destinations.DashboardDestination
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
-import io.reactivex.rxjava3.android.plugins.RxAndroidPlugins
 import io.reactivex.rxjava3.core.Maybe
-import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.core.Single
-import io.reactivex.rxjava3.disposables.Disposable
-import io.reactivex.rxjava3.internal.schedulers.ExecutorScheduler
 import io.reactivex.rxjava3.plugins.RxJavaPlugins
-import io.reactivex.rxjava3.schedulers.Schedulers
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import java.util.concurrent.TimeUnit
 
 class HomeViewModelTest {
     @get:Rule
     val testLogRule = TestLogRule()
-
-    @get:Rule
-    val rxSchedulerRule = RxSchedulerRule()
 
     private val tokenStore: TokenStore = mockk()
     private val deeplinkStore: DeeplinkStore = mockk()
@@ -98,7 +88,7 @@ class HomeViewModelTest {
             sku = "sku1"
         }
         every { deeplinkStore.consumeDeeplinkRequest() } returns Maybe.just(deeplink)
-        every { authenticationService.getFabricTokenExternal() } returns Single.just("fabric_token")
+        every { authenticationService.getFabricTokenExternal(null) } returns Single.just("fabric_token")
 
         // WHEN
         val vm = createViewModelAndSpy()
@@ -113,7 +103,7 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `when deeplink has jwt and auth fails, should navigate to auth flow`() {
+    fun `when deeplink has jwt and auth fails, should navigate to Discover`() {
         // GIVEN
         every { tokenStore.isLoggedIn } returns false
         val deeplink = DeeplinkRequestEntity().apply {
@@ -121,7 +111,7 @@ class HomeViewModelTest {
             jwt = "test_jwt"
         }
         every { deeplinkStore.consumeDeeplinkRequest() } returns Maybe.just(deeplink)
-        every { authenticationService.getFabricTokenExternal() } returns Single.error(
+        every { authenticationService.getFabricTokenExternal(null) } returns Single.error(
             RuntimeException("auth failed")
         )
 
@@ -130,9 +120,8 @@ class HomeViewModelTest {
         vm.onResume()
 
         // THEN
-        verify { vm.navigateTo(any()) } // NavGraphs.authFlow(...)
         // Verify we DON'T navigate to the dashboard
-        verify(exactly = 0) { vm.navigateTo(DashboardDestination.asNewRoot()) }
+        verify(exactly = 1) { vm.navigateTo(DashboardDestination.asNewRoot()) }
     }
 
     private fun createViewModelAndSpy(): HomeViewModel {

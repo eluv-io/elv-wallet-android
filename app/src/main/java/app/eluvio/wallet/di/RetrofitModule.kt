@@ -4,7 +4,6 @@ import app.eluvio.wallet.network.adapters.AssetLinkAdapter
 import app.eluvio.wallet.network.adapters.DisplaySettingsAdapter
 import app.eluvio.wallet.network.adapters.PlayableHashAdapter
 import app.eluvio.wallet.network.adapters.emptyStringAsNull
-import app.eluvio.wallet.network.api.Auth0Api
 import app.eluvio.wallet.network.api.FabricConfigApi
 import app.eluvio.wallet.network.interceptors.AccessTokenInterceptor
 import com.squareup.moshi.Moshi
@@ -84,34 +83,9 @@ object RetrofitModule {
             .build()
     }
 
-    @Singleton
-    @Provides
-    @Auth0
-    fun provideAuth0Retrofit(
-        moshi: Moshi,
-        interceptors: Set<@JvmSuppressWildcards Interceptor>
-    ): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl("https://prod-elv.us.auth0.com/")
-            .client(
-                OkHttpClient.Builder()
-                    .apply { interceptors.forEach { addInterceptor(it) } }
-                    .build()
-            )
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .addCallAdapterFactory(RxJava3CallAdapterFactory.createWithScheduler(Schedulers.io()))
-            .build()
-    }
-
     @Provides
     fun provideConfigApi(@FabricConfig retrofit: Retrofit): FabricConfigApi = retrofit.create()
-
-    @Provides
-    fun provideAuth0Api(@Auth0 retrofit: Retrofit): Auth0Api = retrofit.create()
 }
-
-@Qualifier
-annotation class Auth0
 
 @Qualifier
 annotation class FabricConfig

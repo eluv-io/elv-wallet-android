@@ -70,7 +70,7 @@ class PropertyDetailViewModel @Inject constructor(
                 Flowable.just(property to null)
             }
         }
-        .switchMap { (property, page) ->
+        .switchMapSingle { (property, page) ->
             property.getFirstAuthorizedPage(page, propertyStore)
                 .map { authorizedPage -> property to authorizedPage }
         }

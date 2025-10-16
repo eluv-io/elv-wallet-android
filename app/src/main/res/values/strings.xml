@@ -1,7 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE resources [
-    <!ENTITY sign_on_with_metamask "Sign On With MetaMask">
-    ]>
 <resources>
     <string name="app_name">Media Wallet</string>
     <string name="env_main_name">Main</string>
@@ -14,7 +11,5 @@
     <string name="dashboard_tab_profile">Profile</string>
     <string name="dashboard_tab_search">Search</string>
     <string name="request_new_code">Request New Code</string>
-    <string name="metamask_sign_on_title">&sign_on_with_metamask;</string>
-    <string name="metamask_sign_on_button">-Or- &sign_on_with_metamask;</string>
     <string name="no_content_warning">No items to display</string>
 </resources>

@@ -1,70 +1,78 @@
 package app.eluvio.wallet.data.stores
 
-import app.eluvio.wallet.data.entities.v2.PropertyLoginInfoRealmEntity
-import app.eluvio.wallet.di.Auth0
-import app.eluvio.wallet.network.api.Auth0Api
-import app.eluvio.wallet.network.api.Auth0Request
-import app.eluvio.wallet.network.api.DeviceActivationData
-import app.eluvio.wallet.network.api.GetTokenRequest
-import app.eluvio.wallet.network.api.GetTokenResponse
-import app.eluvio.wallet.util.Auth0Util
+import app.eluvio.wallet.di.ApiProvider
+import app.eluvio.wallet.network.api.authd.AuthServicesApi
+import app.eluvio.wallet.network.api.authd.CsatResponse
+import app.eluvio.wallet.network.api.authd.ActivationCodeResponse
+import app.eluvio.wallet.network.api.authd.ActivationCodeRequest
 import app.eluvio.wallet.util.logging.Log
-import io.reactivex.rxjava3.core.Observable
+import app.eluvio.wallet.util.rx.mapNotNull
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.adapter
+import io.reactivex.rxjava3.core.Flowable
+import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.core.Single
-import retrofit2.Response
-import retrofit2.Retrofit
+import io.reactivex.rxjava3.kotlin.zipWith
+import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.minutes
 
 class DeviceActivationStore @Inject constructor(
-    @Auth0 private val auth0Retrofit: Retrofit,
-    private val auth0Api: Auth0Api,
+    private val apiProvider: ApiProvider,
     private val tokenStore: TokenStore,
+    private val environmentStore: EnvironmentStore,
+    private val moshi: Moshi,
 ) {
+
     fun observeActivationData(
-        loginInfo: PropertyLoginInfoRealmEntity?,
-    ): Observable<DeviceActivationData> {
-        val (api, clientId) = Auth0Util.getApiInfo(loginInfo, auth0Retrofit, auth0Api)
-        return api.getAuth0ActivationData(Auth0Request(clientId = clientId))
-            .doOnSuccess {
-                Log.d("Auth0 activation data fetched: $it")
+        propertyId: String,
+        loginProvider: String
+    ): Flowable<ActivationCodeResponse> {
+        return apiProvider.getApi(AuthServicesApi::class)
+            .zipWith(environmentStore.observeSelectedEnvironment().firstOrError())
+            .flatMap { (api, env) ->
+                val dest = buildString {
+                    append(env.walletUrl)
+                    append("?action=login&mode=login&response=code&source=code")
+                    append("&pid=$propertyId")
+                    append("&origin=Android TV Wallet")
+                    if (loginProvider != "ory") append("&clear=")
+                    // append("&ttl=0.008") // For testing ~30sec token expiration
+                    append("#/login")
+                }
+                api.generateActivationCode(ActivationCodeRequest(dest))
             }
-            .toObservable()
             // Make observable never-ending so we can restart it even after getting successful result from auth0
-            .mergeWith(Observable.never())
-            .map {
-                // [it.verificationUri] is correct, but not pretty. Hardcoding short link
-                it.copy(verificationUri = "https://elv.lv/activate")
-            }
+            .mergeWith(Single.never())
             .timeout {
-                Observable.timer(it.expiresInSeconds, TimeUnit.SECONDS)
+                val delay = (it.expiration * 1000 - Calendar.getInstance().timeInMillis)
+                    .coerceIn(1.minutes.inWholeMilliseconds..7.minutes.inWholeMilliseconds)
+                Flowable.timer(delay, TimeUnit.MILLISECONDS)
                     .doOnComplete {
-                        Log.d("ActivationData timeout reached, re-fetching from auth0")
+                        Log.d("ActivationData timeout reached, re-fetching activation data")
                     }
             }
             .retry()
     }
 
-    fun checkToken(
-        deviceCode: String,
-        loginInfo: PropertyLoginInfoRealmEntity?
-    ): Single<Response<GetTokenResponse>> {
-        val (api, clientId, domain) = Auth0Util.getApiInfo(loginInfo, auth0Retrofit, auth0Api)
-        return api.getToken(GetTokenRequest(clientId = clientId, deviceCode = deviceCode))
-            .doOnSuccess {
-                Log.d("check token result $it")
-                val response = it.body()
-                tokenStore.update(
-                    tokenStore.idToken to response?.idToken,
-                    tokenStore.accessToken to response?.accessToken,
-                    tokenStore.refreshToken to response?.refreshToken,
-                    tokenStore.auth0Domain to domain,
-                    tokenStore.auth0ClientId to clientId,
-
-                    // Clear out previous tokens at this stage, as we are ready to get new ones
-                    tokenStore.fabricToken to null,
-                    tokenStore.walletAddress to null,
-                )
+    /**
+     * Only returns a value when activation is complete and fabric token has been obtained.
+     * Otherwise returns an empty [Maybe].
+     */
+    @OptIn(ExperimentalStdlibApi::class)
+    fun checkToken(activationData: ActivationCodeResponse): Maybe<CsatResponse> {
+        return apiProvider.getApi(AuthServicesApi::class)
+            .flatMap { api -> api.checkToken(activationData.code, activationData.passcode) }
+            .mapNotNull { httpResponse ->
+                Log.d("check token result $httpResponse")
+                httpResponse.body()?.let { response ->
+                    val csat = moshi.adapter<CsatResponse>().fromJson(response.payload)
+                    val refreshToken = response.refreshToken ?: csat?.refreshToken
+                    // update [payload] with refresh_token from top-level
+                    csat?.copy(refreshToken = refreshToken)
+                }
             }
+            .doOnSuccess { tokenStore.login(it) }
     }
 }

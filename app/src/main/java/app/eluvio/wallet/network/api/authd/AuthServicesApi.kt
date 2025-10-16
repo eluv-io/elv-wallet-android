@@ -1,6 +1,5 @@
 package app.eluvio.wallet.network.api.authd
 
-import app.eluvio.wallet.data.stores.Environment
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import io.reactivex.rxjava3.core.Single
@@ -14,6 +13,21 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface AuthServicesApi : AuthdApi {
+    @POST("wlt/refresh/csat")
+    fun refreshCsat(@Body body: RefreshCsatRequest): Single<CsatResponse>
+
+    @POST("wlt/login/redirect/metamask")
+    fun generateActivationCode(@Body body: ActivationCodeRequest): Single<ActivationCodeResponse>
+
+    @GET("wlt/login/redirect/metamask/{code}/{passcode}")
+    fun checkToken(
+        @Path("code") code: String,
+        @Path("passcode") passcode: String,
+    ): Single<Response<CheckTokenResponse>>
+}
+
+interface DeepLinkAuthApi : AuthdApi {
+    // Get a jwt from an "idToken"
     @POST("wlt/login/jwt")
     fun authdLogin(
         // Static body. no need to create special classes for it.
@@ -21,20 +35,8 @@ interface AuthServicesApi : AuthdApi {
             .toRequestBody("application/json".toMediaType())
     ): Single<AuthTokenResponse>
 
-    @POST("wlt/sign/eth/{accountId}")
-    fun authdSign(
-        @Path("accountId") accountId: String,
-        @Body body: SignBody
-    ): Single<SignResponse>
-
-    @POST("wlt/login/redirect/metamask")
-    fun generateMetamaskCode(@Body body: MetamaskCodeRequest): Single<MetamaskActivationData>
-
-    @GET("wlt/login/redirect/metamask/{code}/{passcode}")
-    fun getMetamaskToken(
-        @Path("code") code: String,
-        @Path("passcode") passcode: String,
-    ): Single<Response<MetamaskTokenResponse>>
+    // Get a csat from a cluster token
+    fun csat(@Body body: CsatRequestBody): Single<CsatResponse>
 }
 
 @JsonClass(generateAdapter = true)
@@ -52,35 +54,62 @@ data class AuthTokenResponse(
 )
 
 @JsonClass(generateAdapter = true)
-data class SignBody(val hash: String)
+data class CsatRequestBody(
+    @field:Json(name = "tid") val tenantId: String?,
+    /** A unique device identifier. */
+    @field:Json(name = "nonce") val nonce: String,
+    val email: String? = null,
+    val force: Boolean = true,
+    /**
+     * How long in seconds the resulting token should be valid for. This is for testing only, since
+     * the default is the max value, so adding this parameter can only make your session shorter.
+     */
+    val exp: Long? = null,
 
-@JsonClass(generateAdapter = true)
-data class SignResponse(
-    @field:Json(name = "sig") val signature: String,
+    val app_name: String = "Android TV Wallet",
 )
 
 @JsonClass(generateAdapter = true)
-data class MetamaskCodeRequest(
-    @field:Json(name = "dest") val destination: String,
-    val op: String = "create",
-) {
-    companion object {
-        fun from(environment: Environment) =
-            MetamaskCodeRequest(destination = "${environment.walletUrl}?action=login&mode=login&response=code&source=code#/login")
-    }
-}
+data class CsatResponse(
+    @field:Json(name = "token") val fabricToken: String,
+    @field:Json(name = "addr") val address: String?, // TODO: this needs to be non-null before committing
+    @field:Json(name = "refresh_token") val refreshToken: String?,
+    val clusterToken: String?,
+    val expiresAt: Long?,
+    val email: String?,
+)
 
 @JsonClass(generateAdapter = true)
-data class MetamaskActivationData(
+data class RefreshCsatRequest(
+    @field:Json(name = "refresh_token") val refreshToken: String,
+    val nonce: String,
+    @field:Json(name = "last_csat") val currentFabricToken: String,
+    /**
+     * How long in seconds the resulting token should be valid for. This is for testing only, since
+     * the default is the max value, so adding this parameter can only make your session shorter.
+     */
+    val exp: Long? = null,
+)
+
+@JsonClass(generateAdapter = true)
+data class ActivationCodeRequest(
+    @field:Json(name = "dest") val destination: String,
+    val op: String = "create",
+)
+
+@JsonClass(generateAdapter = true)
+data class ActivationCodeResponse(
     @field:Json(name = "id") val code: String,
     @field:Json(name = "passcode") val passcode: String,
     @field:Json(name = "url") val url: String,
-    @field:Json(name = "metamask_url") val metamaskUrl: String,
     @field:Json(name = "expiration") val expiration: Long,
 )
 
 @JsonClass(generateAdapter = true)
-data class MetamaskTokenResponse(
-    // [payload] holds a string, but it can be parsed into [AuthTokenResponse]
+data class CheckTokenResponse(
+    // [payload] holds a string, but it can be parsed into [CsatResponse]
     val payload: String,
+    // Refresh token is returned in the top level and needs to be set on the object in [payload]
+    // to make a complete CsatResponse
+    @field:Json(name = "refresh_token") val refreshToken: String?,
 )

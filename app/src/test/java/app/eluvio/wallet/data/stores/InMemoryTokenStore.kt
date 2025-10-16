@@ -2,7 +2,6 @@ package app.eluvio.wallet.data.stores
 
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.mutablePreferencesOf
-import app.eluvio.wallet.data.entities.v2.LoginProviders
 import app.eluvio.wallet.util.datastore.ReadWritePref
 import app.eluvio.wallet.util.datastore.StoreOperation
 import app.eluvio.wallet.util.rx.Optional
@@ -22,7 +21,6 @@ open class InMemoryTokenStore : TokenStore {
     }
 
     override val idToken: ReadWritePref<String> = Pref()
-    override val accessToken: ReadWritePref<String> = Pref()
     override val refreshToken: ReadWritePref<String> = Pref()
     override val clusterToken: ReadWritePref<String> = Pref()
     override val fabricToken: ReadWritePref<String> = Pref()
@@ -30,13 +28,7 @@ open class InMemoryTokenStore : TokenStore {
     override val walletAddress: ReadWritePref<String> = Pref()
     override val userEmail: ReadWritePref<String> = Pref()
 
-    private val lpPref = Pref<LoginProviders>()
-    override var loginProvider: LoginProviders
-        get() = lpPref.get() ?: LoginProviders.ORY
-        set(value) = lpPref.set(value)
-
-    override val auth0Domain: ReadWritePref<String> = Pref()
-    override val auth0ClientId: ReadWritePref<String> = Pref()
+    override val loginProvider: ReadWritePref<String> = Pref()
 
     override fun update(vararg operations: StoreOperation) {
         val noOpMap = mutablePreferencesOf()
@@ -46,14 +38,13 @@ open class InMemoryTokenStore : TokenStore {
     override fun wipe() {
         update(
             idToken to null,
-            accessToken to null,
             refreshToken to null,
             clusterToken to null,
             fabricToken to null,
             fabricTokenExpiration to null,
             walletAddress to null,
             userEmail to null,
-            lpPref to null
+            loginProvider to null,
         )
     }
 }

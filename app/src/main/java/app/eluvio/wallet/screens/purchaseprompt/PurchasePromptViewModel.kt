@@ -1,9 +1,9 @@
 package app.eluvio.wallet.screens.purchaseprompt
 
 import android.graphics.Bitmap
-import android.net.Uri
 import android.util.Base64
 import androidx.compose.runtime.Immutable
+import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.data.FabricUrl
@@ -19,13 +19,13 @@ import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.onClickDirection
 import app.eluvio.wallet.screens.common.generateQrCode
-import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
-import com.ramcosta.composedestinations.generated.navArgs
 import app.eluvio.wallet.util.crypto.Base58
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.Optional
 import app.eluvio.wallet.util.rx.asSharedState
 import app.eluvio.wallet.util.rx.mapNotNull
+import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
+import com.ramcosta.composedestinations.generated.navArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
@@ -237,7 +237,10 @@ class PurchasePromptViewModel @Inject constructor(
                             ?.takeIf { it.isNotEmpty() }
                             ?.let { JSONArray(it) }
                     )
-                    .putOpt("secondaryPurchaseOption", permissionSettings?.secondaryMarketPurchaseOption)
+                    .putOpt(
+                        "secondaryPurchaseOption",
+                        permissionSettings?.secondaryMarketPurchaseOption
+                    )
                     .toBase58()
             }
 
@@ -251,7 +254,8 @@ class PurchasePromptViewModel @Inject constructor(
                 }
 
                 else -> {
-                    put("provider", tokenStore.loginProvider.value)
+                    // we only care about "auth0" or "ory", not the whole string that encodes custom domains etc.
+                    put("provider", tokenStore.loginProvider.get()?.substringBefore("_"))
                     put("clusterToken", clusterToken)
                 }
             }
@@ -261,7 +265,7 @@ class PurchasePromptViewModel @Inject constructor(
         }.toBase58()
 
         val pageId = navArgs.pageOverride ?: permissionContext.pageId.orEmpty()
-        return Uri.parse(environment.walletUrl)
+        return environment.walletUrl.toUri()
             .buildUpon()
             .appendPath(permissionContext.propertyId)
             .appendPath(pageId)

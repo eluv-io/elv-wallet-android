@@ -9,8 +9,6 @@ import app.eluvio.wallet.data.entities.v2.MediaPageEntity
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
 import app.eluvio.wallet.data.entities.v2.PropertySearchFiltersEntity
 import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
-import app.eluvio.wallet.data.entities.v2.permissions.PermissionSettingsEntity
-import app.eluvio.wallet.data.entities.v2.permissions.showAlternatePage
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.PlaybackStore
@@ -18,7 +16,6 @@ import app.eluvio.wallet.data.stores.PropertySearchStore
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.navigation.asReplace
-import app.eluvio.wallet.screens.videoplayer.toMediaSource
 import app.eluvio.wallet.util.entity.CircularRedirectException
 import app.eluvio.wallet.util.entity.ShowPurchaseOptionsRedirectException
 import app.eluvio.wallet.util.entity.getFirstAuthorizedPage
@@ -210,7 +207,7 @@ class PropertyDetailViewModel @Inject constructor(
             .switchMapSingle { display ->
                 Maybe.fromCallable { display.heroBackgroundVideoHash?.takeIf { ENABLE_VIDEO_BG } }
                     .flatMapSingle { hash -> videoOptionsFetcher.fetchVideoOptionsFromHash(hash) }
-                    .map { videoEntity -> Optional.of(videoEntity.toMediaSource()) }
+                    .map { mediaSource -> Optional.of(mediaSource) }
                     .defaultIfEmpty(Optional.empty()) // No video hash, no MediaSource
                     .onErrorReturn {
                         Log.e("Error fetching video options", it)
@@ -227,13 +224,6 @@ class PropertyDetailViewModel @Inject constructor(
                 }
             )
             .addTo(disposables)
-    }
-
-    /**
-     * If we are authorized to view this page/property, or redirect behavior isn't configured, returns null.
-     */
-    private fun PermissionSettingsEntity.getRedirectPageId(): String? {
-        return alternatePageId?.takeIf { showAlternatePage }
     }
 
     private fun sections(

@@ -17,7 +17,6 @@ import app.eluvio.wallet.data.stores.NftNotFoundException
 import app.eluvio.wallet.di.ApiProvider
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.network.api.fabric.MarketplaceApi
-import app.eluvio.wallet.screens.videoplayer.toMediaSource
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.mapNotNull
 import app.eluvio.wallet.util.toAnnotatedString
@@ -136,14 +135,14 @@ class LegacyNftDetailViewModel @Inject constructor(
             .map { (offer, redeemState) ->
                 val fulfillmentState = offer.getFulfillmentState(redeemState)
                 val animationPath = offer.animation.values.firstOrNull()
-                val videoOptions: Single<Optional<MediaSource>> = if (animationPath == null) {
+                val mediaSource: Single<Optional<MediaSource>> = if (animationPath == null) {
                     Single.just(Optional.absent())
                 } else {
                     videoOptionsFetcher.fetchVideoOptionsFromPath(animationPath)
-                        .map { videoEntity -> Optional.of(videoEntity.toMediaSource()) }
+                        .map { mediaSource -> Optional.of(mediaSource) }
                         .onErrorReturnItem(Optional.absent())
                 }
-                videoOptions.map { optional ->
+                mediaSource.map { optional ->
                     val imageUrl = (offer.imagePath ?: offer.posterImagePath)?.let { path ->
                         "${endpoint}${path}"
                     }

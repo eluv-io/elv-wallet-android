@@ -153,7 +153,7 @@ class AccessTokenInterceptor @Inject constructor(
                                 refreshToken,
                                 installation.id,
                                 tokenStore.fabricToken.get()!!,
-                                // exp = 20 // Only for testing
+                                exp = 20 // Only for testing
                             )
                         )
                     }

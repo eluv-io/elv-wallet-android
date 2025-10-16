@@ -15,14 +15,14 @@ import app.eluvio.wallet.data.stores.PlaybackStore
 import app.eluvio.wallet.data.stores.PropertySearchStore
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.network.dto.v2.SearchRequest
-import com.ramcosta.composedestinations.generated.destinations.PropertySearchDestination
-import com.ramcosta.composedestinations.generated.navArgs
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState
 import app.eluvio.wallet.screens.property.toDynamicSections
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.Optional
 import app.eluvio.wallet.util.rx.asSharedState
 import app.eluvio.wallet.util.rx.delay
+import com.ramcosta.composedestinations.generated.destinations.PropertySearchDestination
+import com.ramcosta.composedestinations.generated.navArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Single

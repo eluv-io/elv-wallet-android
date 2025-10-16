@@ -1,10 +1,10 @@
 package app.eluvio.wallet.data.stores
 
 import app.eluvio.wallet.di.ApiProvider
+import app.eluvio.wallet.network.api.authd.ActivationCodeRequest
+import app.eluvio.wallet.network.api.authd.ActivationCodeResponse
 import app.eluvio.wallet.network.api.authd.AuthServicesApi
 import app.eluvio.wallet.network.api.authd.CsatResponse
-import app.eluvio.wallet.network.api.authd.ActivationCodeResponse
-import app.eluvio.wallet.network.api.authd.ActivationCodeRequest
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.mapNotNull
 import com.squareup.moshi.Moshi

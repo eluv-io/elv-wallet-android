@@ -13,12 +13,12 @@ import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.data.stores.FulfillmentStore
 import app.eluvio.wallet.di.ApiProvider
 import app.eluvio.wallet.navigation.asPush
-import com.ramcosta.composedestinations.generated.destinations.FulfillmentQrDialogDestination
-import com.ramcosta.composedestinations.generated.navArgs
 import app.eluvio.wallet.util.crypto.Base58
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.realm.toDate
 import app.eluvio.wallet.util.toAnnotatedString
+import com.ramcosta.composedestinations.generated.destinations.FulfillmentQrDialogDestination
+import com.ramcosta.composedestinations.generated.navArgs
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Flowable

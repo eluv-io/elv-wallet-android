@@ -11,8 +11,8 @@ import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.di.ApiProvider
 import app.eluvio.wallet.screens.common.generateQrCode
-import com.ramcosta.composedestinations.generated.destinations.ExternalMediaQrDialogDestination
 import app.eluvio.wallet.util.logging.Log
+import com.ramcosta.composedestinations.generated.destinations.ExternalMediaQrDialogDestination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy

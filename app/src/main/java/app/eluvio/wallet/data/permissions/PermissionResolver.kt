@@ -7,6 +7,7 @@ import app.eluvio.wallet.data.entities.v2.permissions.PermissionSettings
 import app.eluvio.wallet.data.entities.v2.permissions.PermissionSettingsEntity
 import app.eluvio.wallet.data.entities.v2.permissions.PermissionStatesEntity
 import app.eluvio.wallet.data.entities.v2.permissions.VolatilePermissionSettings
+import app.eluvio.wallet.data.permissions.PermissionResolver.resolvePermissions
 import app.eluvio.wallet.util.logging.Log
 
 object PermissionResolver {

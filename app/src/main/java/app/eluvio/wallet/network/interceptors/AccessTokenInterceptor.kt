@@ -11,7 +11,6 @@ import app.eluvio.wallet.data.stores.login
 import app.eluvio.wallet.di.ApiProvider
 import app.eluvio.wallet.network.api.authd.AuthServicesApi
 import app.eluvio.wallet.network.api.authd.RefreshCsatRequest
-import app.eluvio.wallet.util.Toaster
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.unsaved
 import dagger.Lazy

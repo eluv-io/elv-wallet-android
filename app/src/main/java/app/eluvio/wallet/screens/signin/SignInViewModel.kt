@@ -6,8 +6,8 @@ import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.UrlShortener
-import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.DeviceActivationStore
+import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.asReplace
 import app.eluvio.wallet.network.api.authd.ActivationCodeResponse

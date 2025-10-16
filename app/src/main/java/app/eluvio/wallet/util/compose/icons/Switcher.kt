@@ -12,8 +12,6 @@ import androidx.compose.ui.graphics.vector.group
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import app.eluvio.wallet.util.compose.icons.EluvioIcons
-import app.eluvio.wallet.util.compose.icons.MyItems
 
 @Preview
 @Composable

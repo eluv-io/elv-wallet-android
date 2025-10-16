@@ -4,10 +4,10 @@ import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.data.entities.GalleryItemEntity
 import app.eluvio.wallet.data.entities.LiveVideoInfoEntity
 import app.eluvio.wallet.data.entities.MediaEntity
-import app.eluvio.wallet.data.entities.v2.search.FilterAttributeEntity
-import app.eluvio.wallet.data.entities.v2.search.FilterValueEntity
 import app.eluvio.wallet.data.entities.v2.display.thumbnailUrlAndRatio
 import app.eluvio.wallet.data.entities.v2.permissions.PermissionSettingsEntity
+import app.eluvio.wallet.data.entities.v2.search.FilterAttributeEntity
+import app.eluvio.wallet.data.entities.v2.search.FilterValueEntity
 import app.eluvio.wallet.network.converters.toPathMap
 import app.eluvio.wallet.network.dto.v2.DisplaySettingsDto
 import app.eluvio.wallet.network.dto.v2.GalleryItemV2Dto

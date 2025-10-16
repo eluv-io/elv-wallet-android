@@ -47,12 +47,12 @@ import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.common.SearchBox
 import app.eluvio.wallet.screens.common.SearchFilterChip
-import com.ramcosta.composedestinations.generated.destinations.LegacyNftDetailDestination
-import com.ramcosta.composedestinations.generated.destinations.NftDetailDestination
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.util.isKeyUpOf
 import app.eluvio.wallet.util.rememberToaster
 import app.eluvio.wallet.util.subscribeToState
+import com.ramcosta.composedestinations.generated.destinations.LegacyNftDetailDestination
+import com.ramcosta.composedestinations.generated.destinations.NftDetailDestination
 import kotlinx.coroutines.launch
 import java.util.UUID
 import kotlin.math.roundToInt

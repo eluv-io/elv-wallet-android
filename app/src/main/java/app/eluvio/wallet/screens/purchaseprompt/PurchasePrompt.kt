@@ -38,7 +38,6 @@ import androidx.tv.material3.Text
 import app.eluvio.wallet.R
 import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.entities.v2.display.thumbnailUrlAndRatio
-import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.navigation.LocalNavigator
 import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.navigation.NavigationEvent

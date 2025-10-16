@@ -68,7 +68,6 @@ import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.navigation.asReplace
 import app.eluvio.wallet.screens.common.DelayedFullscreenLoader
 import app.eluvio.wallet.screens.common.VideoPlayer
-import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
 import app.eluvio.wallet.screens.property.rows.BannerSection
 import app.eluvio.wallet.screens.property.rows.CarouselSection
 import app.eluvio.wallet.screens.property.rows.DescriptionSection
@@ -80,6 +79,7 @@ import app.eluvio.wallet.util.compose.icons.Search
 import app.eluvio.wallet.util.compose.icons.Switcher
 import app.eluvio.wallet.util.logging.Log
 import coil.compose.AsyncImage
+import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
 import kotlinx.coroutines.launch
 
 @Composable

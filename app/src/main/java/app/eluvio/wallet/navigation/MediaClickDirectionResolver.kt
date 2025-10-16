@@ -5,6 +5,7 @@ import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.entities.v2.permissions.PermissionBehavior
 import app.eluvio.wallet.data.entities.v2.permissions.behaviorEnum
 import app.eluvio.wallet.data.permissions.PermissionContext
+import app.eluvio.wallet.util.logging.Log
 import com.ramcosta.composedestinations.generated.destinations.ExternalMediaQrDialogDestination
 import com.ramcosta.composedestinations.generated.destinations.ImageGalleryDestination
 import com.ramcosta.composedestinations.generated.destinations.LockedMediaDialogDestination
@@ -12,7 +13,6 @@ import com.ramcosta.composedestinations.generated.destinations.MediaGridDestinat
 import com.ramcosta.composedestinations.generated.destinations.PurchasePromptDestination
 import com.ramcosta.composedestinations.generated.destinations.UpcomingVideoDestination
 import com.ramcosta.composedestinations.generated.destinations.VideoPlayerActivityDestination
-import app.eluvio.wallet.util.logging.Log
 import com.ramcosta.composedestinations.spec.Direction
 
 /**

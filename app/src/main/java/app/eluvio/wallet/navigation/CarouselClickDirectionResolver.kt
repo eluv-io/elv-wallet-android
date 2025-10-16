@@ -1,10 +1,10 @@
 package app.eluvio.wallet.navigation
 
+import app.eluvio.wallet.screens.property.DynamicPageLayoutState.CarouselItem
+import com.ramcosta.composedestinations.generated.destinations.FullscreenQRDialogDestination
 import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
 import com.ramcosta.composedestinations.generated.destinations.PurchasePromptDestination
 import com.ramcosta.composedestinations.generated.destinations.RedeemDialogDestination
-import app.eluvio.wallet.screens.property.DynamicPageLayoutState.CarouselItem
-import com.ramcosta.composedestinations.generated.destinations.FullscreenQRDialogDestination
 import com.ramcosta.composedestinations.spec.Direction
 
 /**

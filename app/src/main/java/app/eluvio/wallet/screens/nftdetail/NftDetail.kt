@@ -43,8 +43,6 @@ import app.eluvio.wallet.screens.common.DelayedFullscreenLoader
 import app.eluvio.wallet.screens.common.TvButton
 import app.eluvio.wallet.screens.dashboard.myitems.AllMediaProvider
 import app.eluvio.wallet.screens.dashboard.myitems.MediaCard
-import com.ramcosta.composedestinations.generated.destinations.FullscreenQRDialogDestination
-import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.body_32
 import app.eluvio.wallet.theme.carousel_48
@@ -52,6 +50,8 @@ import app.eluvio.wallet.theme.label_24
 import app.eluvio.wallet.util.compose.RealisticDevices
 import app.eluvio.wallet.util.subscribeToState
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.generated.destinations.FullscreenQRDialogDestination
+import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
 
 @Destination<MainGraph>(navArgs = NftDetailNavArgs::class)
 @Composable

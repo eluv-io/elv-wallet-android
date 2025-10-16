@@ -1,6 +1,5 @@
 package app.eluvio.wallet.network.dto.v2
 
-import app.eluvio.wallet.network.dto.MediaItemDto
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)

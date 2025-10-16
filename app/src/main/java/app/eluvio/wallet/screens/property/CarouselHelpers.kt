@@ -11,13 +11,12 @@ import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.data.stores.PlaybackStore
 import app.eluvio.wallet.navigation.asPush
-import com.ramcosta.composedestinations.generated.destinations.MediaGridDestination
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState.CarouselItem
 import app.eluvio.wallet.screens.property.mediagrid.GridContentOverride
-import app.eluvio.wallet.screens.property.rows.BannerSection
 import app.eluvio.wallet.theme.DefaultTypography
 import app.eluvio.wallet.theme.carousel_48
 import app.eluvio.wallet.util.logging.Log
+import com.ramcosta.composedestinations.generated.destinations.MediaGridDestination
 
 /**
  * The maximum number of items to display in a carousel before showing a "View All" button for "carousel" sections.

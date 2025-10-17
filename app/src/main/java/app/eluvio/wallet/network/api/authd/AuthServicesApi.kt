@@ -72,12 +72,16 @@ data class CsatRequestBody(
 @JsonClass(generateAdapter = true)
 data class CsatResponse(
     @field:Json(name = "token") val fabricToken: String,
-    @field:Json(name = "addr") val address: String?, // TODO: this needs to be non-null before committing
+    @Deprecated("Use [address] instead") @field:Json(name = "addr") val addr: String?,
+    @Deprecated("Use [address] instead") @field:Json(name = "user_addr") val userAddress: String?,
     @field:Json(name = "refresh_token") val refreshToken: String?,
     val clusterToken: String?,
     val expiresAt: Long?,
     val email: String?,
-)
+) {
+    // Server is inconsistent with naming of this field.
+    val address = addr ?: userAddress
+}
 
 @JsonClass(generateAdapter = true)
 data class RefreshCsatRequest(

@@ -30,7 +30,7 @@ interface SignOutHandler {
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface TokenStoreModule {
+interface SignOutHandlerModule {
     @Binds
     fun bindSignOutHandler(impl: SignOutHandlerImpl): SignOutHandler
 }
@@ -39,7 +39,7 @@ class SignOutHandlerImpl @Inject constructor(
     private val tokenStore: TokenStore,
     private val realm: Realm,
     private val playbackStore: PlaybackStore,
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
     private val toaster: Toaster,
 ) : SignOutHandler {
     override fun signOut(

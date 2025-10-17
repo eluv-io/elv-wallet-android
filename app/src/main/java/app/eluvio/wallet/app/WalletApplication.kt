@@ -2,6 +2,7 @@ package app.eluvio.wallet.app
 
 import android.app.Application
 import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.lifecycle.coroutineScope
 import app.eluvio.wallet.BuildConfig
 import app.eluvio.wallet.di.TokenAwareHttpClient
 import app.eluvio.wallet.util.coil.ContentFabricSizingInterceptor
@@ -10,6 +11,7 @@ import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.decode.SvgDecoder
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import timber.log.Timber
 import javax.inject.Inject
@@ -26,9 +28,15 @@ class WalletApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var installReferrerHandler: InstallReferrerHandler
 
+    @Inject
+    lateinit var migrationManager: MigrationManager
+
     override fun onCreate() {
         super.onCreate()
-        ProcessLifecycleOwner.get().lifecycle.addObserver(fabricConfigRefresher)
+        ProcessLifecycleOwner.get().lifecycle.apply {
+            coroutineScope.launch { migrationManager.applyMigration() }
+            addObserver(fabricConfigRefresher)
+        }
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())

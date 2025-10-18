@@ -23,6 +23,7 @@ class DeviceActivationStore @Inject constructor(
     private val tokenStore: TokenStore,
     private val environmentStore: EnvironmentStore,
     private val moshi: Moshi,
+    private val installation: Installation,
 ) {
 
     fun observeActivationData(
@@ -36,6 +37,7 @@ class DeviceActivationStore @Inject constructor(
                     append(env.walletUrl)
                     append("?action=login&mode=login&response=code&source=code")
                     append("&pid=$propertyId")
+                    append("&nonce=${installation.id}")
                     append("&origin=Android TV Wallet")
                     if (loginProvider != "ory") append("&clear=")
                     // append("&ttl=0.008") // For testing ~30sec token expiration

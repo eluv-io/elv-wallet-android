@@ -43,6 +43,7 @@ class AccessTokenInterceptorTest {
             CsatResponse(
                 "fabricToken",
                 "addr",
+                userAddress = null,
                 "refresh",
                 "clusterToken",
                 9999,

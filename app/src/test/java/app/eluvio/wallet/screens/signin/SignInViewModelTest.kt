@@ -159,6 +159,7 @@ class SignInViewModelTest {
     private fun csatSuccess() = CsatResponse(
         "fabricToken",
         "0xAddress",
+        userAddress = null,
         "refreshToken",
         "clusterToken",
         99999999L,

@@ -28,9 +28,14 @@ fun ByteArray.hexToString(): String {
 val String.base58: String
     get() = Base58.encode(this.toHexByteArray())
 
-@OptIn(ExperimentalStdlibApi::class)
 val String.sha256: String
     get() = MessageDigest
         .getInstance("SHA-256")
+        .digest(toByteArray())
+        .toHexString()
+
+val String.sha512: String
+    get() = MessageDigest
+        .getInstance("SHA-512")
         .digest(toByteArray())
         .toHexString()

@@ -5,8 +5,10 @@ import app.eluvio.wallet.network.api.authd.ActivationCodeRequest
 import app.eluvio.wallet.network.api.authd.ActivationCodeResponse
 import app.eluvio.wallet.network.api.authd.AuthServicesApi
 import app.eluvio.wallet.network.api.authd.CsatResponse
+import app.eluvio.wallet.util.Device
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.mapNotNull
+import app.eluvio.wallet.util.sha512
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
 import io.reactivex.rxjava3.core.Flowable
@@ -37,8 +39,8 @@ class DeviceActivationStore @Inject constructor(
                     append(env.walletUrl)
                     append("?action=login&mode=login&response=code&source=code")
                     append("&pid=$propertyId")
-                    append("&nonce=${installation.id}")
-                    append("&origin=Android TV Wallet")
+                    append("&install_id=${installation.id.sha512}")
+                    append("&origin=${Device.NAME}")
                     if (loginProvider != "ory") append("&clear=")
                     // append("&ttl=0.008") // For testing ~30sec token expiration
                     append("#/login")

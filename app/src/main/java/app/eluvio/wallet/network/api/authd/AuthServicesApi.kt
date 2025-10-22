@@ -1,5 +1,6 @@
 package app.eluvio.wallet.network.api.authd
 
+import app.eluvio.wallet.util.Device
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import io.reactivex.rxjava3.core.Single
@@ -66,7 +67,7 @@ data class CsatRequestBody(
      */
     val exp: Long? = null,
 
-    val app_name: String = "Android TV Wallet",
+    val app_name: String = Device.NAME,
 )
 
 @JsonClass(generateAdapter = true)

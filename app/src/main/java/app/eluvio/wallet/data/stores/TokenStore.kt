@@ -2,6 +2,7 @@ package app.eluvio.wallet.data.stores
 
 import android.content.Context
 import androidx.datastore.preferences.rxjava3.RxPreferenceDataStoreBuilder
+import app.eluvio.wallet.network.api.authd.CheckTokenPayload
 import app.eluvio.wallet.network.api.authd.CsatResponse
 import app.eluvio.wallet.util.datastore.ReadWritePref
 import app.eluvio.wallet.util.datastore.StoreOperation
@@ -47,18 +48,38 @@ interface TokenStore {
 /**
  * Save login information from a [CsatResponse] into the [TokenStore].
  */
+fun TokenStore.login(payload: CheckTokenPayload) {
+    update(
+        fabricToken to payload.fabricToken,
+        fabricTokenExpiration to payload.expiresAt?.toString(),
+        refreshToken to payload.refreshToken,
+        walletAddress to payload.address,
+        clusterToken to payload.clusterToken,
+        userEmail to payload.email,
+
+        // idToken is what we get directly from Auth0 before we obtain the fabricToken from authd.
+        // Once we have a fabricToken, it's no longer needed.
+        idToken to null,
+    )
+}
+
 fun TokenStore.login(csatResponse: CsatResponse) {
     update(
         fabricToken to csatResponse.fabricToken,
-        refreshToken to csatResponse.refreshToken,
         fabricTokenExpiration to csatResponse.expiresAt?.toString(),
+        refreshToken to csatResponse.refreshToken,
         walletAddress to csatResponse.address,
-        clusterToken to csatResponse.clusterToken,
-        userEmail to csatResponse.email,
+    )
+}
 
-        // idToken is what we get directly from Auth0 before we obtain the fabricToken from authd.
-        // Once we have a csatResponse, it's no longer needed.
-        idToken to null,
+/**
+ * Refresh the fabric token information in the [TokenStore] from a [CsatResponse].
+ */
+fun TokenStore.refresh(csatResponse: CsatResponse) {
+    update(
+        fabricToken to csatResponse.fabricToken,
+        fabricTokenExpiration to csatResponse.expiresAt?.toString(),
+        refreshToken to csatResponse.refreshToken,
     )
 }
 

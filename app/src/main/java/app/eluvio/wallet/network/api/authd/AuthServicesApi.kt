@@ -1,5 +1,6 @@
 package app.eluvio.wallet.network.api.authd
 
+import app.eluvio.wallet.network.adapters.JsonString
 import app.eluvio.wallet.util.Device
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
@@ -47,7 +48,6 @@ data class AuthTokenResponse(
     // create a fabric token from it.
     // Metamask will return a "fabric token" directly.
     val token: String,
-    val expiresAt: Long?,
 
     // Optional. Returned from Ory, but not Auth0 or Metamask
     val clusterToken: String?,
@@ -58,7 +58,7 @@ data class AuthTokenResponse(
 data class CsatRequestBody(
     @field:Json(name = "tid") val tenantId: String?,
     /** A unique device identifier. */
-    @field:Json(name = "nonce") val nonce: String,
+    val nonce: String,
     val email: String? = null,
     val force: Boolean = true,
     /**
@@ -67,22 +67,16 @@ data class CsatRequestBody(
      */
     val exp: Long? = null,
 
-    val app_name: String = Device.NAME,
+    @field:Json(name = "app_name") val appName: String = Device.NAME,
 )
 
 @JsonClass(generateAdapter = true)
 data class CsatResponse(
     @field:Json(name = "token") val fabricToken: String,
-    @Deprecated("Use [address] instead") @field:Json(name = "addr") val addr: String?,
-    @Deprecated("Use [address] instead") @field:Json(name = "user_addr") val userAddress: String?,
+    @field:Json(name = "user_addr") val address: String?,
     @field:Json(name = "refresh_token") val refreshToken: String?,
-    val clusterToken: String?,
-    val expiresAt: Long?,
-    val email: String?,
-) {
-    // Server is inconsistent with naming of this field.
-    val address = addr ?: userAddress
-}
+    @field:Json(name = "expires_at") val expiresAt: Long?,
+)
 
 @JsonClass(generateAdapter = true)
 data class RefreshCsatRequest(
@@ -112,9 +106,15 @@ data class ActivationCodeResponse(
 
 @JsonClass(generateAdapter = true)
 data class CheckTokenResponse(
-    // [payload] holds a string, but it can be parsed into [CsatResponse]
-    val payload: String,
-    // Refresh token is returned in the top level and needs to be set on the object in [payload]
-    // to make a complete CsatResponse
-    @field:Json(name = "refresh_token") val refreshToken: String?,
+    @field:JsonString val payload: CheckTokenPayload,
+)
+
+@JsonClass(generateAdapter = true)
+data class CheckTokenPayload(
+    @field:Json(name = "token") val fabricToken: String,
+    @field:Json(name = "expiresAt") val expiresAt: Long?,
+    @field:Json(name = "refreshToken") val refreshToken: String,
+    @field:Json(name = "addr") val address: String,
+    @field:Json(name = "clusterToken") val clusterToken: String?,
+    @field:Json(name = "email") val email: String?,
 )

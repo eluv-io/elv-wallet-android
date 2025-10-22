@@ -4,13 +4,10 @@ import app.eluvio.wallet.di.ApiProvider
 import app.eluvio.wallet.network.api.authd.ActivationCodeRequest
 import app.eluvio.wallet.network.api.authd.ActivationCodeResponse
 import app.eluvio.wallet.network.api.authd.AuthServicesApi
-import app.eluvio.wallet.network.api.authd.CsatResponse
 import app.eluvio.wallet.util.Device
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.mapNotNull
 import app.eluvio.wallet.util.sha512
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.adapter
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.core.Single
@@ -24,7 +21,6 @@ class DeviceActivationStore @Inject constructor(
     private val apiProvider: ApiProvider,
     private val tokenStore: TokenStore,
     private val environmentStore: EnvironmentStore,
-    private val moshi: Moshi,
     private val installation: Installation,
 ) {
 
@@ -64,19 +60,16 @@ class DeviceActivationStore @Inject constructor(
      * Only returns a value when activation is complete and fabric token has been obtained.
      * Otherwise returns an empty [Maybe].
      */
-    @OptIn(ExperimentalStdlibApi::class)
-    fun checkToken(activationData: ActivationCodeResponse): Maybe<CsatResponse> {
+    fun checkToken(activationData: ActivationCodeResponse): Maybe<String> {
         return apiProvider.getApi(AuthServicesApi::class)
             .flatMap { api -> api.checkToken(activationData.code, activationData.passcode) }
             .mapNotNull { httpResponse ->
                 Log.d("check token result $httpResponse")
-                httpResponse.body()?.let { response ->
-                    val csat = moshi.adapter<CsatResponse>().fromJson(response.payload)
-                    val refreshToken = response.refreshToken ?: csat?.refreshToken
-                    // update [payload] with refresh_token from top-level
-                    csat?.copy(refreshToken = refreshToken)
-                }
+                val response = httpResponse.body() ?: return@mapNotNull null
+                // Poll successful. Store login information.
+                tokenStore.login(response.payload)
+                // Return any non-null value to signal completion.
+                return@mapNotNull response.payload.fabricToken
             }
-            .doOnSuccess { tokenStore.login(it) }
     }
 }

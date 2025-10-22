@@ -138,7 +138,7 @@ class SignInViewModelTest {
         every { vm.navigateTo(any()) } returns Unit
 
         // WHEN
-        every { deviceActivationStore.checkToken(any()) } returns Maybe.just(csatSuccess())
+        every { deviceActivationStore.checkToken(any()) } returns Maybe.just("success")
         vm.onResume()
         // Wait for polling to start
         testScheduler.advanceTimeBy(10, TimeUnit.SECONDS)
@@ -155,14 +155,4 @@ class SignInViewModelTest {
         }
         RxJavaPlugins.reset()
     }
-
-    private fun csatSuccess() = CsatResponse(
-        "fabricToken",
-        "0xAddress",
-        userAddress = null,
-        "refreshToken",
-        "clusterToken",
-        99999999L,
-        "email@mail.com"
-    )
 }

@@ -7,7 +7,7 @@ import app.eluvio.wallet.data.SignOutHandler
 import app.eluvio.wallet.data.stores.FabricConfigStore
 import app.eluvio.wallet.data.stores.Installation
 import app.eluvio.wallet.data.stores.TokenStore
-import app.eluvio.wallet.data.stores.login
+import app.eluvio.wallet.data.stores.refresh
 import app.eluvio.wallet.di.ApiProvider
 import app.eluvio.wallet.network.api.authd.AuthServicesApi
 import app.eluvio.wallet.network.api.authd.RefreshCsatRequest
@@ -162,7 +162,7 @@ class AccessTokenInterceptor @Inject constructor(
                     }
                     .blockingGet()
 
-                tokenStore.login(csatResponse)
+                tokenStore.refresh(csatResponse)
 
                 return retry
             } catch (e: Throwable) {

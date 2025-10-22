@@ -2,6 +2,7 @@ package app.eluvio.wallet.di
 
 import app.eluvio.wallet.network.adapters.AssetLinkAdapter
 import app.eluvio.wallet.network.adapters.DisplaySettingsAdapter
+import app.eluvio.wallet.network.adapters.JsonStringAdapterFactory
 import app.eluvio.wallet.network.adapters.PlayableHashAdapter
 import app.eluvio.wallet.network.adapters.emptyStringAsNull
 import app.eluvio.wallet.network.api.FabricConfigApi
@@ -61,6 +62,7 @@ object RetrofitModule {
             .add(AssetLinkAdapter())
             .add(DisplaySettingsAdapter())
             .add(PlayableHashAdapter())
+            .add(JsonStringAdapterFactory)
             .build()
     }
 

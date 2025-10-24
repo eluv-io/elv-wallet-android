@@ -113,7 +113,7 @@ data class CheckTokenResponse(
 data class CheckTokenPayload(
     @field:Json(name = "token") val fabricToken: String,
     @field:Json(name = "expiresAt") val expiresAt: Long?,
-    @field:Json(name = "refreshToken") val refreshToken: String,
+    @field:Json(name = "refreshToken") val refreshToken: String?,
     @field:Json(name = "addr") val address: String,
     @field:Json(name = "clusterToken") val clusterToken: String?,
     @field:Json(name = "email") val email: String?,

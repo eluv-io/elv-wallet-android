@@ -35,7 +35,7 @@ class DeviceActivationStore @Inject constructor(
                     append(env.walletUrl)
                     append("?action=login&mode=login&response=code&source=code")
                     append("&pid=$propertyId")
-                    append("&install_id=${installation.id.sha512}")
+                    append("&installId=${installation.id.sha512}")
                     append("&origin=${Device.NAME}")
                     if (loginProvider != "ory") append("&clear=")
                     // append("&ttl=0.008") // For testing ~30sec token expiration

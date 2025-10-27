@@ -10,11 +10,15 @@ import app.eluvio.wallet.util.rx.optionalMap
 import io.reactivex.rxjava3.core.Flowable
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
-fun RxDataStore<Preferences>.readWriteStringPref(keyName: String) =
-    DataStoreReadWritePref(this, stringPreferencesKey(keyName))
+fun RxDataStore<Preferences>.readWriteStringPref(
+    keyName: String,
+    setterTransformer: (String) -> String = { it }
+) = DataStoreReadWritePref(this, stringPreferencesKey(keyName), setterTransformer)
 
-fun RxDataStore<Preferences>.readWriteBoolPref(keyName: String) =
-    DataStoreReadWritePref(this, booleanPreferencesKey(keyName))
+fun RxDataStore<Preferences>.readWriteBoolPref(
+    keyName: String,
+    setterTransformer: (Boolean) -> Boolean = { it }
+) = DataStoreReadWritePref(this, booleanPreferencesKey(keyName), setterTransformer)
 
 interface ReadWritePref<T : Any> {
     fun observe(): Flowable<Optional<T>>
@@ -35,6 +39,8 @@ typealias StoreOperation = MutablePreferences.() -> Unit
 class DataStoreReadWritePref<T : Any>(
     private val dataStore: RxDataStore<Preferences>,
     private val key: Preferences.Key<T>,
+    /** Transform the value before saving it */
+    private val setterTransformer: (T) -> T,
 ) : ReadWritePref<T> {
 
     override fun observe() = dataStore.data().optionalMap { it[key] }
@@ -43,7 +49,7 @@ class DataStoreReadWritePref<T : Any>(
 
     override fun set(value: T?, editor: MutablePreferences) {
         if (value != null) {
-            editor[key] = value
+            editor[key] = setterTransformer(value)
         } else {
             editor.remove(key)
         }

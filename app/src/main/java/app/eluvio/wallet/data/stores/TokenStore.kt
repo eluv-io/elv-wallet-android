@@ -102,7 +102,11 @@ class PreferenceTokenStore @Inject constructor(
     override val clusterToken = dataStore.readWriteStringPref("cluster_token")
     override val fabricToken = dataStore.readWriteStringPref("fabric_token")
     override val fabricTokenExpiration = dataStore.readWriteStringPref("fabric_token_expires_at")
-    override val walletAddress = dataStore.readWriteStringPref("wallet_address")
+    override val walletAddress = dataStore.readWriteStringPref(
+        "wallet_address",
+        // Always store wallet addresses in lowercase.
+        setterTransformer = { it.lowercase() }
+    )
     override val userEmail = dataStore.readWriteStringPref("user_email")
     override val loginProvider = dataStore.readWriteStringPref("login_provider")
 

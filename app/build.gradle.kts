@@ -219,8 +219,8 @@ data class CustomBuildConfig(
                 applicationId = applicationId ?: "app.eluvio.wallet",
                 appName = appName ?: "Media Wallet",
                 defaultPropertyId = propertyId ?: "null",
-                versionCode = versionCode ?: 34,
-                versionName = versionName ?: "2.0.1",
+                versionCode = versionCode ?: 36,
+                versionName = versionName ?: "2.1.0",
                 defaultToStaging = defaultToStaging ?: false,
                 disablePurchasePrompts = disablePurchasePrompts ?: false,
             )

@@ -11,6 +11,7 @@ import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.decode.SvgDecoder
 import dagger.hilt.android.HiltAndroidApp
+import io.reactivex.rxjava3.plugins.RxJavaPlugins
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import timber.log.Timber
@@ -33,6 +34,13 @@ class WalletApplication : Application(), ImageLoaderFactory {
 
     override fun onCreate() {
         super.onCreate()
+
+        // Consume all errors without crashing.
+        // TODO: report to some analytics service
+        RxJavaPlugins.setErrorHandler {
+            Timber.e(it)
+        }
+
         ProcessLifecycleOwner.get().lifecycle.apply {
             coroutineScope.launch { migrationManager.applyMigration() }
             addObserver(fabricConfigRefresher)

@@ -146,7 +146,10 @@ fun LazyListScope.sections(
                     preferredTopPadding,
                 )
 
-                is DynamicPageLayoutState.Section.Description -> DescriptionSection(item = section, modifier)
+                is DynamicPageLayoutState.Section.Description -> DescriptionSection(
+                    item = section,
+                    modifier
+                )
 
                 is DynamicPageLayoutState.Section.Title -> TitleSection(item = section, modifier)
 
@@ -163,9 +166,9 @@ private fun TopActionRow(
     listFocusRequester: FocusRequester,
 ) {
     val actionButtons = buildList<@Composable () -> Unit> {
-        state.propertyLinks
-            .takeIf { it.size > 1 }
-            ?.let { add @Composable { PropertySwitcher(it) } }
+        if (state.propertyLinks.size > 1) {
+            add @Composable { PropertySwitcher(state) }
+        }
 
         state.searchNavigationEvent
             ?.let { add @Composable { SearchButton(it) } }
@@ -227,7 +230,7 @@ private fun SearchButton(searchNavigationEvent: NavigationEvent) {
 }
 
 @Composable
-private fun PropertySwitcher(links: List<DynamicPageLayoutState.PropertyLink>) {
+private fun PropertySwitcher(state: DynamicPageLayoutState) {
     var expanded by remember { mutableStateOf(false) }
     ActionButton(
         icon = Icons.Eluvio.Switcher,
@@ -250,7 +253,7 @@ private fun PropertySwitcher(links: List<DynamicPageLayoutState.PropertyLink>) {
                         .background(Color(0xFFa3a3a3), shape = MaterialTheme.shapes.large)
                         .padding(vertical = 10.dp)
                 ) {
-                    links.forEach { property ->
+                    state.propertyLinks.forEach { property ->
                         Surface(
                             colors = ClickableSurfaceDefaults.colors(
                                 containerColor = Color.Transparent,
@@ -264,7 +267,7 @@ private fun PropertySwitcher(links: List<DynamicPageLayoutState.PropertyLink>) {
                                     navigator(
                                         PropertyDetailDestination(
                                             property.id,
-                                            propertyLinks = ArrayList(links)
+                                            propertyLinks = ArrayList(state.propertyLinks)
                                         ).asReplace()
                                     )
                                 }
@@ -273,7 +276,12 @@ private fun PropertySwitcher(links: List<DynamicPageLayoutState.PropertyLink>) {
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(start = 10.dp, end = 40.dp, top = 6.dp, bottom = 6.dp)
+                                modifier = Modifier.padding(
+                                    start = 10.dp,
+                                    end = 40.dp,
+                                    top = 6.dp,
+                                    bottom = 6.dp
+                                )
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Check,

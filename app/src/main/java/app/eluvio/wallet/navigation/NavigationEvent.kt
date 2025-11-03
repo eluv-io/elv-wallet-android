@@ -1,8 +1,10 @@
 package app.eluvio.wallet.navigation
 
+import androidx.compose.runtime.Immutable
 import com.ramcosta.composedestinations.spec.Direction
 import com.ramcosta.composedestinations.spec.Route
 
+@Immutable
 sealed interface NavigationEvent {
     data object GoBack : NavigationEvent
     data class SetRoot(val direction: Direction) : NavigationEvent

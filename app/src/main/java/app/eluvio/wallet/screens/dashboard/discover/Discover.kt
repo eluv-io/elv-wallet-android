@@ -58,11 +58,11 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import app.eluvio.wallet.R
 import app.eluvio.wallet.data.AspectRatio
-import app.eluvio.wallet.data.entities.v2.MediaPropertyEntity
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.common.ShimmerImage
 import app.eluvio.wallet.screens.common.TvButton
+import app.eluvio.wallet.screens.dashboard.discover.DiscoverViewModel.State
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.borders
 import app.eluvio.wallet.theme.focusedBorder
@@ -87,9 +87,9 @@ fun Discover(onBackgroundImageSet: (String?) -> Unit) {
 
 @Composable
 private fun Discover(
-    state: DiscoverViewModel.State,
+    state: State,
     onBackgroundImageSet: (String?) -> Unit,
-    onPropertyClicked: (MediaPropertyEntity) -> Unit,
+    onPropertyClicked: (State.Property) -> Unit,
     onRetryClicked: () -> Unit,
 ) {
     BoxWithConstraints(
@@ -107,7 +107,7 @@ private fun Discover(
             DiscoverGrid(
                 state,
                 onPropertyFocused = { property ->
-                    onBackgroundImageSet(property.bgImageWithFallback?.url)
+                    onBackgroundImageSet(property.focusBackgroundUrl)
                 },
                 onPropertyClicked = onPropertyClicked,
                 onRetryClicked = onRetryClicked
@@ -118,14 +118,14 @@ private fun Discover(
 
 @Composable
 fun SinglePropertyPage(
-    state: DiscoverViewModel.State,
+    state: State,
     onBackgroundImageSet: (String?) -> Unit,
-    onPropertyClicked: (MediaPropertyEntity) -> Unit,
+    onPropertyClicked: (State.Property) -> Unit,
     onRetryClicked: () -> Unit
 ) {
     val property = state.properties.firstOrNull()
     LaunchedEffect(property?.startScreenBackground) {
-        onBackgroundImageSet(property?.startScreenBackground?.url)
+        onBackgroundImageSet(property?.startScreenBackground)
     }
     if (state.loading) {
         EluvioLoadingSpinner(Modifier.padding(top = 100.dp))
@@ -153,9 +153,9 @@ fun SinglePropertyPage(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun BoxWithConstraintsScope.DiscoverGrid(
-    state: DiscoverViewModel.State,
-    onPropertyFocused: (MediaPropertyEntity) -> Unit,
-    onPropertyClicked: (MediaPropertyEntity) -> Unit,
+    state: State,
+    onPropertyFocused: (State.Property) -> Unit,
+    onPropertyClicked: (State.Property) -> Unit,
     onRetryClicked: () -> Unit
 ) {
     val width by rememberUpdatedState(maxWidth)
@@ -278,13 +278,13 @@ private fun BoxWithConstraintsScope.DiscoverGrid(
 @Composable
 private fun PropertyCard(
     index: Int,
-    property: MediaPropertyEntity,
+    property: State.Property,
     scrollState: LazyGridState,
     lastClickedProperty: MutableState<String?>,
     currentFocusedProperty: MutableState<String?>,
     onDemandFocusRestore: MutableState<String?>,
-    onPropertyClicked: (MediaPropertyEntity) -> Unit,
-    onPropertyFocused: (MediaPropertyEntity) -> Unit,
+    onPropertyClicked: (State.Property) -> Unit,
+    onPropertyFocused: (State.Property) -> Unit,
 ) {
     val focusRequester = remember { FocusRequester() }
     Surface(
@@ -315,10 +315,10 @@ private fun PropertyCard(
                 }
             }
     ) {
-        var showImage by remember(property.image) { mutableStateOf(true) }
+        var showImage by remember(property.cardImage) { mutableStateOf(true) }
         if (showImage) {
             ShimmerImage(
-                model = property.image,
+                model = property.cardImage,
                 contentDescription = property.name,
                 onError = { showImage = false },
                 modifier = Modifier.fillMaxSize()
@@ -381,14 +381,20 @@ private fun RetryButton(onRetryClicked: () -> Unit, modifier: Modifier = Modifie
 @Preview(device = RealisticDevices.TV_720p)
 private fun DiscoverPreview() = EluvioThemePreview {
     Discover(
-        DiscoverViewModel.State(
+        State(
             loading = false,
             isLoggedIn = false,
             properties = (1..50).map {
-                MediaPropertyEntity().apply {
-                    id = "$it"
-                    name = "Property #$it"
-                }
+                State.Property(
+                    id = "$it",
+                    name = "Property $it",
+                    loginProvider = "ory",
+                    skipLogin = false,
+                    cardImage = null,
+                    focusBackgroundUrl = null,
+                    startScreenLogo = null,
+                    startScreenBackground = null
+                )
             }
         ),
         onBackgroundImageSet = {},
@@ -401,7 +407,7 @@ private fun DiscoverPreview() = EluvioThemePreview {
 @Preview(device = RealisticDevices.TV_720p)
 private fun DiscoverLoadingPreview() = EluvioThemePreview {
     Discover(
-        DiscoverViewModel.State(loading = true, isLoggedIn = false),
+        State(loading = true, isLoggedIn = false),
         onBackgroundImageSet = {},
         onPropertyClicked = {},
         onRetryClicked = {},
@@ -412,7 +418,7 @@ private fun DiscoverLoadingPreview() = EluvioThemePreview {
 @Preview(device = RealisticDevices.TV_720p)
 private fun DiscoverEmptyPreview() = EluvioThemePreview {
     Discover(
-        DiscoverViewModel.State(loading = false, isLoggedIn = false),
+        State(loading = false, isLoggedIn = false),
         onBackgroundImageSet = {},
         onPropertyClicked = {},
         onRetryClicked = {},
@@ -423,7 +429,7 @@ private fun DiscoverEmptyPreview() = EluvioThemePreview {
 @Preview(device = RealisticDevices.TV_720p)
 private fun DiscoverRetryPreview() = EluvioThemePreview {
     Discover(
-        DiscoverViewModel.State(loading = false, isLoggedIn = false, showRetryButton = true),
+        State(loading = false, isLoggedIn = false, showRetryButton = true),
         onBackgroundImageSet = {},
         onPropertyClicked = {},
         onRetryClicked = {},

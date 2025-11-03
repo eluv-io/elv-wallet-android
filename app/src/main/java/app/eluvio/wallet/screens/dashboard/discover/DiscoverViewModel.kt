@@ -34,12 +34,28 @@ class DiscoverViewModel @Inject constructor(
     data class State(
         val loading: Boolean = true,
         val isLoggedIn: Boolean,
-        val properties: List<MediaPropertyEntity> = emptyList(),
+        val properties: List<Property> = emptyList(),
         val showRetryButton: Boolean = false,
 
         // For custom, Property-specific builds only.
         val singlePropertyMode: Boolean = BuildConfig.DEFAULT_PROPERTY_ID != null,
-    )
+    ) {
+        @Immutable
+        data class Property(
+            val id: String,
+            val name: String,
+            val loginProvider: String,
+            val skipLogin: Boolean,
+
+            // For displaying Property-specific branding in the Discover screen.
+            val cardImage: String?,
+            val focusBackgroundUrl: String?,
+
+            // For custom, Property-specific builds only.
+            val startScreenLogo: String?,
+            val startScreenBackground: String?,
+        )
+    }
 
     private val retryTrigger = PublishProcessor.create<Unit>()
 
@@ -85,7 +101,7 @@ class DiscoverViewModel @Inject constructor(
                     // Assume that Properties will never be empty once fetched from Server
                     updateState {
                         copy(
-                            properties = properties,
+                            properties = properties.map { it.toStateProperty() },
                             loading = properties.isEmpty(),
                             showRetryButton = false
                         )
@@ -103,12 +119,11 @@ class DiscoverViewModel @Inject constructor(
         retryTrigger.onNext(Unit)
     }
 
-    fun onPropertyClicked(property: MediaPropertyEntity) {
+    fun onPropertyClicked(property: State.Property) {
         val direction = PropertyDetailDestination(property.id)
-        val skipLogin = property.loginInfo?.skipLogin == true
         val loggedInWithSameProvider =
             tokenStore.isLoggedIn && tokenStore.loginProvider.get() == property.loginProvider
-        if (skipLogin || loggedInWithSameProvider) {
+        if (property.skipLogin || loggedInWithSameProvider) {
             navigateTo(direction.asPush())
         } else {
             Log.d("User not signed in, navigating to authFlow and saving propertyId: ${property.id}")
@@ -121,4 +136,19 @@ class DiscoverViewModel @Inject constructor(
             )
         }
     }
+}
+
+private fun MediaPropertyEntity.toStateProperty(): DiscoverViewModel.State.Property {
+    return DiscoverViewModel.State.Property(
+        id = id,
+        name = name,
+        loginProvider = loginProvider,
+        skipLogin = loginInfo?.skipLogin == true,
+
+        cardImage = image?.url,
+        focusBackgroundUrl = bgImageWithFallback?.url,
+
+        startScreenLogo = startScreenLogo?.url,
+        startScreenBackground = startScreenBackground?.url
+    )
 }

@@ -12,8 +12,12 @@ import app.eluvio.wallet.data.entities.v2.search.FilterAttributeEntity
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState.CarouselItem
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.parcelize.Parcelize
 
+@Immutable
+@JvmInline
+value class ImmutableMediaSource(val source: MediaSource)
 
 /**
  * Currently this is only used by PropertyPages, but we were planning to use it as the new
@@ -22,7 +26,7 @@ import kotlinx.parcelize.Parcelize
 @Immutable
 data class DynamicPageLayoutState(
     val backgroundImageUrl: String? = null,
-    val backgroundVideo: MediaSource? = null,
+    val backgroundVideo: ImmutableMediaSource? = null,
     val sections: List<Section> = emptyList(),
 
     val searchNavigationEvent: NavigationEvent? = null,
@@ -64,7 +68,7 @@ data class DynamicPageLayoutState(
             val permissionContext: PermissionContext,
             val displaySettings: DisplaySettings? = null,
             val viewAllNavigationEvent: NavigationEvent? = null,
-            val items: List<CarouselItem>,
+            val items: ImmutableList<CarouselItem>,
             val filterAttribute: FilterAttributeEntity? = null,
         ) : Section {
             override val sectionId: String =
@@ -72,6 +76,7 @@ data class DynamicPageLayoutState(
         }
     }
 
+    @Immutable
     sealed interface CarouselItem {
         val permissionContext: PermissionContext
         val forceDisabled: Boolean

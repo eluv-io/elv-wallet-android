@@ -1,6 +1,7 @@
 package app.eluvio.wallet.screens.qrdialogs.fulfillment
 
 import android.graphics.Bitmap
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.data.stores.FulfillmentStore
@@ -18,6 +19,7 @@ class FulfillmentQrDialogViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val fulfillmentStore: FulfillmentStore,
 ) : BaseViewModel<FulfillmentQrDialogViewModel.State>(State()) {
+    @Immutable
     data class State(
         val loading: Boolean = true,
         val code: String = "",

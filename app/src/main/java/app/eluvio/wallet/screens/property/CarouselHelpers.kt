@@ -17,6 +17,7 @@ import app.eluvio.wallet.theme.DefaultTypography
 import app.eluvio.wallet.theme.carousel_48
 import app.eluvio.wallet.util.logging.Log
 import com.ramcosta.composedestinations.generated.destinations.MediaGridDestination
+import kotlinx.collections.immutable.toImmutableList
 
 /**
  * The maximum number of items to display in a carousel before showing a "View All" button for "carousel" sections.
@@ -95,7 +96,7 @@ private fun MediaPageSectionEntity.toCarouselSection(
     return DynamicPageLayoutState.Section.Carousel(
         permissionContext,
         displaySettings = displaySettings,
-        items = items.take(displayLimit),
+        items = items.take(displayLimit).toImmutableList(),
         filterAttribute = filterAttribute,
         viewAllNavigationEvent = MediaGridDestination(permissionContext, gridContentOverride)
             .takeIf { showViewAll }

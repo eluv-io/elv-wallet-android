@@ -1,5 +1,6 @@
 package app.eluvio.wallet.data.entities
 
+import androidx.compose.runtime.Immutable
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -12,6 +13,9 @@ import io.realm.kotlin.types.TypedRealmObject
 import io.realm.kotlin.types.annotations.PrimaryKey
 import kotlin.reflect.KClass
 
+// Realm classes are mutable by nature, but we make sure to only use them immutably, so adding this
+// annotation helps Compose treat them as immutable and avoid unnecessary recompositions.
+@Immutable
 class MediaCollectionEntity : RealmObject {
     @PrimaryKey
     var id: String = ""

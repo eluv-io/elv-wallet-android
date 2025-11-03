@@ -1,6 +1,7 @@
 package app.eluvio.wallet.screens.redeemdialog
 
 import android.text.Html
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
@@ -38,6 +39,7 @@ class RedeemDialogViewModel @Inject constructor(
     private val apiProvider: ApiProvider,
     private val fulfillmentStore: FulfillmentStore,
 ) : BaseViewModel<RedeemDialogViewModel.State>(State()) {
+    @Immutable
     data class State(
         val title: String = "",
         val subtitle: AnnotatedString = AnnotatedString(""),

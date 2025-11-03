@@ -6,13 +6,15 @@ import app.eluvio.wallet.data.stores.TokenStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.PersistentList
 import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val tokenStore: TokenStore,
-) : BaseViewModel<List<Tabs>>(
+) : BaseViewModel<PersistentList<Tabs>>(
     getTabs(tokenStore.isLoggedIn), savedStateHandle
 ) {
     override fun onResume() {

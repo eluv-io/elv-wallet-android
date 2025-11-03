@@ -1,6 +1,7 @@
 package app.eluvio.wallet.screens.dashboard.profile
 
 import android.os.Parcelable
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.data.SignOutHandler
@@ -27,6 +28,7 @@ class ProfileViewModel @Inject constructor(
 ) : BaseViewModel<ProfileViewModel.State>(State(), savedStateHandle) {
 
     @Parcelize
+    @Immutable
     data class State(
         val address: String = "",
         val userId: String = "",

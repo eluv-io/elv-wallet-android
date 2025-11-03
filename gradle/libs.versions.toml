@@ -1,6 +1,7 @@
 [versions]
 agp = "8.13.0"
 kotlin_version = "2.2.10"
+kotlinx-collections-immutable = "0.4.0"
 ksp = "2.2.10-2.0.2"
 
 compose-bom = "2025.09.01"
@@ -88,8 +89,11 @@ rxkotlin = { module = "io.reactivex.rxjava3:rxkotlin", version.ref = "rxkotlin" 
 gradle-secrets = { module = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin", version.ref = "gradle-secrets" }
 # Realm is deprecated, so we're using this community fork for new builds and kotlin 2.0+ support.
 realm = { module = "com.infomaniak.realm.kotlin:library-base", version.ref = "realm" }
+
+kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinx-collections-immutable" }
 kotlinx-coroutines-rx3 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-rx3", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+
 junit = { module = "junit:junit", version.ref = "junit" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-junit" }
 reflections = { module = "org.reflections:reflections", version.ref = "reflections" }

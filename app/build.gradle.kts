@@ -127,6 +127,8 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
 
+    implementation(libs.kotlinx.collections.immutable)
+
     implementation(libs.rxandroid)
     // Because RxAndroid releases are few and far between, it is recommended you also
     // explicitly depend on RxJava's latest version for bug fixes and new features.

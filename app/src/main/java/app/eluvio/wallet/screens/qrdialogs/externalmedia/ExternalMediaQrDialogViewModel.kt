@@ -3,6 +3,7 @@ package app.eluvio.wallet.screens.qrdialogs.externalmedia
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Parcelable
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.data.UrlShortener
@@ -27,8 +28,14 @@ class ExternalMediaQrDialogViewModel @Inject constructor(
     private val apiProvider: ApiProvider,
     private val urlShortener: UrlShortener,
 ) : BaseViewModel<ExternalMediaQrDialogViewModel.State>(State(), savedStateHandle) {
+
+    @Immutable
     @Parcelize
-    data class State(val qrCode: Bitmap? = null, val url: String? = null, val error: Boolean = false) : Parcelable
+    data class State(
+        val qrCode: Bitmap? = null,
+        val url: String? = null,
+        val error: Boolean = false
+    ) : Parcelable
 
     private val mediaId = ExternalMediaQrDialogDestination.argsFrom(savedStateHandle).mediaItemId
     override fun onResume() {

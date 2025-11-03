@@ -61,6 +61,7 @@ import coil.drawable.CrossfadeDrawable
 import coil.request.ImageRequest
 import com.ramcosta.composedestinations.annotation.Destination
 import io.reactivex.rxjava3.processors.PublishProcessor
+import kotlinx.collections.immutable.ImmutableList
 import java.util.concurrent.TimeUnit
 
 @Destination<MainGraph>
@@ -72,7 +73,7 @@ fun Dashboard() {
 }
 
 @Composable
-fun Dashboard(tabs: List<Tabs>) {
+fun Dashboard(tabs: ImmutableList<Tabs>) {
     var selectedTab by rememberSaveable(tabs) { mutableStateOf(tabs.first()) }
     if (selectedTab !in tabs) {
         // This is a vestige of the never-used no-auth flow.
@@ -128,7 +129,7 @@ fun Dashboard(tabs: List<Tabs>) {
 @Composable
 private fun NavigationDrawerScope.DrawerContent(
     drawerValue: DrawerValue,
-    tabs: List<Tabs>,
+    tabs: ImmutableList<Tabs>,
     selectedTab: Tabs,
     onTabSelected: (Tabs) -> Unit,
     onDrawerClosed: () -> Unit,

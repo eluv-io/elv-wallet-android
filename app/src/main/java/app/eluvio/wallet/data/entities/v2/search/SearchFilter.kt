@@ -1,11 +1,13 @@
 package app.eluvio.wallet.data.entities.v2.search
 
+import androidx.compose.runtime.Immutable
 import app.eluvio.wallet.data.FabricUrl
 
 /**
  * A fully built search filter that includes all [FilterOptions] data and references sub-filters objects,
  * rather than just ids.
  */
+@Immutable
 data class SearchFilter(
     val id: String,
     val title: String,

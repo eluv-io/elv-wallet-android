@@ -80,6 +80,7 @@ import app.eluvio.wallet.util.compose.icons.Switcher
 import app.eluvio.wallet.util.logging.Log
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 
 @Composable
@@ -372,7 +373,7 @@ private fun DynamicPageLayoutPreview() = EluvioThemePreview {
                         subtitle = "Subtitle",
                         displayFormat = DisplayFormat.CAROUSEL,
                     ),
-                    items = listOf(
+                    items = persistentListOf(
                         DynamicPageLayoutState.CarouselItem.Media(
                             permissionContext = PermissionContext(propertyId = "property1"),
                             entity = MediaEntity().apply {

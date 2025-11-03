@@ -8,9 +8,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import app.eluvio.wallet.R
 import app.eluvio.wallet.util.compose.icons.Eluvio
 import app.eluvio.wallet.util.compose.icons.MyItems
+import kotlinx.collections.immutable.immutableListOf
+import kotlinx.collections.immutable.persistentListOf
 
 enum class Tabs(
-    @StringRes val title: Int,
+    @param:StringRes val title: Int,
     val icon: ImageVector
 ) {
     Discover(R.string.dashboard_tab_discover, Icons.Default.Home),
@@ -19,7 +21,7 @@ enum class Tabs(
     ;
 
     companion object {
-        val NoAuthTabs = listOf(Discover)
-        val AuthTabs = listOf(Discover, MyItems, Profile)
+        val NoAuthTabs = persistentListOf(Discover)
+        val AuthTabs = persistentListOf(Discover, MyItems, Profile)
     }
 }

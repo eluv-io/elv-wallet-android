@@ -15,35 +15,28 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import app.eluvio.wallet.data.entities.v2.display.DisplaySettings
 import app.eluvio.wallet.theme.label_24
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 fun BoxScope.MetadataTexts(displaySettings: DisplaySettings?) = displaySettings?.run {
-    MetadataTexts(headers, title, subtitle)
-}
-
-@Composable
-fun BoxScope.MetadataTexts(
-    headers: List<String>,
-    title: String?,
-    subtitle: String?
-) {
     Column(
         Modifier
             .align(Alignment.BottomStart)
             .padding(23.dp)
     ) {
-        MetadataTexts(headers, title, subtitle)
+        MetadataTexts(headers.toImmutableList(), title, subtitle)
     }
 }
 
 @Composable
 fun ColumnScope.MetadataTexts(displaySettings: DisplaySettings?) = displaySettings?.run {
-    MetadataTexts(headers, title, subtitle)
+    MetadataTexts(headers.toImmutableList(), title, subtitle)
 }
 
 @Composable
 fun ColumnScope.MetadataTexts(
-    headers: List<String>,
+    headers: ImmutableList<String>,
     title: String?,
     subtitle: String?
 ) {

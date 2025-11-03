@@ -78,6 +78,8 @@ import app.eluvio.wallet.util.compose.fromHex
 import app.eluvio.wallet.util.compose.thenIf
 import app.eluvio.wallet.util.compose.thenIfNotNull
 import coil.compose.AsyncImage
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 val CAROUSEL_CARD_HEIGHT = 110.dp
 
@@ -147,7 +149,8 @@ fun CarouselSection(
                 if (hasFilterRow) {
                     FilterSelectorRow(
                         selectedValue = selectedFilter?.second,
-                        attributeValues = item.filterAttribute!!.values.map { it.value },
+                        attributeValues = item.filterAttribute!!.values.map { it.value }
+                            .toImmutableList(),
                         onValueSelected = { tag ->
                             selectedFilter = tag?.let { item.filterAttribute.id to it }
                         },
@@ -212,7 +215,7 @@ fun CarouselSection(
 @Composable
 private fun SectionItems(
     displayFormat: DisplayFormat,
-    filteredItems: List<CarouselItem>,
+    filteredItems: ImmutableList<CarouselItem>,
     startPadding: Dp,
     modifier: Modifier = Modifier
 ) {
@@ -376,7 +379,7 @@ private fun ViewAllButton(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ItemGrid(
-    items: List<CarouselItem>,
+    items: ImmutableList<CarouselItem>,
     startPadding: Dp,
     modifier: Modifier = Modifier,
     maxItemsInEachRow: Int = Int.MAX_VALUE
@@ -417,7 +420,11 @@ private fun ItemGrid(
 }
 
 @Composable
-private fun ItemRow(items: List<CarouselItem>, startPadding: Dp, modifier: Modifier = Modifier) {
+private fun ItemRow(
+    items: ImmutableList<CarouselItem>,
+    startPadding: Dp,
+    modifier: Modifier = Modifier
+) {
     // The 'key' function prevents from focusRestorer() from breaking when crashing when
     // filteredItems changes.
     // From what I could tell it's kind of like 'remember' but for Composable.
@@ -445,7 +452,7 @@ private fun ItemRow(items: List<CarouselItem>, startPadding: Dp, modifier: Modif
 @Composable
 private fun FilterSelectorRow(
     selectedValue: String?,
-    attributeValues: List<String>,
+    attributeValues: ImmutableList<String>,
     onValueSelected: (String?) -> Unit,
     modifier: Modifier = Modifier,
     viewAllNavigationEvent: NavigationEvent?,
@@ -516,9 +523,9 @@ private fun FilterTab(
 
 @Composable
 private fun rememberFilteredItems(
-    items: List<CarouselItem>,
+    items: ImmutableList<CarouselItem>,
     selectedFilter: Pair<String, String>?
-): List<CarouselItem> {
+): ImmutableList<CarouselItem> {
     return remember(items, selectedFilter) {
         if (selectedFilter == null) {
             items
@@ -532,6 +539,7 @@ private fun rememberFilteredItems(
                         ?.map { tag -> tag.value }
                         ?.contains(selectedFilter.second) == true
                 }
+                .toImmutableList()
         }
     }
 }

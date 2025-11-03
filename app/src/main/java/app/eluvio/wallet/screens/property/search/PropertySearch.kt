@@ -63,6 +63,7 @@ import app.eluvio.wallet.theme.carousel_36
 import app.eluvio.wallet.util.subscribeToState
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
+import kotlinx.collections.immutable.persistentListOf
 
 @Destination<MainGraph>(navArgs = PropertySearchNavArgs::class)
 @Composable
@@ -302,7 +303,7 @@ private fun PropertySearchPreview() = EluvioThemePreview {
                         subtitle = "Subtitle",
                         displayFormat = DisplayFormat.CAROUSEL,
                     ),
-                    items = listOf(
+                    items = persistentListOf(
                         DynamicPageLayoutState.CarouselItem.Media(
                             permissionContext = PermissionContext(propertyId = "property1"),
                             forceDisabled = false,

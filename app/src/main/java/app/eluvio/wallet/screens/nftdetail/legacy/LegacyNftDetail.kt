@@ -70,17 +70,17 @@ import app.eluvio.wallet.theme.redeemTagSurface
 import app.eluvio.wallet.theme.title_62
 import app.eluvio.wallet.util.compose.FractionBringIntoViewSpec
 import app.eluvio.wallet.util.findActivity
-import app.eluvio.wallet.util.rememberToaster
 import app.eluvio.wallet.util.subscribeToState
 import coil.compose.AsyncImage
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.generated.destinations.RedeemDialogDestination
 import io.realm.kotlin.ext.realmListOf
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 @Destination<MainGraph>(navArgs = LegacyNftDetailArgs::class)
 @Composable
 fun LegacyNftDetail() {
-    val toaster = rememberToaster()
     hiltViewModel<LegacyNftDetailViewModel>().subscribeToState { _, state ->
         LegacyNftDetail(state)
     }
@@ -167,7 +167,7 @@ private fun LegacyNftDetail(state: LegacyNftDetailViewModel.State) {
                                 )
                             )
                         }
-                        MediaItemsRow(collection.media)
+                        MediaItemsRow(collection.media.toImmutableList())
                     }
                 }
 
@@ -283,7 +283,7 @@ private fun FeaturedMediaAndOffersRow(state: LegacyNftDetailViewModel.State) {
 }
 
 @Composable
-private fun MediaItemsRow(media: List<MediaEntity>) {
+private fun MediaItemsRow(media: ImmutableList<MediaEntity>) {
     val items = media.filter { !it.shouldBeHidden() }
     if (items.isNotEmpty()) {
         LazyRow(horizontalArrangement = Arrangement.spacedBy(20.dp)) {

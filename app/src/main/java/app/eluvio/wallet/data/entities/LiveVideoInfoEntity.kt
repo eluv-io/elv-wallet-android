@@ -2,6 +2,7 @@ package app.eluvio.wallet.data.entities
 
 import android.content.Context
 import android.text.format.DateFormat
+import androidx.compose.runtime.Immutable
 import app.eluvio.wallet.util.realm.millis
 import app.eluvio.wallet.util.realm.toDate
 import dagger.Module
@@ -20,6 +21,7 @@ import kotlin.reflect.KClass
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
+@Immutable
 class LiveVideoInfoEntity : EmbeddedRealmObject {
     // icon image paths.
     var icons: RealmList<String> = realmListOf()

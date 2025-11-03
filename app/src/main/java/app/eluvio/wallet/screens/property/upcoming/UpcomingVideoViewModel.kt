@@ -1,5 +1,6 @@
 package app.eluvio.wallet.screens.property.upcoming
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.data.entities.MediaEntity
@@ -36,6 +37,7 @@ class UpcomingVideoViewModel @Inject constructor(
     State(mediaItemId = navArgs.mediaItemId, propertyId = navArgs.propertyId),
     savedStateHandle
 ) {
+    @Immutable
     data class State(
         val imagesBaseUrl: String? = null,
         val backgroundImageUrl: String? = null,

@@ -1,6 +1,7 @@
 package app.eluvio.wallet.screens.dashboard.myitems
 
 import android.os.Parcelable
+import androidx.compose.runtime.Immutable
 import app.eluvio.wallet.data.entities.NftTemplateEntity
 import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.util.rx.generate
@@ -24,6 +25,7 @@ class AllMediaProvider @Inject constructor(
     ) : Parcelable
 
     @Parcelize
+    @Immutable
     data class Media(
         val key: String,
         val contractAddress: String,

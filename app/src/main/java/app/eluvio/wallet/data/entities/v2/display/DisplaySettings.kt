@@ -1,9 +1,13 @@
 package app.eluvio.wallet.data.entities.v2.display
 
+import androidx.compose.runtime.Immutable
 import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.entities.v2.DisplayFormat
 
+// Realm classes are mutable by nature, but we make sure to only use them immutably, so adding this
+// annotation helps Compose treat them as immutable and avoid unnecessary recompositions.
+@Immutable
 interface DisplaySettings {
     val title: String?
     val subtitle: String?

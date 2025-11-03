@@ -19,14 +19,14 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.ui.PlayerView
+import app.eluvio.wallet.screens.property.ImmutableMediaSource
 import app.eluvio.wallet.util.logging.Log
 
 @SuppressLint("UnsafeOptInUsageError")
 @Composable
 fun VideoPlayer(
-    mediaSource: MediaSource,
+    mediaSource: ImmutableMediaSource,
     modifier: Modifier = Modifier,
     // Fallback content to show when the player encounters an error
     fallback: @Composable (() -> Unit)? = null
@@ -45,7 +45,7 @@ fun VideoPlayer(
             .setPlaybackLooper(videoPlayerLooper)
             .build()
             .apply {
-                setMediaSource(mediaSource)
+                setMediaSource(mediaSource.source)
                 repeatMode = Player.REPEAT_MODE_ALL
                 playWhenReady = true
                 addListener(object : Player.Listener {

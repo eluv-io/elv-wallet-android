@@ -53,7 +53,7 @@ class EnvSelectActivity : ComponentActivity() {
                     LocalNavigator provides { /*No-Op*/ },
                 ) {
                     hiltViewModel<EnvSelectViewModel>().subscribeToState { vm, state ->
-                        EnvSelector(state, vm)
+                        EnvSelector(state, vm::onEnvSelected)
                     }
                 }
             }
@@ -62,7 +62,7 @@ class EnvSelectActivity : ComponentActivity() {
 }
 
 @Composable
-private fun EnvSelector(state: EnvSelectViewModel.State, vm: EnvSelectViewModel) {
+private fun EnvSelector(state: EnvSelectViewModel.State, onEnvSelected: (Environment) -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -78,7 +78,7 @@ private fun EnvSelector(state: EnvSelectViewModel.State, vm: EnvSelectViewModel)
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             state.availableEnvironments.forEach { env ->
                 val selected = state.selectedEnv == env
-                TvButton(onClick = { vm.onEnvSelected(env) }) {
+                TvButton(onClick = { onEnvSelected(env) }) {
                     Row(
                         modifier = Modifier
                             .align(Alignment.Center)

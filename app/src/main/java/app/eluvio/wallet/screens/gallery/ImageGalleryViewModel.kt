@@ -1,5 +1,6 @@
 package app.eluvio.wallet.screens.gallery
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.data.entities.MediaEntity
@@ -17,6 +18,7 @@ class ImageGalleryViewModel @Inject constructor(
     private val contentStore: ContentStore,
     private val apiProvider: ApiProvider,
 ) : BaseViewModel<ImageGalleryViewModel.State>(State()) {
+    @Immutable
     data class State(val images: List<GalleryImage> = emptyList()) {
         data class GalleryImage(val url: String, val name: String?, val aspectRatio: Float? = null)
     }

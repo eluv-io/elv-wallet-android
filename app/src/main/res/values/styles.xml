@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="MediaPlayerCircleButton">
+        <item name="background">@null</item>
+        <item name="android:padding">@dimen/exo_icon_padding</item>
+    </style>
+
+    <style name="MediaPlayerCircleButton.PlayPause">
+        <item name="android:src">@drawable/exo_styled_controls_play</item>
+        <item name="android:contentDescription">@string/exo_controls_play_description</item>
+    </style>
+
+    <style name="MediaPlayerCircleButton.Settings">
+        <item name="android:src">@drawable/exo_styled_controls_settings</item>
+        <item name="android:contentDescription">@string/exo_controls_settings_description</item>
+    </style>
+
+    <style name="MediaPlayerTextButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:paddingVertical">5dp</item>
+        <item name="android:paddingHorizontal">16dp</item>
+        <item name="android:textColor">@color/media_button_text_color</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:gravity">center</item>
+    </style>
+</resources>

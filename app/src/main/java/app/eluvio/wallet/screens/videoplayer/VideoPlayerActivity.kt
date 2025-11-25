@@ -15,8 +15,8 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.ui.DefaultTimeBar
 import androidx.media3.ui.PlayerView
+import androidx.media3.ui.TimeBar
 import app.eluvio.wallet.R
 import app.eluvio.wallet.data.VideoOptionsFetcher
 import app.eluvio.wallet.data.entities.MediaEntity
@@ -52,6 +52,7 @@ import javax.inject.Inject
 import kotlin.math.abs
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import androidx.media3.ui.R as media3R
 
 @ActivityDestination<MainGraph>(navArgs = VideoPlayerArgs::class)
 @AndroidEntryPoint
@@ -76,6 +77,10 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
 
     private var playerView: PlayerView? = null
     private var exoPlayer: ExoPlayer? = null
+
+    private var playPauseButton: View? = null
+    private var timeBar: TimeBar? = null
+
     private var liveIndicator: View? = null
     private var infoButton: View? = null
     private var infoPane: VideoInfoPane? = null
@@ -107,10 +112,15 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
 
         onBackPressedDispatcher.addCallback(this, backPressedCallback)
 
+        playPauseButton = findViewById(media3R.id.exo_play_pause)
+        timeBar = findViewById(media3R.id.exo_progress)
+        timeBar?.setKeyTimeIncrement(5000)
+
         liveIndicator = findViewById(R.id.live_indicator)
         liveIndicator?.setOnClickListener {
             exoPlayer?.seekToDefaultPosition()
             exoPlayer?.playWhenReady = true
+            playPauseButton?.requestFocus()
         }
 
         infoPane = findViewById(R.id.video_player_info_pane)
@@ -140,17 +150,11 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
                 }
             })
             player = exoPlayer
-            showController()
 
             // Manually show spinner until exoplayer figures itself out
             //noinspection MissingInflatedId
-            findViewById<View>(androidx.media3.ui.R.id.exo_buffering).visibility = View.VISIBLE
+            findViewById<View>(media3R.id.exo_buffering).visibility = View.VISIBLE
         }
-
-        //noinspection MissingInflatedId
-        findViewById<DefaultTimeBar>(androidx.media3.ui.R.id.exo_progress)
-            ?.setKeyTimeIncrement(5000)
-
 
         Maybe.fromCallable { navArgs.deeplinkhack_contract }
             .flatMap { base58contract ->

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <drawable name="exo_styled_controls_play" tools:override="true">@drawable/ic_play</drawable>
+    <drawable name="exo_styled_controls_pause" tools:override="true">@drawable/ic_pause</drawable>
+
+    <dimen name="exo_icon_padding" tools:override="true">8dp</dimen>
+
+    <!--  We can use this to figure out when exoplayer is messing with alpha of buttons and prevent it -->
+    <!--  We want to control alpha ourselves  -->
+    <integer name="exo_media_button_opacity_percentage_enabled" tools:override="true">200</integer>
+    <integer name="exo_media_button_opacity_percentage_disabled" tools:override="true">33</integer>
+</resources>

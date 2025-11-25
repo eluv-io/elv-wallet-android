@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="glowRadius" format="dimension" />
+    <attr name="focusedBackgroundColor" format="color" />
+    <attr name="unfocusedBackgroundColor" format="color" />
+
+    <declare-styleable name="MediaGlowIconButton">
+        <attr name="focusedBackgroundColor" />
+        <attr name="unfocusedBackgroundColor" />
+        <attr name="glowRadius" />
+    </declare-styleable>
+
+    <declare-styleable name="MediaGlowTextButton">
+        <attr name="cornerRadius" format="dimension" />
+        <attr name="focusedBackgroundColor" />
+        <attr name="glowRadius" />
+    </declare-styleable>
+</resources>

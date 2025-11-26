@@ -29,6 +29,7 @@ import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.screens.videoplayer.ui.VideoInfoPane
 import app.eluvio.wallet.util.crypto.Base58
+import app.eluvio.wallet.util.exoplayer.defaultSeekPositionMs
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.mapNotNull
 import app.eluvio.wallet.util.rx.safeDispose
@@ -48,6 +49,7 @@ import io.reactivex.rxjava3.kotlin.Singles
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
 import javax.inject.Inject
+import kotlin.math.abs
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -302,10 +304,18 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
         infoPane?.setRestartButtonEnabled(!isLive)
         if (isLive) {
             /**
-             * [ExoPlayer.getCurrentLiveOffset] didn't work as expected, so just using proximity to end of seekbar instead.
+             * [ExoPlayer.getCurrentLiveOffset] usually returns C.TIME_UNSET, so instead we check
+             * proximity to:
+             * 1) The duration, or "end" position of the stream.
+             * 2) The "default" position. This is when the player will try to be when playing live
+             *    content. This can be ~30 seconds behind the "end" position of the stream.
              */
-            val isCloseToLiveEdge =
-                exoPlayer.contentDuration - exoPlayer.contentPosition < 20.seconds.inWholeMilliseconds
+            val isCloseToLiveEdge = with(exoPlayer) {
+                val isCloseToDefaultPosition =
+                    abs(defaultSeekPositionMs - contentPosition) < LIVE_EDGE_PROXIMITY_THRESHOLD
+                val isCloseToEnd = contentDuration - contentPosition < LIVE_EDGE_PROXIMITY_THRESHOLD
+                isCloseToDefaultPosition || isCloseToEnd
+            }
             val playingLive = exoPlayer.isPlaying && isCloseToLiveEdge
             // Setting the Activated state will make the label turn red.
             liveIndicator?.isActivated = playingLive
@@ -410,3 +420,5 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
         infoPane?.animateShow()
     }
 }
+
+private val LIVE_EDGE_PROXIMITY_THRESHOLD = 20.seconds.inWholeMilliseconds

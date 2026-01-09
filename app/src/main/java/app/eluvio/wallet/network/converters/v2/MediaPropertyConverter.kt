@@ -36,6 +36,8 @@ fun MediaPropertyDto.toEntity(baseUrl: String): MediaPropertyEntity? {
         startScreenBackground = dto.start_screen_background?.toUrl(baseUrl)
         startScreenLogo = dto.start_screen_logo?.toUrl(baseUrl)
 
+        countdownBackground = dto.countdown_background_desktop?.toUrl(baseUrl)
+
         permissionStates = dto.toPermissionStateEntities()
         rawPermissions = dto.permissions?.toContentPermissionsEntity()
         propertyPermissions = dto.permissions?.toPropertyPermissionsEntity()

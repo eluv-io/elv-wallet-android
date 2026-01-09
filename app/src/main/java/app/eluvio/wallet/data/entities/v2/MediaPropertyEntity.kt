@@ -47,6 +47,9 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
     var startScreenBackground: FabricUrlEntity? = null
     var startScreenLogo: FabricUrlEntity? = null
 
+    // Background for the countdown screen of upcoming live events.
+    var countdownBackground: FabricUrlEntity? = null
+
     @Ignore
     val loginProvider: String
         get() = loginInfo?.loginProvider ?: "ory"
@@ -84,6 +87,7 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         if (tenantId != other.tenantId) return false
         if (startScreenBackground != other.startScreenBackground) return false
         if (startScreenLogo != other.startScreenLogo) return false
+        if (countdownBackground != other.countdownBackground) return false
         if (permissionStates != other.permissionStates) return false
         if (resolvedPermissions != other.resolvedPermissions) return false
         if (rawPermissions != other.rawPermissions) return false
@@ -105,6 +109,7 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         result = 31 * result + (tenantId?.hashCode() ?: 0)
         result = 31 * result + (startScreenBackground?.hashCode() ?: 0)
         result = 31 * result + (startScreenLogo?.hashCode() ?: 0)
+        result = 31 * result + (countdownBackground?.hashCode() ?: 0)
         result = 31 * result + permissionStates.hashCode()
         result = 31 * result + (resolvedPermissions?.hashCode() ?: 0)
         result = 31 * result + (rawPermissions?.hashCode() ?: 0)
@@ -114,7 +119,7 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
     }
 
     override fun toString(): String {
-        return "MediaPropertyEntity(id='$id', name='$name', headerLogoUrl=$headerLogoUrl, image=$image, bgImageUrl=$bgImageUrl, bgImageWithFallback=$bgImageWithFallback, mainPage=$mainPage, subpropertySelection=$subpropertySelection, loginInfo=$loginInfo, tenantId=$tenantId, startScreenBackground=$startScreenBackground, startScreenLogo=$startScreenLogo, loginProvider=$loginProvider, permissionStates=$permissionStates, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, permissionChildren=$permissionChildren, propertyPermissions=$propertyPermissions, searchPermissions=$searchPermissions)"
+        return "MediaPropertyEntity(id='$id', name='$name', headerLogoUrl=$headerLogoUrl, image=$image, bgImageUrl=$bgImageUrl, bgImageWithFallback=$bgImageWithFallback, mainPage=$mainPage, subpropertySelection=$subpropertySelection, loginInfo=$loginInfo, tenantId=$tenantId, startScreenBackground=$startScreenBackground, startScreenLogo=$startScreenLogo, countdownBackground=$countdownBackground, loginProvider='$loginProvider', permissionStates=$permissionStates, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, permissionChildren=$permissionChildren, propertyPermissions=$propertyPermissions, searchPermissions=$searchPermissions)"
     }
 
     // Index can't be saved as part of the PropertyEntity object because it will get overridden

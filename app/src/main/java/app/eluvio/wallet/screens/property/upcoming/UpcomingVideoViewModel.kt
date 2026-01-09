@@ -18,6 +18,7 @@ import app.eluvio.wallet.util.rx.timer
 import com.ramcosta.composedestinations.generated.destinations.VideoPlayerActivityDestination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Flowable
+import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.kotlin.Flowables
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
@@ -122,6 +123,9 @@ class UpcomingVideoViewModel @Inject constructor(
         permissionContextResolver.resolve(permissionContext)
             .firstElement()
             .flatMap { (property, page) ->
+                property.countdownBackground?.let {
+                    return@flatMap Maybe.just(it)
+                }
                 propertyStore.observeSections(property, page!!, forceRefresh = false)
                     .firstElement()
                     .mapNotNull { sections ->

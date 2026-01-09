@@ -34,6 +34,8 @@ data class MediaPropertyDto(
     val start_screen_background: AssetLinkDto?,
     val start_screen_logo: AssetLinkDto?,
 
+    val countdown_background_desktop: AssetLinkDto?,
+
     // For each permission used in the property, holds whether or not the user is authorized for it.
     @field:Json(name = "permission_auth_state")
     override val permissionStates: Map<String, PermissionsStateDto>?,

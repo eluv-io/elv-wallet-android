@@ -11,6 +11,12 @@
         android:layout_height="match_parent"
         app:use_controller="true" />
 
+    <app.eluvio.wallet.screens.videoplayer.ui.ScrubThumbnailView
+        android:id="@+id/scrub_thumbnail_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
     <app.eluvio.wallet.screens.videoplayer.ui.VideoInfoPane
         android:id="@+id/video_player_info_pane"
         android:layout_width="wrap_content"

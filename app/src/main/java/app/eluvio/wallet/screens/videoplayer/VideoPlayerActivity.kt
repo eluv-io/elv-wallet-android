@@ -15,6 +15,7 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.DefaultTimeBar
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.TimeBar
 import app.eluvio.wallet.R
@@ -27,10 +28,12 @@ import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.PlaybackStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.MainGraph
+import app.eluvio.wallet.screens.videoplayer.ui.ScrubThumbnailView
 import app.eluvio.wallet.screens.videoplayer.ui.VideoInfoPane
 import app.eluvio.wallet.util.crypto.Base58
 import app.eluvio.wallet.util.exoplayer.defaultSeekPositionMs
 import app.eluvio.wallet.util.logging.Log
+import app.eluvio.wallet.util.media.ThumbnailLoader
 import app.eluvio.wallet.util.rx.mapNotNull
 import app.eluvio.wallet.util.rx.safeDispose
 import app.eluvio.wallet.util.sha256
@@ -73,13 +76,17 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
     @Inject
     lateinit var envStore: EnvironmentStore
 
+    @Inject
+    lateinit var thumbnailLoader: ThumbnailLoader
+
     private var disposables = CompositeDisposable()
 
     private var playerView: PlayerView? = null
     private var exoPlayer: ExoPlayer? = null
 
     private var playPauseButton: View? = null
-    private var timeBar: TimeBar? = null
+    private var timeBar: DefaultTimeBar? = null
+    private var scrubThumbnailView: ScrubThumbnailView? = null
 
     private var liveIndicator: View? = null
     private var infoButton: View? = null
@@ -94,6 +101,29 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             // No need to propagate event.
             // This callback should only be enabled when the controller is visible.
             playerView?.hideController()
+        }
+    }
+
+    private val scrubListener = object : TimeBar.OnScrubListener {
+        override fun onScrubStart(timeBar: TimeBar, position: Long) {
+            positionThumbnailAboveTimeBar()
+            updateScrubThumbnailXPosition(position)
+        }
+
+        override fun onScrubMove(timeBar: TimeBar, position: Long) {
+            updateScrubThumbnailXPosition(position)
+        }
+
+        override fun onScrubStop(timeBar: TimeBar, position: Long, canceled: Boolean) {
+            scrubThumbnailView?.hide()
+        }
+
+        private fun updateScrubThumbnailXPosition(position: Long) {
+            val duration = exoPlayer?.duration ?: return
+            if (duration <= 0) return
+
+            val fraction = position.toFloat() / duration.toFloat()
+            scrubThumbnailView?.updatePosition(position, fraction)
         }
     }
 
@@ -156,6 +186,15 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             findViewById<View>(media3R.id.exo_buffering).visibility = View.VISIBLE
         }
 
+        scrubThumbnailView = findViewById(R.id.scrub_thumbnail_view)
+
+        //noinspection MissingInflatedId
+        timeBar = findViewById<DefaultTimeBar>(media3R.id.exo_progress)?.apply {
+            setKeyTimeIncrement(5000)
+            addListener(scrubListener)
+        }
+
+
         Maybe.fromCallable { navArgs.deeplinkhack_contract }
             .flatMap { base58contract ->
                 // Assume we own a token for this contract. If we don't, we'll just be stuck loading forever.
@@ -209,8 +248,8 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
         )
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeBy(
-                onSuccess = { (mediaSource, property, env) ->
-                    mediaSource.mediaItem.localConfiguration?.uri
+                onSuccess = { (playoutInfo, property, env) ->
+                    playoutInfo.mediaSource.mediaItem.localConfiguration?.uri
                         ?.toString()
                         ?.let { uri ->
                             val customerData = createCustomerData(property, uri)
@@ -220,8 +259,13 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
                                 customerData,
                                 playerView
                             )
+
+                            // Load thumbnails for scrubbing if available
+                            playoutInfo.thumbnailsWebVttUrl?.let { thumbnailsUrl ->
+                                loadThumbnails(thumbnailsUrl)
+                            }
                         }
-                    exoPlayer?.setMediaSource(mediaSource)
+                    exoPlayer?.setMediaSource(playoutInfo.mediaSource)
                     exoPlayer?.playWhenReady = true
                     exoPlayer?.prepare()
                     exoPlayer?.seekTo(playbackStore.getPlaybackPosition(mediaItemId))
@@ -422,6 +466,44 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
     private fun showInfoPane() {
         playerView?.hideController()
         infoPane?.animateShow()
+    }
+
+    private fun loadThumbnails(thumbnailsUrl: String) {
+        thumbnailLoader.loadThumbnails(thumbnailsUrl)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeBy(
+                onSuccess = { sprite ->
+                    Log.d("Loaded ${sprite.cues.size} thumbnail cues")
+                    scrubThumbnailView?.setThumbnailSprite(sprite)
+                },
+                onError = { error ->
+                    Log.w("Failed to load thumbnails", error)
+                    // Thumbnails are optional, don't show error to user
+                }
+            )
+            .addTo(disposables)
+    }
+
+
+    // ExoPlayer has a hard time when "bottom bar" is higher than 50% of the screen,
+    // so we need to manually position the thumbnail view above the time bar.
+    private fun positionThumbnailAboveTimeBar() {
+        val timeBarView = timeBar ?: return
+        val thumbnailView = scrubThumbnailView ?: return
+
+        // Get the TimeBar's position relative to its parent (the root FrameLayout)
+        val timeBarLocation = IntArray(2)
+        timeBarView.getLocationInWindow(timeBarLocation)
+
+        val parentLocation = IntArray(2)
+        (thumbnailView.parent as? View)?.getLocationInWindow(parentLocation)
+
+        // Position the thumbnail view so its bottom is at the top of the TimeBar
+        val timeBarTopRelativeToParent = timeBarLocation[1] - parentLocation[1]
+        val padding = 18f * resources.displayMetrics.density
+        thumbnailView.y = timeBarTopRelativeToParent - thumbnailView.thumbnailHeight - padding
+        thumbnailView.x = timeBarLocation[0].toFloat()
+        thumbnailView.layoutParams.width = timeBarView.width
     }
 }
 

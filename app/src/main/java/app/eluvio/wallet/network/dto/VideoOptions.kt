@@ -24,4 +24,5 @@ data class ProtocolPropertiesDto(
     val start_offset_float: Float?,
     val start_offset_rat: String?,
     val license_servers: List<String>?,
+    @field:Json(name = "thumbnails_webvtt_uri") val thumbnailsWebvttUri: String? = null,
 )

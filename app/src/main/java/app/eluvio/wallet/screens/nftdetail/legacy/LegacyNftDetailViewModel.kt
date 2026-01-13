@@ -139,7 +139,7 @@ class LegacyNftDetailViewModel @Inject constructor(
                     Single.just(Optional.absent())
                 } else {
                     videoOptionsFetcher.fetchVideoOptionsFromPath(animationPath)
-                        .map { mediaSource -> Optional.of(mediaSource) }
+                        .map { playoutInfo -> Optional.of(playoutInfo.mediaSource) }
                         .onErrorReturnItem(Optional.absent())
                 }
                 mediaSource.map { optional ->

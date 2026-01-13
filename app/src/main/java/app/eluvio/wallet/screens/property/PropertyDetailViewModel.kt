@@ -207,7 +207,7 @@ class PropertyDetailViewModel @Inject constructor(
             .switchMapSingle { display ->
                 Maybe.fromCallable { display.heroBackgroundVideoHash?.takeIf { ENABLE_VIDEO_BG } }
                     .flatMapSingle { hash -> videoOptionsFetcher.fetchVideoOptionsFromHash(hash) }
-                    .map { mediaSource -> Optional.of(ImmutableMediaSource(mediaSource)) }
+                    .map { playoutInfo -> Optional.of(ImmutableMediaSource(playoutInfo.mediaSource)) }
                     .defaultIfEmpty(Optional.empty()) // No video hash, no MediaSource
                     .onErrorReturn {
                         Log.e("Error fetching video options", it)

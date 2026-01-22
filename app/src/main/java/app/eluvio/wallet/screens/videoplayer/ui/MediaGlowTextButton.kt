@@ -16,6 +16,8 @@ open class MediaGlowTextButton @JvmOverloads constructor(
 ) : AppCompatTextView(context, attrs, defStyleAttr) {
 
     private val focusedPaint = Paint()
+    private val unfocusedPaint = Paint()
+    private var hasUnfocusedBackground = false
 
     private var cornerRadius: Float = 0f
     private var glowRadius: Float = 0f
@@ -39,6 +41,13 @@ open class MediaGlowTextButton @JvmOverloads constructor(
             val focusedBgColor =
                 getColor(R.styleable.MediaGlowTextButton_focusedBackgroundColor, Color.WHITE)
             initFocusedPaint(focusedBgColor)
+
+            val unfocusedBgColor =
+                getColor(R.styleable.MediaGlowTextButton_unfocusedBackgroundColor, Color.TRANSPARENT)
+            if (unfocusedBgColor != Color.TRANSPARENT) {
+                hasUnfocusedBackground = true
+                unfocusedPaint.color = unfocusedBgColor
+            }
         }
     }
 
@@ -62,6 +71,16 @@ open class MediaGlowTextButton @JvmOverloads constructor(
                 cornerRadius,
                 cornerRadius,
                 focusedPaint
+            )
+        } else if (hasUnfocusedBackground) {
+            canvas.drawRoundRect(
+                glowRadius,
+                glowRadius,
+                width.toFloat() - glowRadius,
+                height.toFloat() - glowRadius,
+                cornerRadius,
+                cornerRadius,
+                unfocusedPaint
             )
         }
         super.onDraw(canvas)

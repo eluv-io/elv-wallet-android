@@ -30,6 +30,7 @@ import app.eluvio.wallet.data.stores.PlaybackStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.screens.videoplayer.ui.ScrubThumbnailView
+import app.eluvio.wallet.screens.videoplayer.ui.StreamItem
 import app.eluvio.wallet.screens.videoplayer.ui.StreamSelectionPane
 import app.eluvio.wallet.screens.videoplayer.ui.VideoInfoPane
 import app.eluvio.wallet.util.crypto.Base58
@@ -49,6 +50,7 @@ import com.ramcosta.composedestinations.generated.destinations.VideoPlayerActivi
 import dagger.hilt.android.AndroidEntryPoint
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Maybe
+import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.Singles
 import io.reactivex.rxjava3.kotlin.addTo
@@ -99,7 +101,7 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
     private var infoPane: VideoInfoPane? = null
     private var streamsButton: View? = null
     private var streamSelectionPane: StreamSelectionPane? = null
-    private var availableStreams: List<MediaEntity> = emptyList()
+    private var availableStreams: List<StreamItem> = emptyList()
 
     // List of buttons that aren't handled by exoplayer, and we need to handle manually.
     private val customControllerButtons: List<View>
@@ -143,7 +145,12 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
     lateinit var contentStore: ContentStore
 
     private val navArgs by lazy { VideoPlayerActivityDestination.argsFrom(intent) }
+
+    // This holds the "original" media id the player was launched for, but might not reflect the
+    // currently playing/selected media item, since the stream selector allows us to switch to
+    // another Media Item or another fabric video object.
     private val mediaItemId by lazy { fakeMediaItemId ?: navArgs.mediaItemId }
+    private var currentlyPlayingStreamId: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -179,8 +186,8 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
         streamsButton?.setOnClickListener { showStreamSelectionPane() }
 
         streamSelectionPane = findViewById(R.id.video_player_stream_selection_pane)
-        streamSelectionPane?.setOnStreamSelectedListener { media ->
-            switchToStream(media)
+        streamSelectionPane?.setOnStreamSelectedListener { stream ->
+            switchToStream(stream)
         }
 
         exoPlayer = ExoPlayer.Builder(this)
@@ -242,9 +249,10 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             .ignoreElement()
             .subscribeBy(
                 onComplete = {
-                    loadVideo(mediaItemId)
+                    currentlyPlayingStreamId = mediaItemId
+                    loadVideoFromMediaItem(mediaItemId)
                     loadMetadata(mediaItemId)
-                    navArgs.propertyId?.let { loadStreamSelections(it) }
+                    loadStreamSelections(mediaItemId)
                 },
                 onError = {
                     Log.e("VideoPlayerFragment: Error fetching video options", it)
@@ -259,10 +267,21 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             .addTo(disposables)
     }
 
-    private fun loadVideo(mediaItemId: String) {
+    private fun loadVideoFromMediaItem(mediaItemId: String) {
+        loadVideo(
+            videoOptionsFetcher.fetchVideoOptions(mediaItemId, navArgs.propertyId),
+            mediaItemId
+        )
+    }
+
+    private fun loadVideoFromHash(hash: String, streamId: String) {
+        loadVideo(videoOptionsFetcher.fetchVideoOptionsFromHash(hash), streamId)
+    }
+
+    private fun loadVideo(videoOptions: Single<VideoPlayoutInfo>, streamId: String) {
         // this is all we really need if it wasn't for all the fake stuff
         Singles.zip(
-            videoOptionsFetcher.fetchVideoOptions(mediaItemId, navArgs.propertyId),
+            videoOptions,
             propertyStore
                 .observeMediaProperty(navArgs.propertyId ?: "", forceRefresh = false)
                 .firstOrError(),
@@ -290,7 +309,7 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
                     exoPlayer?.setMediaSource(playoutInfo.mediaSource)
                     exoPlayer?.playWhenReady = true
                     exoPlayer?.prepare()
-                    exoPlayer?.seekTo(playbackStore.getPlaybackPosition(mediaItemId))
+                    exoPlayer?.seekTo(playbackStore.getPlaybackPosition(streamId))
                 },
                 onError = {
                     Log.e("VideoPlayerFragment: Error fetching video options", it)
@@ -419,12 +438,16 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             if (shouldStorePlaybackPosition(currentPosition)) {
                 Log.d("Saving playback position $currentPosition")
                 playbackStore.setPlaybackPosition(
-                    mediaItemId,
+                    currentlyPlayingStreamId,
                     currentPosition,
                     exoPlayer.contentDuration
                 )
             } else {
-                playbackStore.setPlaybackPosition(mediaItemId, 0, exoPlayer.contentDuration)
+                playbackStore.setPlaybackPosition(
+                    currentlyPlayingStreamId,
+                    0,
+                    exoPlayer.contentDuration
+                )
             }
         }
         playerView?.onPause()
@@ -457,6 +480,7 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             Log.d("Forwarding key event to stream selection pane")
             if (event.keyCode == KeyEvent.KEYCODE_BACK) {
                 streamSelectionPane?.visibility = View.GONE
+                playerView?.controllerAutoShow = true
                 playerView?.showController()
                 return true
             }
@@ -516,9 +540,8 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             .addTo(disposables)
     }
 
-
-    private fun loadStreamSelections(propertyId: String) {
-        streamSelectionLoader.getStreams(propertyId)
+    private fun loadStreamSelections(mediaItemId: String) {
+        streamSelectionLoader.getStreams(mediaItemId, navArgs.propertyId)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeBy(
                 onSuccess = { streams ->
@@ -526,7 +549,7 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
                         Log.d("Loaded ${streams.size} stream selections")
                         availableStreams = streams
                         streamsButton?.isVisible = true
-                        streamSelectionPane?.setStreams(streams, mediaItemId)
+                        streamSelectionPane?.setStreams(availableStreams)
                     } else {
                         Log.d("No stream selections or only one stream available")
                     }
@@ -541,19 +564,30 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
 
     private fun showStreamSelectionPane() {
         playerView?.hideController()
+        playerView?.controllerAutoShow = false
         streamSelectionPane?.animateShow()
     }
 
-    private fun switchToStream(media: MediaEntity) {
+    private fun switchToStream(stream: StreamItem) {
         streamSelectionPane?.visibility = View.GONE
-        // Update the current media item tracking
-        fakeMediaItemId = media.id
-        titleView?.text = media.name
-        // Reload the video with the new stream
-        loadVideo(media.id)
-        loadMetadata(media.id)
-        // Update the selection indicator in the pane
-        streamSelectionPane?.setStreams(availableStreams, media.id)
+        playerView?.controllerAutoShow = true
+        titleView?.text = stream.label
+
+        when (stream) {
+            is StreamItem.MediaItem -> {
+                fakeMediaItemId = stream.id
+                currentlyPlayingStreamId = stream.id
+                loadVideoFromMediaItem(stream.id)
+                loadMetadata(stream.id)
+                // Reload streams to get the new MediaItem's additional_views
+                loadStreamSelections(stream.id)
+            }
+
+            is StreamItem.AdditionalView -> {
+                // Keep current streams (additional_views belong to the original media item)
+                loadVideoFromHash(stream.playableHash, stream.id)
+            }
+        }
     }
 
     // ExoPlayer has a hard time when "bottom bar" is higher than 50% of the screen,

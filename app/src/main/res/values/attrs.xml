@@ -13,6 +13,7 @@
     <declare-styleable name="MediaGlowTextButton">
         <attr name="cornerRadius" format="dimension" />
         <attr name="focusedBackgroundColor" />
+        <attr name="unfocusedBackgroundColor" />
         <attr name="glowRadius" />
     </declare-styleable>
 </resources>

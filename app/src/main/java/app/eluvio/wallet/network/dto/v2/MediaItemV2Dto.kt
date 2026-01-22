@@ -25,6 +25,8 @@ data class MediaItemV2Dto(
     @field:Json(name = "media_lists")
     val mediaLists: List<String>?,
     val gallery: List<GalleryItemV2Dto>?,
+    @field:Json(name = "additional_views")
+    val additionalViews: List<AdditionalViewDto>?,
 
     // Live Video info
     @field:Json(name = "live_video")
@@ -73,6 +75,14 @@ data class MediaPermissionsDto(
 @JsonClass(generateAdapter = true)
 data class MediaIconDto(
     val icon: AssetLinkDto?,
+)
+
+@JsonClass(generateAdapter = true)
+data class AdditionalViewDto(
+    val label: String?,
+    val image: AssetLinkDto?,
+    @field:Json(name = "media_link")
+    val mediaLink: MediaLinkDto?,
 )
 
 @JsonClass(generateAdapter = true)

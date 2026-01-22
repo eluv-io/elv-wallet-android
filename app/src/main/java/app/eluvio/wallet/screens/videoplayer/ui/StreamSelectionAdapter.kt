@@ -6,19 +6,16 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import app.eluvio.wallet.R
-import app.eluvio.wallet.data.entities.MediaEntity
 import coil.load
 
 class StreamSelectionAdapter : RecyclerView.Adapter<StreamSelectionAdapter.ViewHolder>() {
 
-    private var items: List<MediaEntity> = emptyList()
-    private var currentMediaItemId: String? = null
+    private var items: List<StreamItem> = emptyList()
 
-    var onStreamSelected: ((MediaEntity) -> Unit)? = null
+    var onStreamSelected: ((StreamItem) -> Unit)? = null
 
-    fun setItems(items: List<MediaEntity>, currentMediaItemId: String?) {
+    fun setItems(items: List<StreamItem>) {
         this.items = items
-        this.currentMediaItemId = currentMediaItemId
         notifyDataSetChanged()
     }
 
@@ -30,7 +27,7 @@ class StreamSelectionAdapter : RecyclerView.Adapter<StreamSelectionAdapter.ViewH
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = items[position]
-        holder.bind(item, item.id == currentMediaItemId)
+        holder.bind(item)
     }
 
     override fun getItemCount(): Int = items.size
@@ -39,9 +36,9 @@ class StreamSelectionAdapter : RecyclerView.Adapter<StreamSelectionAdapter.ViewH
         private val thumbnail: ImageView = itemView.findViewById(R.id.stream_thumbnail)
         private val nameButton: MediaGlowTextButton = itemView.findViewById(R.id.stream_name)
 
-        fun bind(item: MediaEntity, isSelected: Boolean) {
-            nameButton.text = item.name
-            thumbnail.load(item.image) {
+        fun bind(item: StreamItem) {
+            nameButton.text = item.label
+            thumbnail.load(item.imageUrl) {
                 crossfade(true)
             }
 

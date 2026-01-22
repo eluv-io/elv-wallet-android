@@ -1,6 +1,8 @@
 package app.eluvio.wallet.network.converters.v2
 
 import app.eluvio.wallet.data.AspectRatio
+import app.eluvio.wallet.data.entities.AdditionalViewEntity
+import app.eluvio.wallet.data.entities.FabricUrlEntity
 import app.eluvio.wallet.data.entities.GalleryItemEntity
 import app.eluvio.wallet.data.entities.LiveVideoInfoEntity
 import app.eluvio.wallet.data.entities.MediaEntity
@@ -9,6 +11,7 @@ import app.eluvio.wallet.data.entities.v2.permissions.PermissionSettingsEntity
 import app.eluvio.wallet.data.entities.v2.search.FilterAttributeEntity
 import app.eluvio.wallet.data.entities.v2.search.FilterValueEntity
 import app.eluvio.wallet.network.converters.toPathMap
+import app.eluvio.wallet.network.dto.v2.AdditionalViewDto
 import app.eluvio.wallet.network.dto.v2.DisplaySettingsDto
 import app.eluvio.wallet.network.dto.v2.GalleryItemV2Dto
 import app.eluvio.wallet.network.dto.v2.MediaItemV2Dto
@@ -56,6 +59,7 @@ fun MediaItemV2Dto.toEntity(baseUrl: String): MediaEntity? {
             }
         }.toRealmListOrEmpty()
         tags = dto.tags.toRealmListOrEmpty()
+        additionalViews = dto.additionalViews?.mapNotNull { it.toEntity(baseUrl) }.toRealmListOrEmpty()
         rawPermissions = PermissionSettingsEntity().apply {
             permissionItemIds = dto.permissions.orEmpty()
                 .takeIf {
@@ -95,5 +99,16 @@ private fun GalleryItemV2Dto.toEntity(): GalleryItemEntity? {
         // TODO: image should take precedence over thumbnail, if it exists
         imagePath = dto.thumbnail?.path ?: return null
         imageAspectRatio = AspectRatio.parse(dto.thumbnailAspectRatio)
+    }
+}
+
+private fun AdditionalViewDto.toEntity(baseUrl: String): AdditionalViewEntity? {
+    val dto = this
+    val imagePath = dto.image?.path ?: return null
+    return AdditionalViewEntity().apply {
+        label = dto.label ?: ""
+        imageUrl = FabricUrlEntity().apply { set(baseUrl, imagePath) }
+        playableHash = dto.mediaLink?.hashContainer?.get("source")?.toString()
+        mediaLinks = dto.mediaLink?.sources?.mapValues { it.value.path }.toRealmDictionaryOrEmpty()
     }
 }

@@ -7,7 +7,6 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import app.eluvio.wallet.R
-import app.eluvio.wallet.data.entities.MediaEntity
 
 class StreamSelectionPane @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
@@ -23,11 +22,11 @@ class StreamSelectionPane @JvmOverloads constructor(
         recyclerView.adapter = adapter
     }
 
-    fun setStreams(streams: List<MediaEntity>, currentMediaItemId: String?) {
-        adapter.setItems(streams, currentMediaItemId)
+    fun setStreams(streams: List<StreamItem>) {
+        adapter.setItems(streams)
     }
 
-    fun setOnStreamSelectedListener(listener: (MediaEntity) -> Unit) {
+    fun setOnStreamSelectedListener(listener: (StreamItem) -> Unit) {
         adapter.onStreamSelected = listener
     }
 

@@ -80,6 +80,8 @@ class MediaEntity : RealmObject, EntityWithPermissions {
 
     var displaySettings: DisplaySettingsEntity? = null
 
+    var additionalViews: RealmList<AdditionalViewEntity> = realmListOf()
+
     // If display settings aren't directly available, construct them from legacy fields.
     fun requireDisplaySettings(): DisplaySettings {
         return displaySettings ?: defaultDisplaySettings()
@@ -137,6 +139,7 @@ class MediaEntity : RealmObject, EntityWithPermissions {
         if (attributes != other.attributes) return false
         if (tags != other.tags) return false
         if (displaySettings != other.displaySettings) return false
+        if (additionalViews != other.additionalViews) return false
 
         return true
     }
@@ -171,6 +174,7 @@ class MediaEntity : RealmObject, EntityWithPermissions {
         result = 31 * result + attributes.hashCode()
         result = 31 * result + tags.hashCode()
         result = 31 * result + (displaySettings?.hashCode() ?: 0)
+        result = 31 * result + additionalViews.hashCode()
         return result
     }
 
@@ -237,7 +241,40 @@ class MediaEntity : RealmObject, EntityWithPermissions {
         @Provides
         @ElementsIntoSet
         fun provideEntity(): Set<KClass<out TypedRealmObject>> =
-            setOf(MediaEntity::class, LockedStateEntity::class)
+            setOf(MediaEntity::class, LockedStateEntity::class, AdditionalViewEntity::class)
+    }
+}
+
+class AdditionalViewEntity : EmbeddedRealmObject {
+    var label: String = ""
+    var imageUrl: FabricUrlEntity? = null
+    var playableHash: String? = null
+    var mediaLinks: RealmDictionary<String> = realmDictionaryOf()
+
+    override fun toString(): String {
+        return "AdditionalViewEntity(label='$label', imageUrl=$imageUrl, playableHash=$playableHash, mediaLinks=$mediaLinks)"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as AdditionalViewEntity
+
+        if (label != other.label) return false
+        if (imageUrl != other.imageUrl) return false
+        if (playableHash != other.playableHash) return false
+        if (mediaLinks != other.mediaLinks) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = label.hashCode()
+        result = 31 * result + (imageUrl?.hashCode() ?: 0)
+        result = 31 * result + (playableHash?.hashCode() ?: 0)
+        result = 31 * result + mediaLinks.hashCode()
+        return result
     }
 }
 

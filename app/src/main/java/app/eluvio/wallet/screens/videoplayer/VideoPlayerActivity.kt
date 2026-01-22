@@ -30,6 +30,7 @@ import app.eluvio.wallet.data.stores.PlaybackStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.screens.videoplayer.ui.ScrubThumbnailView
+import app.eluvio.wallet.screens.videoplayer.ui.StreamSelectionPane
 import app.eluvio.wallet.screens.videoplayer.ui.VideoInfoPane
 import app.eluvio.wallet.util.crypto.Base58
 import app.eluvio.wallet.util.exoplayer.defaultSeekPositionMs
@@ -80,6 +81,9 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
     @Inject
     lateinit var thumbnailLoader: ThumbnailLoader
 
+    @Inject
+    lateinit var streamSelectionLoader: StreamSelectionLoader
+
     private var disposables = CompositeDisposable()
 
     private var playerView: PlayerView? = null
@@ -93,10 +97,13 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
     private var liveIndicator: View? = null
     private var infoButton: View? = null
     private var infoPane: VideoInfoPane? = null
+    private var streamsButton: View? = null
+    private var streamSelectionPane: StreamSelectionPane? = null
+    private var availableStreams: List<MediaEntity> = emptyList()
 
     // List of buttons that aren't handled by exoplayer, and we need to handle manually.
     private val customControllerButtons: List<View>
-        get() = listOfNotNull(liveIndicator, infoButton)
+        get() = listOfNotNull(liveIndicator, infoButton, streamsButton)
 
     private val backPressedCallback = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() {
@@ -168,6 +175,14 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
         infoButton = findViewById(R.id.video_player_info_button)
         infoButton?.setOnClickListener { showInfoPane() }
 
+        streamsButton = findViewById(R.id.video_player_streams_button)
+        streamsButton?.setOnClickListener { showStreamSelectionPane() }
+
+        streamSelectionPane = findViewById(R.id.video_player_stream_selection_pane)
+        streamSelectionPane?.setOnStreamSelectedListener { media ->
+            switchToStream(media)
+        }
+
         exoPlayer = ExoPlayer.Builder(this)
             .setAudioAttributes(AudioAttributes.DEFAULT,  /* handleAudioFocus= */true)
             .build()
@@ -229,6 +244,7 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
                 onComplete = {
                     loadVideo(mediaItemId)
                     loadMetadata(mediaItemId)
+                    navArgs.propertyId?.let { loadStreamSelections(it) }
                 },
                 onError = {
                     Log.e("VideoPlayerFragment: Error fetching video options", it)
@@ -437,6 +453,15 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             }
             return infoPane?.dispatchKeyEvent(event) == true
         }
+        if (streamSelectionPane?.isVisible == true) {
+            Log.d("Forwarding key event to stream selection pane")
+            if (event.keyCode == KeyEvent.KEYCODE_BACK) {
+                streamSelectionPane?.visibility = View.GONE
+                playerView?.showController()
+                return true
+            }
+            return streamSelectionPane?.dispatchKeyEvent(event) == true
+        }
         // Capture ENTER key events on custom buttons
         if (event.keyCode in listOf(KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_DPAD_CENTER)) {
             if (currentFocus in customControllerButtons) {
@@ -491,6 +516,45 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             .addTo(disposables)
     }
 
+
+    private fun loadStreamSelections(propertyId: String) {
+        streamSelectionLoader.getStreams(propertyId)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeBy(
+                onSuccess = { streams ->
+                    if (streams.size > 1) {
+                        Log.d("Loaded ${streams.size} stream selections")
+                        availableStreams = streams
+                        streamsButton?.isVisible = true
+                        streamSelectionPane?.setStreams(streams, mediaItemId)
+                    } else {
+                        Log.d("No stream selections or only one stream available")
+                    }
+                },
+                onError = { error ->
+                    Log.w("Failed to load stream selections", error)
+                    // Stream selection is optional, don't show error to user
+                }
+            )
+            .addTo(disposables)
+    }
+
+    private fun showStreamSelectionPane() {
+        playerView?.hideController()
+        streamSelectionPane?.animateShow()
+    }
+
+    private fun switchToStream(media: MediaEntity) {
+        streamSelectionPane?.visibility = View.GONE
+        // Update the current media item tracking
+        fakeMediaItemId = media.id
+        titleView?.text = media.name
+        // Reload the video with the new stream
+        loadVideo(media.id)
+        loadMetadata(media.id)
+        // Update the selection indicator in the pane
+        streamSelectionPane?.setStreams(availableStreams, media.id)
+    }
 
     // ExoPlayer has a hard time when "bottom bar" is higher than 50% of the screen,
     // so we need to manually position the thumbnail view above the time bar.

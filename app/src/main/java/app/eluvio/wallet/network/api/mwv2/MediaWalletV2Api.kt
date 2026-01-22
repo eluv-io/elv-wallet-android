@@ -47,4 +47,7 @@ interface MediaWalletV2Api : AuthdApi {
 
     @GET("mw/properties/{propertyId}/permissions?no_cache=true")
     fun getPermissionStates(@Path("propertyId") propertyId: String): Single<GetPermissionResponse>
+
+    @POST("mw/properties/{propertyId}/sidebar/live")
+    fun getStreamSelections(@Path("propertyId") propertyId: String): Single<PagedContent<MediaItemV2Dto>>
 }

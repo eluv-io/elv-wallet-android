@@ -23,4 +23,11 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:visibility="invisible" />
+
+    <app.eluvio.wallet.screens.videoplayer.ui.StreamSelectionPane
+        android:id="@+id/video_player_stream_selection_pane"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:visibility="gone" />
 </FrameLayout>

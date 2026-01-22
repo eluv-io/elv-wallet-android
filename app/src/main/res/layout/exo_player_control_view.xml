@@ -141,6 +141,15 @@ so be mindful of pruning the view hierarchy-->
                 android:clipChildren="false"
                 android:layoutDirection="ltr">
 
+                <app.eluvio.wallet.screens.videoplayer.ui.MediaGlowTextButton
+                    android:id="@+id/video_player_streams_button"
+                    style="@style/MediaPlayerTextButton"
+                    android:layout_marginEnd="12dp"
+                    android:nextFocusUp="@id/exo_play_pause"
+                    android:text="Stream Selector"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
                 <app.eluvio.wallet.screens.videoplayer.ui.MediaGlowIconButton
                     android:id="@id/exo_subtitle"
                     style="@style/ExoStyledControls.Button.Bottom.CC"

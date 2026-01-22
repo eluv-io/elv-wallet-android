@@ -18,6 +18,23 @@ so be mindful of pruning the view hierarchy-->
         android:layout_height="0dp"
         android:background="@color/exo_black_opacity_60" />
 
+    <FrameLayout
+        android:id="@id/exo_top_controls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:layout_marginHorizontal="36dp"
+        android:layout_marginVertical="27dp">
+
+        <TextView
+            android:id="@+id/video_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            tools:text="Video Title" />
+    </FrameLayout>
+
     <LinearLayout
         android:id="@id/exo_bottom_bar"
         android:layout_width="match_parent"

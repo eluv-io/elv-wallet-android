@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.core.net.toUri
@@ -88,6 +89,7 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
     private var timeBar: DefaultTimeBar? = null
     private var scrubThumbnailView: ScrubThumbnailView? = null
 
+    private var titleView: TextView? = null
     private var liveIndicator: View? = null
     private var infoButton: View? = null
     private var infoPane: VideoInfoPane? = null
@@ -145,6 +147,10 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
         playPauseButton = findViewById(media3R.id.exo_play_pause)
         timeBar = findViewById(media3R.id.exo_progress)
         timeBar?.setKeyTimeIncrement(5000)
+
+        titleView = findViewById<TextView>(R.id.video_title)?.apply {
+            text = navArgs.mediaTitle
+        }
 
         liveIndicator = findViewById(R.id.live_indicator)
         liveIndicator?.setOnClickListener {
@@ -335,6 +341,7 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
         contentStore.observeMediaItem(mediaItemId)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeBy {
+                titleView?.text = it.name
                 infoPane?.setDisplaySettings(it.requireDisplaySettings())
             }
             .addTo(disposables)

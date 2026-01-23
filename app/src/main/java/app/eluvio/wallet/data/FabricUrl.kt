@@ -16,4 +16,5 @@ import app.eluvio.wallet.data.entities.FabricUrlEntity
  */
 interface FabricUrl {
     val url: String?
+    val imageHash: String?
 }

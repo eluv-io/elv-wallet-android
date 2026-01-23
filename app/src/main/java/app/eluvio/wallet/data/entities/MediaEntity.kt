@@ -42,6 +42,9 @@ class MediaEntity : RealmObject, EntityWithPermissions {
 
     // Full path. Can't be converted to [FabricUrl] because it's coming as a full path from the v1 API.
     var image: String = ""
+
+    // Only used in StreamSelector right now, but can be expanded in the future.
+    var imageHash: String? = null
     var posterImagePath: String? = null
     var mediaType: String = ""
     var imageAspectRatio: Float? = null
@@ -123,6 +126,7 @@ class MediaEntity : RealmObject, EntityWithPermissions {
         if (id != other.id) return false
         if (name != other.name) return false
         if (!image.equalsIgnoreHost(other.image)) return false
+        if (imageHash != other.imageHash) return false
         if (posterImagePath != other.posterImagePath) return false
         if (mediaType != other.mediaType) return false
         if (imageAspectRatio != other.imageAspectRatio) return false
@@ -158,6 +162,7 @@ class MediaEntity : RealmObject, EntityWithPermissions {
         var result = id.hashCode()
         result = 31 * result + name.hashCode()
         result = 31 * result + image.hashCodeIgnoreHost()
+        result = 31 * result + (imageHash?.hashCode() ?: 0)
         result = 31 * result + (posterImagePath?.hashCode() ?: 0)
         result = 31 * result + mediaType.hashCode()
         result = 31 * result + (imageAspectRatio?.hashCode() ?: 0)
@@ -284,6 +289,7 @@ private fun MediaEntity.defaultDisplaySettings(): DisplaySettings {
     // don't want to arbitrarily break it up to base/path.
     val imageUrl = object : FabricUrl {
         override val url: String = imageOrLockedImage()
+        override val imageHash: String? get() = this@defaultDisplaySettings.imageHash
     }
     return when (aspectRatio()) {
         AspectRatio.SQUARE -> base.copy(thumbnailSquareUrl = imageUrl)

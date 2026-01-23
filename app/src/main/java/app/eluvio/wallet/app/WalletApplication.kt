@@ -6,7 +6,7 @@ import androidx.lifecycle.coroutineScope
 import app.eluvio.wallet.BuildConfig
 import app.eluvio.wallet.di.TokenAwareHttpClient
 import app.eluvio.wallet.util.coil.ContentFabricSizingInterceptor
-import app.eluvio.wallet.util.coil.FabricUrlMapper
+import app.eluvio.wallet.util.coil.FabricImageInterceptor
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.decode.SvgDecoder
@@ -59,8 +59,8 @@ class WalletApplication : Application(), ImageLoaderFactory {
         return ImageLoader.Builder(this).okHttpClient(httpClient)
             .components {
                 add(SvgDecoder.Factory())
+                add(FabricImageInterceptor())
                 add(ContentFabricSizingInterceptor())
-                add(FabricUrlMapper())
             }
             .build()
     }

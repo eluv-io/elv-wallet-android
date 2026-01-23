@@ -280,6 +280,7 @@ private fun PropertySearchPreview() = EluvioThemePreview {
         values = List(4) {
             SearchFilter.Value("Secondary Filter $it", imageUrl = object : FabricUrl {
                 override val url: String get() = "dummy"
+                override val imageHash: String? = null
             })
         },
         style = SearchFilter.Style.IMAGE

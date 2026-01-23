@@ -38,7 +38,7 @@ class StreamSelectionAdapter : RecyclerView.Adapter<StreamSelectionAdapter.ViewH
 
         fun bind(item: StreamItem) {
             nameButton.text = item.label
-            thumbnail.load(item.imageUrl) {
+            thumbnail.load(item.image) {
                 crossfade(true)
             }
 

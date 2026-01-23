@@ -33,9 +33,14 @@ class FabricUrlEntity : EmbeddedRealmObject, FabricUrl {
     private var path: String? = null
     private var baseUrl: String? = null
 
-    fun set(baseUrl: String, path: String) {
+    /** ThumbHash placeholder for the image, base64 encoded */
+    override var imageHash: String? = null
+        private set
+
+    fun set(baseUrl: String, path: String, imageHash: String? = null) {
         this.baseUrl = baseUrl
         this.path = path
+        this.imageHash = imageHash
     }
 
     fun updateBaseUrl(baseUrl: String) {
@@ -43,7 +48,7 @@ class FabricUrlEntity : EmbeddedRealmObject, FabricUrl {
     }
 
     override fun toString(): String {
-        return "FabricUrlEntity(path=$path, baseUrl=$baseUrl)"
+        return "FabricUrlEntity(path=$path, baseUrl=$baseUrl, imageHash=$imageHash)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -53,12 +58,17 @@ class FabricUrlEntity : EmbeddedRealmObject, FabricUrl {
         other as FabricUrlEntity
 
         // Ignore baseUrl when comparing.
-        return path == other.path
+        if (path != other.path) return false
+        if (imageHash != other.imageHash) return false
+
+        return true
     }
 
     override fun hashCode(): Int {
         // Ignore baseUrl when comparing.
-        return path?.hashCode() ?: 0
+        var result = path?.hashCode() ?: 0
+        result = 31 * result + (imageHash?.hashCode() ?: 0)
+        return result
     }
 
     @Module

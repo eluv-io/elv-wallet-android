@@ -16,6 +16,8 @@ data class MediaItemV2Dto(
     val mediaLink: MediaLinkDto?,
     @field:Json(name = "media_type")
     val mediaType: String?,
+    @field:Json(name = "image_hash")
+    val imageHash: String?,
     val type: String,
     @field:Json(name = "poster_image")
     val posterImage: AssetLinkDto?,
@@ -81,6 +83,8 @@ data class MediaIconDto(
 data class AdditionalViewDto(
     val label: String?,
     val image: AssetLinkDto?,
+    @field:Json(name = "image_hash")
+    val imageHash: String?,
     @field:Json(name = "media_link")
     val mediaLink: MediaLinkDto?,
 )

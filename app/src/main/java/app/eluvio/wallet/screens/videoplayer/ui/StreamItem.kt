@@ -1,5 +1,6 @@
 package app.eluvio.wallet.screens.videoplayer.ui
 
+import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.entities.AdditionalViewEntity
 import app.eluvio.wallet.data.entities.MediaEntity
 
@@ -10,20 +11,21 @@ import app.eluvio.wallet.data.entities.MediaEntity
 sealed class StreamItem {
     abstract val id: String
     abstract val label: String
-    abstract val imageUrl: String
+    /** Image to display as FabricUrl (with optional thumbhash for placeholder). */
+    abstract val image: FabricUrl?
 
     /** Stream from the stream selection API - load using media item ID */
     data class MediaItem(
         override val id: String,
         override val label: String,
-        override val imageUrl: String,
+        override val image: FabricUrl?,
     ) : StreamItem() {
         companion object {
             fun from(entity: MediaEntity): MediaItem {
                 return MediaItem(
                     id = entity.id,
                     label = entity.name,
-                    imageUrl = entity.image,
+                    image = SimpleFabricUrl(entity.image, entity.imageHash),
                 )
             }
         }
@@ -33,7 +35,7 @@ sealed class StreamItem {
     data class AdditionalView(
         override val id: String,
         override val label: String,
-        override val imageUrl: String,
+        override val image: FabricUrl?,
         val playableHash: String,
     ) : StreamItem() {
         companion object {
@@ -41,10 +43,16 @@ sealed class StreamItem {
                 return AdditionalView(
                     id = "additional_view_$index",
                     label = entity.label,
-                    imageUrl = entity.imageUrl?.url ?: "",
+                    image = entity.imageUrl,
                     playableHash = entity.playableHash ?: "",
                 )
             }
         }
     }
 }
+
+/** Simple FabricUrl wrapper for URLs that aren't stored as FabricUrlEntity */
+private data class SimpleFabricUrl(
+    override val url: String?,
+    override val imageHash: String?,
+) : FabricUrl

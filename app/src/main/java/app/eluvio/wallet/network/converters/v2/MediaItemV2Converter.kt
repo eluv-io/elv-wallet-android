@@ -40,6 +40,7 @@ fun MediaItemV2Dto.toEntity(baseUrl: String): MediaEntity? {
         imageAspectRatio = aspectRatio
         mediaType = dto.mediaType ?: dto.type
         image = display.thumbnailUrlAndRatio?.first ?: ""
+        imageHash = dto.imageHash
         playableHash = dto.mediaLink?.hashContainer?.get("source")?.toString()
         mediaLinks = dto.mediaLink?.toPathMap().toRealmDictionaryOrEmpty()
         gallery = dto.gallery?.mapNotNull { it.toEntity() }.toRealmListOrEmpty()
@@ -107,7 +108,7 @@ private fun AdditionalViewDto.toEntity(baseUrl: String): AdditionalViewEntity? {
     val imagePath = dto.image?.path ?: return null
     return AdditionalViewEntity().apply {
         label = dto.label ?: ""
-        imageUrl = FabricUrlEntity().apply { set(baseUrl, imagePath) }
+        imageUrl = FabricUrlEntity().apply { set(baseUrl, imagePath, dto.imageHash) }
         playableHash = dto.mediaLink?.hashContainer?.get("source")?.toString()
         mediaLinks = dto.mediaLink?.sources?.mapValues { it.value.path }.toRealmDictionaryOrEmpty()
     }

@@ -251,13 +251,13 @@ class MediaEntity : RealmObject, EntityWithPermissions {
 }
 
 class AdditionalViewEntity : EmbeddedRealmObject {
-    var label: String = ""
+    var title: String = ""
     var imageUrl: FabricUrlEntity? = null
     var playableHash: String? = null
     var mediaLinks: RealmDictionary<String> = realmDictionaryOf()
 
     override fun toString(): String {
-        return "AdditionalViewEntity(label='$label', imageUrl=$imageUrl, playableHash=$playableHash, mediaLinks=$mediaLinks)"
+        return "AdditionalViewEntity(title='$title', imageUrl=$imageUrl, playableHash=$playableHash, mediaLinks=$mediaLinks)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -266,7 +266,7 @@ class AdditionalViewEntity : EmbeddedRealmObject {
 
         other as AdditionalViewEntity
 
-        if (label != other.label) return false
+        if (title != other.title) return false
         if (imageUrl != other.imageUrl) return false
         if (playableHash != other.playableHash) return false
         if (mediaLinks != other.mediaLinks) return false
@@ -275,7 +275,7 @@ class AdditionalViewEntity : EmbeddedRealmObject {
     }
 
     override fun hashCode(): Int {
-        var result = label.hashCode()
+        var result = title.hashCode()
         result = 31 * result + (imageUrl?.hashCode() ?: 0)
         result = 31 * result + (playableHash?.hashCode() ?: 0)
         result = 31 * result + mediaLinks.hashCode()

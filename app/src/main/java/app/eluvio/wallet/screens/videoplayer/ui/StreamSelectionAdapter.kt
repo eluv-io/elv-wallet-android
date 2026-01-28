@@ -37,7 +37,7 @@ class StreamSelectionAdapter : RecyclerView.Adapter<StreamSelectionAdapter.ViewH
         private val nameButton: MediaGlowTextButton = itemView.findViewById(R.id.stream_name)
 
         fun bind(item: StreamItem) {
-            nameButton.text = item.label
+            nameButton.text = item.title
             thumbnail.load(item.image) {
                 crossfade(true)
             }

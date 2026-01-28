@@ -571,7 +571,7 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
     private fun switchToStream(stream: StreamItem) {
         streamSelectionPane?.visibility = View.GONE
         playerView?.controllerAutoShow = true
-        titleView?.text = stream.label
+        titleView?.text = stream.title
 
         when (stream) {
             is StreamItem.MediaItem -> {

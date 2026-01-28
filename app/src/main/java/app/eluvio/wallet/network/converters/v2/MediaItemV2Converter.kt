@@ -107,7 +107,7 @@ private fun AdditionalViewDto.toEntity(baseUrl: String): AdditionalViewEntity? {
     val dto = this
     val imagePath = dto.image?.path ?: return null
     return AdditionalViewEntity().apply {
-        label = dto.label ?: ""
+        title = dto.title ?: dto.label ?: ""
         imageUrl = FabricUrlEntity().apply { set(baseUrl, imagePath, dto.imageHash) }
         playableHash = dto.mediaLink?.hashContainer?.get("source")?.toString()
         mediaLinks = dto.mediaLink?.sources?.mapValues { it.value.path }.toRealmDictionaryOrEmpty()

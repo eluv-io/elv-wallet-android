@@ -10,21 +10,21 @@ import app.eluvio.wallet.data.entities.MediaEntity
  */
 sealed class StreamItem {
     abstract val id: String
-    abstract val label: String
+    abstract val title: String
     /** Image to display as FabricUrl (with optional thumbhash for placeholder). */
     abstract val image: FabricUrl?
 
     /** Stream from the stream selection API - load using media item ID */
     data class MediaItem(
         override val id: String,
-        override val label: String,
+        override val title: String,
         override val image: FabricUrl?,
     ) : StreamItem() {
         companion object {
             fun from(entity: MediaEntity): MediaItem {
                 return MediaItem(
                     id = entity.id,
-                    label = entity.name,
+                    title = entity.name,
                     image = SimpleFabricUrl(entity.image, entity.imageHash),
                 )
             }
@@ -34,7 +34,7 @@ sealed class StreamItem {
     /** Stream from additional_views - load using playable hash */
     data class AdditionalView(
         override val id: String,
-        override val label: String,
+        override val title: String,
         override val image: FabricUrl?,
         val playableHash: String,
     ) : StreamItem() {
@@ -42,7 +42,7 @@ sealed class StreamItem {
             fun from(entity: AdditionalViewEntity, index: Int): AdditionalView {
                 return AdditionalView(
                     id = "additional_view_$index",
-                    label = entity.label,
+                    title = entity.title,
                     image = entity.imageUrl,
                     playableHash = entity.playableHash ?: "",
                 )

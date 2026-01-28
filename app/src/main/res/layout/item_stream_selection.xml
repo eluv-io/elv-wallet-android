@@ -27,6 +27,5 @@
         android:gravity="center"
         android:maxLines="1"
         android:paddingVertical="8dp"
-        app:unfocusedBackgroundColor="#CC383838"
         tools:text="Camera A" />
 </LinearLayout>

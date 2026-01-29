@@ -1,6 +1,6 @@
 ## Eluvio Media Wallet for AndroidTV
 
-An embedded TV app for viewing collected NFTs on the Eluvio Content Fabric.
+An embedded TV app for streaming media from the Content Fabric.
 
 See [https://live.eluv.io/media-wallet/compatible-devices](https://live.eluv.io/media-wallet/compatible-devices)
 for a complete list of devices.

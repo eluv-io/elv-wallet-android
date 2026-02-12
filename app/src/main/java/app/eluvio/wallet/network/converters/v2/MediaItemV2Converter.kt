@@ -60,7 +60,9 @@ fun MediaItemV2Dto.toEntity(baseUrl: String): MediaEntity? {
             }
         }.toRealmListOrEmpty()
         tags = dto.tags.toRealmListOrEmpty()
-        additionalViews = dto.additionalViews?.mapNotNull { it.toEntity(baseUrl) }.toRealmListOrEmpty()
+        additionalViews = dto.additionalViews
+            ?.mapNotNull { it.toEntity(baseUrl) }
+            .toRealmListOrEmpty()
         rawPermissions = PermissionSettingsEntity().apply {
             permissionItemIds = dto.permissions.orEmpty()
                 .takeIf {
@@ -105,7 +107,7 @@ private fun GalleryItemV2Dto.toEntity(): GalleryItemEntity? {
 
 private fun AdditionalViewDto.toEntity(baseUrl: String): AdditionalViewEntity? {
     val dto = this
-    val imagePath = dto.image?.path ?: return null
+    val imagePath = dto.image_tv?.path ?: dto.image?.path ?: return null
     return AdditionalViewEntity().apply {
         title = dto.title ?: dto.label ?: ""
         imageUrl = FabricUrlEntity().apply { set(baseUrl, imagePath, dto.imageHash) }

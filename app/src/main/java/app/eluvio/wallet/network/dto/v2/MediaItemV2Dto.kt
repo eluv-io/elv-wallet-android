@@ -84,6 +84,7 @@ data class AdditionalViewDto(
     val title: String?,
     // Legacy field. In the future, [title] will be the correct field.
     val label: String?,
+    val image_tv: AssetLinkDto?,
     val image: AssetLinkDto?,
     @field:Json(name = "image_hash")
     val imageHash: String?,

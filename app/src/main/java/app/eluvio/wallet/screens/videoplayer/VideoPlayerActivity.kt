@@ -545,13 +545,15 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeBy(
                 onSuccess = { streams ->
-                    if (streams.size > 1) {
+                    val onlySelfAvail =
+                        streams.size == 1 && streams.firstOrNull()?.id == mediaItemId
+                    if (streams.isEmpty() || onlySelfAvail) {
+                        Log.d("No stream selections or only one stream available")
+                    } else {
                         Log.d("Loaded ${streams.size} stream selections")
                         availableStreams = streams
                         streamsButton?.isVisible = true
                         streamSelectionPane?.setStreams(availableStreams)
-                    } else {
-                        Log.d("No stream selections or only one stream available")
                     }
                 },
                 onError = { error ->

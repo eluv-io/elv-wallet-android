@@ -39,6 +39,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.tv.material3.ClickableSurfaceScale
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
@@ -192,22 +193,45 @@ private fun DisabledCard(
     aspectRatio: Float,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        Modifier
+    ImageCard(
+        imageUrl = imageUrl,
+        contentDescription = media.nameOrLockedName(),
+        shape = shape,
+        scale = ClickableSurfaceScale.None,
+        focusedOverlay = {
+            val padding = if (aspectRatio == AspectRatio.WIDE) 18.dp else 12.dp
+            Text(
+                "Could not access media.",
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(padding)
+                    .align(Alignment.Center)
+            )
+        },
+        unFocusedOverlay = {
+            if (media.mediaType == MediaEntity.MEDIA_TYPE_VIDEO) {
+                val liveState = liveState
+                if (liveState != null) {
+                    LiveVideoUnFocusedOverlay(liveState)
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .align(Alignment.Center)
+                            .alpha(0.75f)
+                    )
+                }
+            }
+        },
+        onClick = { },
+        modifier = modifier
+            .height(cardHeight)
+            .aspectRatio(aspectRatio, matchHeightConstraintsFirst = true)
             .alpha(MaterialTheme.colorScheme.disabledItemAlpha)
             .clip(shape)
-    ) {
-        ShimmerImage(
-            imageUrl,
-            contentDescription = media.nameOrLockedName(),
-            modifier = modifier
-                .height(cardHeight)
-                .aspectRatio(aspectRatio, matchHeightConstraintsFirst = true)
-        )
-        liveState?.let {
-            LiveVideoUnFocusedOverlay(it)
-        }
-    }
+    )
 }
 
 @Composable

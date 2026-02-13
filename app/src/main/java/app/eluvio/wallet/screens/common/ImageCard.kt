@@ -21,6 +21,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.ClickableSurfaceDefaults
+import androidx.tv.material3.ClickableSurfaceScale
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import app.eluvio.wallet.theme.EluvioThemePreview
@@ -42,13 +43,14 @@ fun ImageCard(
     dimOnFocus: Boolean = true,
     shape: Shape = MaterialTheme.shapes.medium,
     onClick: () -> Unit,
+    scale: ClickableSurfaceScale = LocalSurfaceScale.current,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
     Surface(
         onClick = onClick,
         border = MaterialTheme.borders.focusedBorder,
-        scale = LocalSurfaceScale.current,
+        scale = scale,
         shape = ClickableSurfaceDefaults.shape(shape),
         interactionSource = interactionSource,
         colors = ClickableSurfaceDefaults.colors(

@@ -8,7 +8,6 @@ import app.eluvio.wallet.screens.videoplayer.ui.StreamItem
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.realm.saveTo
 import io.reactivex.rxjava3.core.Single
-import io.reactivex.rxjava3.kotlin.Singles
 import io.reactivex.rxjava3.kotlin.zipWith
 import io.realm.kotlin.Realm
 import javax.inject.Inject
@@ -19,36 +18,34 @@ class StreamSelectionLoader @Inject constructor(
     private val realm: Realm,
 ) {
     fun getStreams(mediaItemId: String, propertyId: String?): Single<List<StreamItem>> {
-        val additionalViewsStream = contentStore.observeMediaItem(mediaItemId)
+        return contentStore.observeMediaItem(mediaItemId)
             .firstOrError()
-            .map { media ->
-                media.additionalViews.mapIndexed { index, view ->
+            .flatMap { media ->
+                val additionalViews = media.additionalViews.mapIndexed { index, view ->
                     StreamItem.AdditionalView.from(view, index)
                 }
+
+                val isLive = media.liveVideoInfo?.ended == false
+                val apiStreams = if (isLive && propertyId != null) {
+                    apiProvider.getApi(MediaWalletV2Api::class)
+                        .flatMap { api -> api.getStreamSelections(propertyId) }
+                        .zipWith(apiProvider.getFabricEndpoint())
+                        .map { (response, baseUrl) ->
+                            response.contents.orEmpty()
+                                .mapNotNull { it.toEntity(baseUrl) }
+                        }
+                        .saveTo(realm)
+                        .map { list -> list.map { StreamItem.MediaItem.from(it) } }
+                        .onErrorReturn { e ->
+                            Log.e("Error loading streams from API", e)
+                            emptyList()
+                        }
+                } else {
+                    Single.just(emptyList())
+                }
+
+                apiStreams.map { api -> additionalViews + api }
             }
             .onErrorReturn { emptyList() }
-
-        val apiStreams = if (propertyId != null) {
-            apiProvider.getApi(MediaWalletV2Api::class)
-                .flatMap { api -> api.getStreamSelections(propertyId) }
-                .zipWith(apiProvider.getFabricEndpoint())
-                .map { (response, baseUrl) ->
-                    response.contents.orEmpty()
-                        .mapNotNull { it.toEntity(baseUrl) }
-                }
-                .saveTo(realm)
-                .map { list -> list.map { StreamItem.MediaItem.from(it) } }
-                .onErrorReturn { e ->
-                    Log.e("Error loading streams from API", e)
-                    emptyList()
-                }
-        } else {
-            Single.just(emptyList())
-        }
-
-        return Singles.zip(additionalViewsStream, apiStreams)
-            .map { (additionalViews, api) ->
-                additionalViews + api
-            }
     }
 }

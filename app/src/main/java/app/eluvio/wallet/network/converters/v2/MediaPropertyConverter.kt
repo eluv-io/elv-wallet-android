@@ -31,7 +31,7 @@ fun MediaPropertyDto.toEntity(baseUrl: String): MediaPropertyEntity? {
             .toRealmListOrEmpty()
 
         loginInfo = dto.login?.toEntity(baseUrl)
-        tenantId = dto.tenant?.id
+        tenantId = dto.tenant?.tenant_iten ?: dto.tenant?.id
 
         startScreenBackground = dto.start_screen_background?.toUrl(baseUrl)
         startScreenLogo = dto.start_screen_logo?.toUrl(baseUrl)

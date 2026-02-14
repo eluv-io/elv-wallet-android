@@ -45,8 +45,11 @@ data class MediaPropertyDto(
 
 @JsonClass(generateAdapter = true)
 data class TenantDto(
+    // This is actually the "tenant object id" (iq__...)
     @field:Json(name = "tenant_id")
     val id: String,
+    // The real tenant id (iten...)
+    val tenant_iten: String?,
 )
 
 @JsonClass(generateAdapter = true)

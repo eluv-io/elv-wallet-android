@@ -277,12 +277,14 @@ private fun PropertySwitcher(state: DynamicPageLayoutState) {
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(
-                                    start = 10.dp,
-                                    end = 40.dp,
-                                    top = 6.dp,
-                                    bottom = 6.dp
-                                )
+                                modifier = Modifier
+                                    .width(IntrinsicSize.Max)
+                                    .padding(
+                                        start = 10.dp,
+                                        end = 40.dp,
+                                        top = 6.dp,
+                                        bottom = 6.dp
+                                    )
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Check,

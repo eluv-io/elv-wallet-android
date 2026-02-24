@@ -149,13 +149,19 @@ class PropertyDetailViewModel @Inject constructor(
             Flowable.just(navArgs.propertyLinks.map { it.copy(isCurrent = it.id == propertyId) })
         } else {
             property.mapNotNull {
-                it.subpropertySelection.map { subproperty ->
+                val subpropertyLinks = it.subpropertySelection.mapNotNull { subproperty ->
                     DynamicPageLayoutState.PropertyLink(
                         id = subproperty.id,
                         name = subproperty.title ?: return@mapNotNull null,
                         isCurrent = subproperty.id == propertyId
                     )
                 }
+                val thisProperty = DynamicPageLayoutState.PropertyLink(
+                    id = it.id,
+                    name = it.name,
+                    isCurrent = it.id == propertyId
+                )
+                listOf(thisProperty) + subpropertyLinks
             }
         }
 

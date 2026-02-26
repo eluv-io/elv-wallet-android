@@ -427,23 +427,26 @@ private fun ItemRow(
 ) {
     // The 'key' function prevents from focusRestorer() from breaking when crashing when
     // filteredItems changes.
-    // From what I could tell it's kind of like 'remember' but for Composable.
-    key(items) {
-        val scrollState = rememberLazyListState()
-        val childFocusRequesters = remember(items.size) { List(items.size) { FocusRequester() } }
-        LazyRow(
-            state = scrollState,
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
-            contentPadding = PaddingValues(start = startPadding, end = Overscan.horizontalPadding),
-            modifier = modifier.focusCapturingLazyList(scrollState, childFocusRequesters)
-        ) {
-            itemsIndexed(items) { index, item ->
-                CarouselItemCard(
-                    carouselItem = item,
-                    cardHeight = CAROUSEL_CARD_HEIGHT,
-                    modifier = Modifier.focusRequester(childFocusRequesters[index])
-                )
-            }
+    // From what I could tell, it's kind of like 'remember' but for Composable.
+    // key(items) {
+    // TODO: this [key] clause is causing the screen to flicker on any update to [items].
+    //   as the comment above mentions, this was introduced to fix some issue with section filters,
+    //   but those are disabled. If we ever bring back section filters, we'll have to make sure
+    //   we don't get crashes without this [key] block.
+    val scrollState = rememberLazyListState()
+    val childFocusRequesters = remember(items.size) { List(items.size) { FocusRequester() } }
+    LazyRow(
+        state = scrollState,
+        horizontalArrangement = Arrangement.spacedBy(20.dp),
+        contentPadding = PaddingValues(start = startPadding, end = Overscan.horizontalPadding),
+        modifier = modifier.focusCapturingLazyList(scrollState, childFocusRequesters)
+    ) {
+        itemsIndexed(items) { index, item ->
+            CarouselItemCard(
+                carouselItem = item,
+                cardHeight = CAROUSEL_CARD_HEIGHT,
+                modifier = Modifier.focusRequester(childFocusRequesters[index])
+            )
         }
     }
 }

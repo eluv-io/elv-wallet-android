@@ -545,14 +545,15 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribeBy(
                 onSuccess = { streams ->
-                    val onlySelfAvail =
-                        streams.size == 1 && streams.firstOrNull()?.id == mediaItemId
-                    if (streams.isEmpty() || onlySelfAvail) {
+                    // streams always includes the current mediaItem as first element.
+                    // Show selector only if there are other streams beyond the current item.
+                    if (streams.size <= 1) {
                         Log.d("No stream selections or only one stream available")
                     } else {
                         Log.d("Loaded ${streams.size} stream selections")
                         availableStreams = streams
                         streamsButton?.isVisible = true
+                        streamSelectionPane?.setCurrentlyPlayingStreamId(currentlyPlayingStreamId)
                         streamSelectionPane?.setStreams(availableStreams)
                     }
                 },
@@ -567,6 +568,7 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
     private fun showStreamSelectionPane() {
         playerView?.hideController()
         playerView?.controllerAutoShow = false
+        streamSelectionPane?.setCurrentlyPlayingStreamId(currentlyPlayingStreamId)
         streamSelectionPane?.animateShow()
     }
 
@@ -586,6 +588,8 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             }
 
             is StreamItem.AdditionalView -> {
+                currentlyPlayingStreamId = stream.id
+                streamSelectionPane?.setCurrentlyPlayingStreamId(currentlyPlayingStreamId)
                 // Keep current streams (additional_views belong to the original media item)
                 loadVideoFromHash(stream.playableHash, stream.id)
             }

@@ -21,6 +21,8 @@ class StreamSelectionLoader @Inject constructor(
         return contentStore.observeMediaItem(mediaItemId)
             .firstOrError()
             .flatMap { media ->
+                val currentItem = StreamItem.MediaItem.from(media)
+
                 val additionalViews = media.additionalViews.mapIndexed { index, view ->
                     StreamItem.AdditionalView.from(view, index)
                 }
@@ -35,7 +37,11 @@ class StreamSelectionLoader @Inject constructor(
                                 .mapNotNull { it.toEntity(baseUrl) }
                         }
                         .saveTo(realm)
-                        .map { list -> list.map { StreamItem.MediaItem.from(it) } }
+                        .map { list ->
+                            list.map { StreamItem.MediaItem.from(it) }
+                                // Filter out current media item from sidebar results
+                                .filter { it.id != mediaItemId }
+                        }
                         .onErrorReturn { e ->
                             Log.e("Error loading streams from API", e)
                             emptyList()
@@ -44,7 +50,7 @@ class StreamSelectionLoader @Inject constructor(
                     Single.just(emptyList())
                 }
 
-                apiStreams.map { api -> additionalViews + api }
+                apiStreams.map { api -> listOf(currentItem) + additionalViews + api }
             }
             .onErrorReturn { emptyList() }
     }

@@ -26,6 +26,10 @@ class StreamSelectionPane @JvmOverloads constructor(
         adapter.setItems(streams)
     }
 
+    fun setCurrentlyPlayingStreamId(streamId: String) {
+        adapter.currentlyPlayingStreamId = streamId
+    }
+
     fun setOnStreamSelectedListener(listener: (StreamItem) -> Unit) {
         adapter.onStreamSelected = listener
     }
@@ -34,15 +38,16 @@ class StreamSelectionPane @JvmOverloads constructor(
         isVisible = true
         alpha = 0f
         translationY = height.toFloat()
-        // Scroll to first item
-        recyclerView.scrollToPosition(0)
+
+        val currentIndex = adapter.indexOfCurrentlyPlaying().coerceAtLeast(0)
+        recyclerView.scrollToPosition(currentIndex)
+
         animate()
             .alpha(1f)
             .translationY(0f)
             .setDuration(250)
             .withEndAction {
-                // Focus first button after animation
-                recyclerView.findViewHolderForAdapterPosition(0)?.itemView
+                recyclerView.findViewHolderForAdapterPosition(currentIndex)?.itemView
                     ?.findViewById<MediaGlowTextButton>(R.id.stream_name)?.requestFocus()
             }
             .start()

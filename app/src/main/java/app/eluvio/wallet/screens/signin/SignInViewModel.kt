@@ -82,7 +82,7 @@ class SignInViewModel @Inject constructor(
     private fun observeActivationData() {
         activationDataDisposable?.dispose()
         activationDataDisposable = deviceActivationStore
-            .observeActivationData(propertyId, navArgs.provider)
+            .observeActivationData(propertyId)
             .doOnNext {
                 observeActivationComplete(it)
             }

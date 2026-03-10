@@ -24,10 +24,7 @@ class DeviceActivationStore @Inject constructor(
     private val installation: Installation,
 ) {
 
-    fun observeActivationData(
-        propertyId: String,
-        loginProvider: String
-    ): Flowable<ActivationCodeResponse> {
+    fun observeActivationData(propertyId: String): Flowable<ActivationCodeResponse> {
         return apiProvider.getApi(AuthServicesApi::class)
             .zipWith(environmentStore.observeSelectedEnvironment().firstOrError())
             .flatMap { (api, env) ->
@@ -37,7 +34,6 @@ class DeviceActivationStore @Inject constructor(
                     append("&pid=$propertyId")
                     append("&installId=${installation.id.sha512}")
                     append("&origin=${Device.NAME}")
-                    if (loginProvider != "ory") append("&clear=")
                     // append("&ttl=0.008") // For testing ~30sec token expiration
                     append("#/login")
                 }

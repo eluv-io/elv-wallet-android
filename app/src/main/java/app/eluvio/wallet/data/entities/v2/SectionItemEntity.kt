@@ -47,6 +47,9 @@ class SectionItemEntity : RealmObject, EntityWithPermissions {
     override val permissionChildren: List<EntityWithPermissions>
         get() = listOfNotNull(media)
 
+    override val isHidden: Boolean
+        get() = super.isHidden || media?.isHidden == true
+
     override fun toString(): String {
         return "SectionItemEntity(id='$id', disabled='$disabled', mediaType=$mediaType, media=$media, linkData=$linkData, isPurchaseItem=$isPurchaseItem, bannerImageUrl=$bannerImageUrl, useMediaDisplaySettings=$useMediaDisplaySettings, displaySettings=$displaySettings, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions)"
     }

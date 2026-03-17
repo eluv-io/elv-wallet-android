@@ -26,7 +26,12 @@ class LiveVideoInfoEntity : EmbeddedRealmObject {
     // icon image paths.
     var icons: RealmList<String> = realmListOf()
 
-    var eventStartTime: RealmInstant? = null
+    var _eventStartTime: RealmInstant? = null
+    var eventStartTime: RealmInstant?
+        get() = _eventStartTime ?: _streamStartTime
+        set(value) {
+            _eventStartTime = value
+        }
 
     @Ignore
     val eventStarted: Boolean
@@ -34,7 +39,7 @@ class LiveVideoInfoEntity : EmbeddedRealmObject {
 
     var _streamStartTime: RealmInstant? = null
     var streamStartTime: RealmInstant?
-        get() = _streamStartTime ?: eventStartTime
+        get() = _streamStartTime ?: _eventStartTime
         set(value) {
             _streamStartTime = value
         }

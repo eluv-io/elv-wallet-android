@@ -12,6 +12,16 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+// Firebase plugins fail the build if app/google-services.json is missing.
+// The file is git-ignored and fetched on demand via bin/fetch-secrets.sh.
+// External contributors and CI builds without the secret skip Firebase entirely.
+if (file("google-services.json").exists()) {
+    apply(plugin = libs.plugins.google.services.get().pluginId)
+    apply(plugin = libs.plugins.firebase.crashlytics.get().pluginId)
+} else {
+    logger.warn("google-services.json missing — Firebase disabled for this build. Run bin/fetch-secrets.sh to enable.")
+}
+
 android {
     namespace = "app.eluvio.wallet"
     compileSdk = 36
@@ -171,6 +181,10 @@ dependencies {
 
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.datastore.rxjava3)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
 }
 
 secrets {

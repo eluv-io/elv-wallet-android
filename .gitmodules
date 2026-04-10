@@ -1,3 +1,0 @@
-[submodule "secrets"]
-	path = secrets
-	url = git@github.com:qluvio/elv-wallet-android-secrets.git

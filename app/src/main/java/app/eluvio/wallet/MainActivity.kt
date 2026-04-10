@@ -21,11 +21,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.core.util.Consumer
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import app.eluvio.wallet.navigation.ComposeNavigator
 import app.eluvio.wallet.navigation.LocalNavigator
 import app.eluvio.wallet.theme.EluvioTheme
 import app.eluvio.wallet.util.logging.Log
+import com.google.firebase.FirebaseApp
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.logEvent
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.generated.NavGraphs
 import dagger.hilt.android.AndroidEntryPoint
@@ -36,10 +40,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             EluvioTheme {
-                Box(
-                    modifier = Modifier.fillMaxSize()
-//                        .background(Color(0xFF050505))
-                ) {
+                Box(modifier = Modifier.fillMaxSize()) {
                     Image(
                         painterResource(id = R.drawable.bg_gradient),
                         contentDescription = null,
@@ -55,8 +56,13 @@ class MainActivity : ComponentActivity() {
                             navController.handleDeepLink(it)
                         }
                         this@MainActivity.addOnNewIntentListener(consumer)
+
+                        val screenTracker = firebaseScreenTracker(this@MainActivity)
+                        navController.addOnDestinationChangedListener(screenTracker)
+
                         onDispose {
                             this@MainActivity.removeOnNewIntentListener(consumer)
+                            navController.removeOnDestinationChangedListener(screenTracker)
                         }
                     }
                     val navigator = remember {
@@ -90,6 +96,29 @@ class MainActivity : ComponentActivity() {
             true
         } else {
             super.onKeyUp(keyCode, event)
+        }
+    }
+}
+
+/**
+ * Returns a [NavController.OnDestinationChangedListener] that logs screen views to Firebase
+ * Analytics. No-ops if Firebase isn't initialized (e.g. builds without google-services.json).
+ */
+private fun firebaseScreenTracker(context: Context): NavController.OnDestinationChangedListener {
+    // Builds without google-services.json don't apply the google-services Gradle plugin,
+    // so Firebase is never auto-initialized and calling FirebaseAnalytics.getInstance() would
+    // throw IllegalStateException. getApps() returns empty in that case — bail out and no-op.
+    val analytics = FirebaseApp.getApps(context)
+        .firstOrNull()
+        ?.let { FirebaseAnalytics.getInstance(context) }
+    return NavController.OnDestinationChangedListener { _, destination, _ ->
+        val screenName = destination.route
+            ?.substringBefore("/")
+            ?.substringBefore("?")
+            ?: return@OnDestinationChangedListener
+        analytics?.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
+            param(FirebaseAnalytics.Param.SCREEN_NAME, screenName)
+            param(FirebaseAnalytics.Param.SCREEN_CLASS, screenName)
         }
     }
 }

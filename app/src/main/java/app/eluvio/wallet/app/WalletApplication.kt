@@ -10,6 +10,7 @@ import app.eluvio.wallet.util.coil.FabricImageInterceptor
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.decode.SvgDecoder
+import com.google.firebase.FirebaseApp
 import dagger.hilt.android.HiltAndroidApp
 import io.reactivex.rxjava3.plugins.RxJavaPlugins
 import kotlinx.coroutines.launch
@@ -35,8 +36,7 @@ class WalletApplication : Application(), ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
 
-        // Consume all errors without crashing.
-        // TODO: report to some analytics service
+        // Consume all errors without crashing, but report to Crashlytics.
         RxJavaPlugins.setErrorHandler {
             Timber.e(it)
         }
@@ -48,6 +48,10 @@ class WalletApplication : Application(), ImageLoaderFactory {
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
+        } else if (FirebaseApp.getApps(this).isNotEmpty()) {
+            // No FirebaseApp means the google-services plugin wasn't applied (no
+            // google-services.json at build time). Touching Crashlytics in that state throws.
+            Timber.plant(CrashlyticsTree())
         }
 
         installReferrerHandler.captureInstallReferrer()

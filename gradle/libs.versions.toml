@@ -34,6 +34,9 @@ okhttp-mockwebserver = "5.2.0"
 # Next version (2.1.0) and above, require Kotlin 2.0
 realm = "3.2.9"
 kotlinx-coroutines = "1.10.2"
+firebase-bom = "33.12.0"
+firebase-crashlytics-plugin = "3.0.3"
+google-services = "4.4.2"
 gradle-secrets = "2.0.1"
 junit = "4.13.2"
 reflections = "0.10.2"
@@ -86,6 +89,9 @@ okhttp-mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.
 rxandroid = { module = "io.reactivex.rxjava3:rxandroid", version.ref = "rxandroid" }
 rxjava = { module = "io.reactivex.rxjava3:rxjava", version.ref = "rxjava" }
 rxkotlin = { module = "io.reactivex.rxjava3:rxkotlin", version.ref = "rxkotlin" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 gradle-secrets = { module = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin", version.ref = "gradle-secrets" }
 # Realm is deprecated, so we're using this community fork for new builds and kotlin 2.0+ support.
 realm = { module = "com.infomaniak.realm.kotlin:library-base", version.ref = "realm" }
@@ -106,6 +112,8 @@ org-jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.re
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = 'com.google.devtools.ksp', version.ref = 'ksp' }
 realm = { id = "com.infomaniak.realm.kotlin", version.ref = "realm" }
+firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-crashlytics-plugin" }
+google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
 gradle-secrets = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "gradle-secrets" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin_version" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin_version" }

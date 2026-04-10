@@ -3,6 +3,7 @@ package app.eluvio.wallet.screens.dashboard.profile
 import android.os.Parcelable
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
+import app.eluvio.wallet.BuildConfig
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.data.SignOutHandler
 import app.eluvio.wallet.data.stores.Environment
@@ -16,6 +17,9 @@ import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
 import kotlinx.parcelize.Parcelize
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -36,6 +40,8 @@ class ProfileViewModel @Inject constructor(
         val fabricNode: String = "",
         val authNode: String = "",
         val ethNode: String = "",
+        val sessionExpiration: String? = null,
+        val appVersion: String = "",
         val stagingFlag: Boolean = false
     ) : Parcelable
 
@@ -46,8 +52,15 @@ class ProfileViewModel @Inject constructor(
             fabricConfigStore.observeFabricConfiguration(),
             tokenStore.walletAddress.observe(),
             environmentStore.stagingFlag.observe(),
-        ) { env, config, walletAddress, stagingFlag ->
+            tokenStore.fabricTokenExpiration.observe(),
+        ) { env, config, walletAddress, stagingFlag, tokenExpiration ->
             val address = walletAddress.orDefault(null) ?: ""
+            val expirationText = tokenExpiration.orDefault(null)
+                ?.toLongOrNull()
+                ?.let {
+                    SimpleDateFormat("M/d/yy, h:mm a", Locale.getDefault())
+                        .format(Date(it))
+                }
             State(
                 address = address,
                 userId = "iusr${address.base58}",
@@ -55,6 +68,8 @@ class ProfileViewModel @Inject constructor(
                 fabricNode = config.fabricEndpoint,
                 authNode = config.authdEndpoint,
                 ethNode = config.network.services.ethereumApi.first(),
+                sessionExpiration = expirationText,
+                appVersion = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
                 stagingFlag = stagingFlag.orDefault(false) == true
             )
         }

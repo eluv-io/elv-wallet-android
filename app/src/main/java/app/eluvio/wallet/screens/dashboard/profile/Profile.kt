@@ -3,7 +3,7 @@ package app.eluvio.wallet.screens.dashboard.profile
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,7 +11,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -19,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -32,6 +36,7 @@ import app.eluvio.wallet.screens.common.TvButton
 import app.eluvio.wallet.screens.common.withAlpha
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.header_30
+import app.eluvio.wallet.theme.label_24
 import app.eluvio.wallet.util.compose.requestInitialFocus
 import app.eluvio.wallet.util.subscribeToState
 
@@ -48,47 +53,61 @@ private fun Profile(
     onSignOut: () -> Unit,
     onStatingToggled: (Boolean) -> Unit
 ) {
-    Box(
-        contentAlignment = Alignment.Center,
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(Overscan.defaultPadding(excludeTop = true))
     ) {
-        Column(
-            horizontalAlignment = Alignment.Start,
-            modifier = Modifier.fillMaxWidth(0.6f)
+        Spacer(Modifier.weight(1f))
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Spacer(Modifier.weight(1f)) // take up remaining space
-            Header("PROFILE")
-            Spacer(Modifier.height(10.dp))
-            InfoField("Address: ${state.address}")
-            Spacer(Modifier.height(10.dp))
-            InfoField("User Id: ${state.userId}")
+            // Left column: Profile + App
+            Column(modifier = Modifier.weight(1f)) {
+                Header("PROFILE")
+                Spacer(Modifier.height(10.dp))
+                InfoField("Address: ${state.address}")
+                Spacer(Modifier.height(10.dp))
+                InfoField("User Id: ${state.userId}")
 
-            Spacer(Modifier.height(20.dp))
-            Header("FABRIC")
-            Spacer(Modifier.height(10.dp))
-            val network = state.network?.prettyEnvName?.let { stringResource(it) }
-            InfoField("Network: $network")
-            Spacer(Modifier.height(10.dp))
-            InfoField("Fabric Node: ${state.fabricNode}")
-            Spacer(Modifier.height(10.dp))
-            InfoField("Authority Service: ${state.authNode}")
-            Spacer(Modifier.height(10.dp))
-            InfoField("Eth Service: ${state.ethNode}")
+                Spacer(Modifier.height(20.dp))
+                Header("APP")
+                Spacer(Modifier.height(10.dp))
+                InfoField("Version: ${state.appVersion}")
+            }
 
-            Spacer(Modifier.weight(1f)) // take up remaining space
+            // Right column: Fabric + toggles
+            Column(modifier = Modifier.weight(1f)) {
+                Header("FABRIC")
+                Spacer(Modifier.height(10.dp))
+                val network = state.network?.prettyEnvName?.let { stringResource(it) }
+                InfoField("Network: $network")
+                Spacer(Modifier.height(10.dp))
+                InfoField("Fabric Node: ${state.fabricNode}")
+                Spacer(Modifier.height(10.dp))
+                InfoField("Authority Service: ${state.authNode}")
+                Spacer(Modifier.height(10.dp))
+                InfoField("Eth Service: ${state.ethNode}")
+                state.sessionExpiration?.let {
+                    Spacer(Modifier.height(10.dp))
+                    InfoField("Session Expiration: $it")
+                }
 
-            StagingToggleRow(state.stagingFlag, onStatingToggled)
-            Spacer(Modifier.height(10.dp))
-            TvButton(
-                text = "Sign Out",
-                onClick = onSignOut,
-                Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .requestInitialFocus()
-            )
+                Spacer(Modifier.height(10.dp))
+                StagingToggleRow(state.stagingFlag, onStatingToggled)
+            }
         }
+
+        Spacer(Modifier.weight(1f))
+
+        TvButton(
+            text = "Sign Out",
+            onClick = onSignOut,
+            Modifier.requestInitialFocus()
+        )
     }
 }
 
@@ -109,12 +128,13 @@ private fun StagingToggleRow(stagingFlag: Boolean, onStatingToggled: (Boolean) -
             .padding(10.dp)
             .fillMaxWidth()
     ) {
-        Text("Set to staging", style = MaterialTheme.typography.header_30)
+        Text("Set to staging", style = MaterialTheme.typography.label_24)
         Spacer(Modifier.weight(1f))
         Checkbox(
             checked = stagingFlag,
             onCheckedChange = onStatingToggled,
             interactionSource = interactionSource,
+            modifier = Modifier.size(20.dp)
         )
     }
 }
@@ -132,7 +152,7 @@ private fun Header(text: String) {
 private fun InfoField(text: String) {
     Text(
         text,
-        style = MaterialTheme.typography.header_30,
+        style = MaterialTheme.typography.label_24.copy(fontWeight = FontWeight.Normal),
         modifier = Modifier
             .background(Color(0xff232323), shape = RoundedCornerShape(4.dp))
             .padding(10.dp)
@@ -151,6 +171,8 @@ private fun ProfilePreview() = EluvioThemePreview {
             fabricNode = "https://host-2-2-2-2.cf.io",
             authNode = "https://host-2-2-2-2.cf.io/as",
             ethNode = "https://host-2-2-2-2.cf.io/eth",
+            sessionExpiration = "3/19/26, 12:26 PM",
+            appVersion = "1.2.0 (334)",
         ),
         onSignOut = {},
         onStatingToggled = {},

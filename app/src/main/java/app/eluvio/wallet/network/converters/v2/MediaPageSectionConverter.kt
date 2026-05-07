@@ -62,7 +62,11 @@ private fun SectionItemDto.toEntity(baseUrl: String): SectionItemEntity? {
     return SectionItemEntity().apply {
         id = dto.id
         mediaType = dto.mediaType
-        media = dto.media?.toEntity(baseUrl)
+        // Add the sectionItem id as a prefix to prevent conflicts when pulling media items from DB
+        // and multiple section items point to the same media. This causes issues in permission
+        // resolution. We don't need to prefix SectionItems with Section ids because they are
+        // unique, and there's no way to have 2 sections point to the same sectionItem.
+        media = dto.media?.toEntity(baseUrl, parentPrefix = "${dto.id}_")
         if (dto.type == "media" && media == null) {
             // This section is supposed to be a media item, but the media is missing. Ignore.
             return null

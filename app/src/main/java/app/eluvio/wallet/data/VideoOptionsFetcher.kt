@@ -47,12 +47,15 @@ class VideoOptionsFetcher @Inject constructor(
         propertyId: String,
         mediaItemId: String
     ): Single<VideoPlayoutInfo> {
+        // This is kind of hacky and dangerous, but in case the media id is prefixed (in the case
+        // of sectionItems), we want to strip that prefix before asking the server about it.
+        val id = mediaItemId.substringAfter("_")
         return apiProvider.getApi(VideoPlayoutApi::class)
             .zipWith(apiProvider.getFabricEndpoint())
             .flatMap { (api, baseUrl) ->
                 api.getVideoOptions(
                     propertyId = propertyId,
-                    mediaItemId = mediaItemId
+                    mediaItemId = id
                 ).map { response ->
                     response.toVideoPlayoutInfo(baseUrl, context, httpClient)
                         ?: throw RuntimeException("No supported video formats found in $response")

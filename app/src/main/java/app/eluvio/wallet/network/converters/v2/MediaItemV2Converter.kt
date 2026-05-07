@@ -19,12 +19,8 @@ import app.eluvio.wallet.util.realm.toRealmDictionaryOrEmpty
 import app.eluvio.wallet.util.realm.toRealmInstant
 import app.eluvio.wallet.util.realm.toRealmListOrEmpty
 
-fun MediaItemV2Dto.toEntity(baseUrl: String): MediaEntity? {
+fun MediaItemV2Dto.toEntity(baseUrl: String, parentPrefix: String = ""): MediaEntity {
     val dto = this
-//    if (dto.mediaLink?.hashContainer?.get("resolution_error") != null) {
-//        return null
-//    }
-
     val display = (dto as DisplaySettingsDto).toEntity(baseUrl)
 
     val (imageFile, aspectRatio) = dto.mediaFile?.let { it to null }
@@ -33,7 +29,7 @@ fun MediaItemV2Dto.toEntity(baseUrl: String): MediaEntity? {
         ?: dto.thumbnail_image_landscape?.let { it to AspectRatio.WIDE }
         ?: (null to null)
     return MediaEntity().apply {
-        id = dto.id
+        id = parentPrefix + dto.id
         name = dto.title ?: ""
         displaySettings = display
         mediaFile = imageFile?.path ?: ""

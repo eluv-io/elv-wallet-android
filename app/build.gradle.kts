@@ -108,8 +108,6 @@ dependencies {
 
     implementation(libs.accompanist.placeholder.material)
 
-    implementation(libs.compose.destinations)
-    ksp(libs.compose.destinations.ksp)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)

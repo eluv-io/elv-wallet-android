@@ -1,24 +1,16 @@
 package app.eluvio.wallet.navigation
 
-import app.eluvio.wallet.BuildConfig
+import app.eluvio.wallet.core.BuildConfig
 import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.entities.v2.permissions.PermissionBehavior
 import app.eluvio.wallet.data.entities.v2.permissions.behaviorEnum
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.util.logging.Log
-import com.ramcosta.composedestinations.generated.destinations.ExternalMediaQrDialogDestination
-import com.ramcosta.composedestinations.generated.destinations.ImageGalleryDestination
-import com.ramcosta.composedestinations.generated.destinations.LockedMediaDialogDestination
-import com.ramcosta.composedestinations.generated.destinations.MediaGridDestination
-import com.ramcosta.composedestinations.generated.destinations.PurchasePromptDestination
-import com.ramcosta.composedestinations.generated.destinations.UpcomingVideoDestination
-import com.ramcosta.composedestinations.generated.destinations.VideoPlayerActivityDestination
-import com.ramcosta.composedestinations.spec.Direction
 
 /**
  * Figures out where we should go when a media item is clicked.
  */
-fun MediaEntity.onClickDirection(permissionContext: PermissionContext?): Direction? {
+fun MediaEntity.onClickTarget(permissionContext: PermissionContext?): NavTarget? {
     return when (permissionContext) {
         null -> clickWithoutContext(this)
         else -> clickWithPermissionContext(this, permissionContext)
@@ -27,7 +19,7 @@ fun MediaEntity.onClickDirection(permissionContext: PermissionContext?): Directi
             if (result != null) {
                 Log.v("Clicked on Media, navigating to: $result")
             } else {
-                Log.w("No direction found for media: $this")
+                Log.w("No target found for media: $this")
             }
         }
 }
@@ -35,16 +27,16 @@ fun MediaEntity.onClickDirection(permissionContext: PermissionContext?): Directi
 private fun clickWithPermissionContext(
     media: MediaEntity,
     permissionContext: PermissionContext
-): Direction? {
+): NavTarget? {
     return when {
         BuildConfig.DISABLE_PURCHASE_PROMPTS && (media.showAlternatePage || media.showPurchaseOptions) -> null
 
         media.showAlternatePage -> {
-            PurchasePromptDestination(permissionContext, pageOverride = media.resolvedPermissions?.alternatePageId)
+            NavTarget.PurchasePrompt(permissionContext, pageOverride = media.resolvedPermissions?.alternatePageId)
         }
 
         media.showPurchaseOptions -> {
-            PurchasePromptDestination(permissionContext)
+            NavTarget.PurchasePrompt(permissionContext)
         }
 
         media.isUnauthorizedWithUnknownBehavior -> {
@@ -54,12 +46,12 @@ private fun clickWithPermissionContext(
 
         media.mediaItemsIds.isNotEmpty() -> {
             // This media item is a container for other media (e.g. a media list/collection)
-            MediaGridDestination(permissionContext)
+            NavTarget.MediaGrid(permissionContext)
         }
 
         media.liveVideoInfo?.streamStarted == false -> {
             // this is a live video that hasn't started yet.
-            UpcomingVideoDestination(
+            NavTarget.UpcomingVideo(
                 propertyId = permissionContext.propertyId,
                 mediaItemId = media.id,
                 sourcePageId = permissionContext.pageId,
@@ -69,7 +61,7 @@ private fun clickWithPermissionContext(
         media.mediaType in listOf(
             MediaEntity.MEDIA_TYPE_LIVE_VIDEO,
             MediaEntity.MEDIA_TYPE_VIDEO,
-        ) -> VideoPlayerActivityDestination(
+        ) -> NavTarget.VideoPlayer(
             mediaItemId = media.id,
             mediaTitle = media.requireDisplaySettings().title,
             propertyId = permissionContext.propertyId
@@ -83,10 +75,10 @@ private fun clickWithPermissionContext(
  * Handles click on media that has either been pre-checked for permissions, or comes from the legacy
  * world of NFTs without v2 permissions.
  */
-private fun clickWithoutContext(media: MediaEntity): Direction? {
+private fun clickWithoutContext(media: MediaEntity): NavTarget? {
     if (media.requireLockedState().locked) {
         // This is media_wallet_v1 concept of "locked". Deprecated in media_wallet_v2.
-        return LockedMediaDialogDestination(
+        return NavTarget.LockedMediaDialog(
             media.nameOrLockedName(),
             media.imageOrLockedImage(),
             media.requireLockedState().subtitle,
@@ -95,13 +87,13 @@ private fun clickWithoutContext(media: MediaEntity): Direction? {
     } else {
         return when (media.mediaType) {
             MediaEntity.MEDIA_TYPE_LIVE_VIDEO,
-            MediaEntity.MEDIA_TYPE_VIDEO -> VideoPlayerActivityDestination(media.id)
+            MediaEntity.MEDIA_TYPE_VIDEO -> NavTarget.VideoPlayer(media.id)
 
             MediaEntity.MEDIA_TYPE_IMAGE,
-            MediaEntity.MEDIA_TYPE_GALLERY -> ImageGalleryDestination(media.id)
+            MediaEntity.MEDIA_TYPE_GALLERY -> NavTarget.ImageGallery(media.id)
 
             else -> if (media.mediaFile.isNotEmpty() || media.mediaLinks.isNotEmpty()) {
-                ExternalMediaQrDialogDestination(media.id)
+                NavTarget.ExternalMediaQrDialog(media.id)
             } else {
                 Log.w("Tried to open unsupported media with no links: $media")
                 null

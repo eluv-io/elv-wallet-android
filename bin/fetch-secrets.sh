@@ -2,7 +2,7 @@
 #
 # Fetches build secrets from the team 1Password vault:
 #   - secrets/secrets.properties (Mux env keys, optional overrides)
-#   - app/google-services.json   (Firebase config — without it, Firebase is disabled at build time)
+#   - tv/google-services.json    (Firebase config — without it, Firebase is disabled at build time)
 #
 # Prerequisites:
 #   - Membership in the `client-api-secrets` 1Password vault.
@@ -28,5 +28,9 @@ op inject \
 echo "Wrote $REPO_ROOT/secrets/secrets.properties"
 
 op read "op://client-api-secrets/Firebase analytics AndroidTV json/google-services.json" \
-  > "$REPO_ROOT/app/google-services.json"
-echo "Wrote $REPO_ROOT/app/google-services.json"
+  > "$REPO_ROOT/tv/google-services.json"
+echo "Wrote $REPO_ROOT/tv/google-services.json"
+
+op read "op://client-api-secrets/Firebase analytics Android Mobile json/google-services.json" \
+  > "$REPO_ROOT/mobile/google-services.json"
+echo "Wrote $REPO_ROOT/mobile/google-services.json"

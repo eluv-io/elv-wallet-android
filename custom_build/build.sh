@@ -62,12 +62,12 @@ if [ $verifyOnly -eq 1 ]; then
 fi
 
 # copy icons
-rm -rf ./../app/src/main/res/mipmap*
-cp -r ./config/android/res ./../app/src/main
-cp ./config/androidtv/res/drawable-xhdpi/* ./../app/src/main/res/drawable-xhdpi/
+rm -rf ./../tv/src/main/res/mipmap*
+cp -r ./config/android/res ./../tv/src/main
+cp ./config/androidtv/res/drawable-xhdpi/* ./../tv/src/main/res/drawable-xhdpi/
 
 cd ..
-./gradlew assembleDefaultDebug assembleDefaultRelease bundleDefaultRelease \
+./gradlew assembleDebug assembleRelease bundleRelease \
   -PapplicationId="$APPLICATION_ID" \
   -PversionCode=$VERSION_CODE \
   -PversionName="$VERSION_NAME" \
@@ -81,7 +81,7 @@ cd ..
 
 # Make a copy of the generated APK and AAB files
 mkdir -p ./custom_build/build_output
-cp ./app/build/outputs/apk/default/release/app-default-release.apk ./custom_build/build_output/
-cp ./app/build/outputs/apk/default/debug/app-default-debug.apk ./custom_build/build_output/
-cp ./app/build/outputs/bundle/defaultRelease/app-default-release.aab ./custom_build/build_output/
+cp ./tv/build/outputs/apk/release/tv-release.apk ./custom_build/build_output/
+cp ./tv/build/outputs/apk/debug/tv-debug.apk ./custom_build/build_output/
+cp ./tv/build/outputs/bundle/release/tv-release.aab ./custom_build/build_output/
 echo "Build completed successfully. APK and AAB at: $(pwd)/custom_build/build_output"

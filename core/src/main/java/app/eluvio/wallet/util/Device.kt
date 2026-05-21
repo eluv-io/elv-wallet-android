@@ -1,9 +1,8 @@
 package app.eluvio.wallet.util
 
 import android.os.Build
-import androidx.compose.ui.text.capitalize
-import androidx.compose.ui.text.intl.Locale
+import java.util.Locale
 
 object Device {
-    val NAME = "${Build.MANUFACTURER.capitalize(Locale.current)} ${Build.MODEL}"
+    val NAME = "${Build.MANUFACTURER.replaceFirstChar { it.titlecase(Locale.getDefault()) }} ${Build.MODEL}"
 }

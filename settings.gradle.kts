@@ -18,4 +18,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "elv-wallet-android"
 include(":tv")
+include(":mobile")
 include(":core")

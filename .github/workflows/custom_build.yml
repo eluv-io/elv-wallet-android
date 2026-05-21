@@ -35,9 +35,9 @@ jobs:
 
       - name: Rename APK/AAB
         run: |
-          mv custom_build/build_output/app-default-debug.apk custom-wallet-debug-${{ env.APK_VERSION }}.apk
-          mv custom_build/build_output/app-default-release.apk custom-wallet-release-${{ env.APK_VERSION }}.apk
-          mv custom_build/build_output/app-default-release.aab custom-wallet-release-${{ env.APK_VERSION }}.aab
+          mv custom_build/build_output/tv-debug.apk custom-wallet-debug-${{ env.APK_VERSION }}.apk
+          mv custom_build/build_output/tv-release.apk custom-wallet-release-${{ env.APK_VERSION }}.apk
+          mv custom_build/build_output/tv-release.aab custom-wallet-release-${{ env.APK_VERSION }}.aab
 
       - name: Upload APK/AAB
         uses: actions/upload-artifact@v4

@@ -28,6 +28,8 @@ This defaults to "fullscreen/top-level" navigation. For nested navigation, provi
 There's a lot of boilerplate involved with creating a new Composable/ViewModel pair.
 Use this [Template with multiple files](https://www.jetbrains.com/help/idea/templates-with-multiple-files.html) to generate the files for you.
 
+Register the screen in `MainNavHost` with `composable<${NAME}NavArgs> { ${NAME}() }`.
+
 ```
 package ${PACKAGE_NAME}
 
@@ -35,12 +37,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.util.subscribeToState
-import com.ramcosta.composedestinations.annotation.Destination
 
-@Destination<MainGraph>(navArgs = ${NAME}NavArgs::class)
 @Composable
 fun ${NAME}() {
     hiltViewModel<${NAME}ViewModel>().subscribeToState { vm, state ->
@@ -76,10 +75,13 @@ class ${NAME}ViewModel @Inject constructor(
 }
 ```
 
-And for the NavArgs. Not every screen will need this, but it's easier to delete when not needed, than write it out when it is.
+And for the NavArgs. Not every screen will need this, but it's easier to delete when not needed, than write it out when it is. `@Serializable` is required so Nav 2.8 can encode/decode the route; non-primitive fields also need a typeMap entry.
 
 ```
 package ${PACKAGE_NAME}
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class ${NAME}NavArgs(val arg1: String)
 ```

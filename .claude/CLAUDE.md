@@ -4,7 +4,7 @@
 
 Build and run on emulator:
 ```
-./gradlew installDefaultDebug 2>&1 | tail -10 && adb shell monkey -p app.eluvio.wallet.debug -c android.intent.category.LAUNCHER 1
+./gradlew :tv:installDebug 2>&1 | tail -10 && adb shell monkey -p app.eluvio.wallet.debug -c android.intent.category.LAUNCHER 1
 ```
 
 ## Project Info

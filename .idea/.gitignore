@@ -3,3 +3,6 @@
 /workspace.xml
 # GitHub Copilot persisted chat sessions
 /copilot/chatSessions
+# Per-user IDE preferences (no build impact)
+/markdown.xml
+/appInsightsSettings.xml

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Media Wallet</string>
+    <string name="sign_in_button">Sign In</string>
+
+    <string name="dashboard_tab_discover">Home</string>
+    <string name="dashboard_tab_my_items">My Items</string>
+    <string name="dashboard_tab_my_media">My Media</string>
+    <string name="dashboard_tab_profile">Profile</string>
+    <string name="dashboard_tab_search">Search</string>
+    <string name="request_new_code">Request New Code</string>
+    <string name="no_content_warning">No items to display</string>
+</resources>

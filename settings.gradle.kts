@@ -17,4 +17,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "elv-wallet-android"
-include(":app")
+include(":tv")
+include(":core")

@@ -71,17 +71,6 @@ android {
         }
     }
 
-    flavorDimensions += listOf("server")
-    productFlavors {
-        create("default") {
-            dimension = "server"
-        }
-        create("mock") {
-            dimension = "server"
-            applicationIdSuffix = ".mock"
-        }
-    }
-
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

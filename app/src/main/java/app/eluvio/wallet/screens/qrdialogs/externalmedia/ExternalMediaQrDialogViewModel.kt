@@ -13,20 +13,20 @@ import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.di.ApiProvider
 import app.eluvio.wallet.screens.common.generateQrCode
 import app.eluvio.wallet.util.logging.Log
-import com.ramcosta.composedestinations.generated.destinations.ExternalMediaQrDialogDestination
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
 import kotlinx.parcelize.Parcelize
-import javax.inject.Inject
 
-@HiltViewModel
-class ExternalMediaQrDialogViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+@HiltNavKeyViewModel
+open class ExternalMediaQrDialogViewModel(
+    @NavArg private val navArgs: ExternalMediaQrDialogNavArgs,
     private val contentStore: ContentStore,
     private val tokenStore: TokenStore,
     private val apiProvider: ApiProvider,
     private val urlShortener: UrlShortener,
+    savedStateHandle: SavedStateHandle,
 ) : BaseViewModel<ExternalMediaQrDialogViewModel.State>(State(), savedStateHandle) {
 
     @Immutable
@@ -37,7 +37,7 @@ class ExternalMediaQrDialogViewModel @Inject constructor(
         val error: Boolean = false
     ) : Parcelable
 
-    private val mediaId = ExternalMediaQrDialogDestination.argsFrom(savedStateHandle).mediaItemId
+    private val mediaId = navArgs.mediaItemId
     override fun onResume() {
         super.onResume()
         apiProvider.getFabricEndpoint()

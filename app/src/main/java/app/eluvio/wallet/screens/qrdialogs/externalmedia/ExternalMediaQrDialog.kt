@@ -21,13 +21,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import app.eluvio.wallet.navigation.LocalNavigator
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.screens.common.DelayedFullscreenLoader
-import app.eluvio.wallet.screens.common.FullscreenDialogStyle
 import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.common.TvButton
 import app.eluvio.wallet.screens.common.generateQrCodeBlocking
@@ -36,16 +34,10 @@ import app.eluvio.wallet.theme.carousel_48
 import app.eluvio.wallet.theme.title_62
 import app.eluvio.wallet.util.compose.requestInitialFocus
 import app.eluvio.wallet.util.subscribeToState
-import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.annotation.RootGraph
 
-@Destination<RootGraph>(
-    style = FullscreenDialogStyle::class,
-    navArgs = ExternalMediaQrDialogNavArgs::class
-)
 @Composable
-fun ExternalMediaQrDialog() {
-    hiltViewModel<ExternalMediaQrDialogViewModel>().subscribeToState { _, state ->
+fun ExternalMediaQrDialog(vm: ExternalMediaQrDialogViewModel) {
+    vm.subscribeToState { _, state ->
         ExternalMediaQrDialog(state)
     }
 }

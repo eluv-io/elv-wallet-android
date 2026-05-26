@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.app.Events
 import app.eluvio.wallet.data.FabricUrl
+import app.eluvio.wallet.data.GridContentOverride
 import app.eluvio.wallet.data.entities.v2.DisplayFormat
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
 import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
@@ -19,19 +20,19 @@ import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState
 import app.eluvio.wallet.screens.property.toCarouselItems
 import app.eluvio.wallet.util.logging.Log
-import com.ramcosta.composedestinations.generated.destinations.MediaGridDestination
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
-import javax.inject.Inject
 
-@HiltViewModel
-class MediaGridViewModel @Inject constructor(
+@HiltNavKeyViewModel
+open class MediaGridViewModel(
+    @NavArg private val navArgs: MediaGridNavArgs,
     private val permissionContextResolver: PermissionContextResolver,
     private val contentStore: ContentStore,
     private val playbackStore: PlaybackStore,
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
 ) : BaseViewModel<MediaGridViewModel.State>(State(), savedStateHandle) {
 
     @Immutable
@@ -42,8 +43,6 @@ class MediaGridViewModel @Inject constructor(
         val bgColor: String? = null,
         val bgImageUrl: FabricUrl? = null,
     )
-
-    private val navArgs = MediaGridDestination.argsFrom(savedStateHandle)
     private val permissionContext = navArgs.permissionContext
 
     override fun onResume() {

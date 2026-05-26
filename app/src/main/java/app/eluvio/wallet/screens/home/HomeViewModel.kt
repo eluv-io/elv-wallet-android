@@ -1,6 +1,6 @@
 package app.eluvio.wallet.screens.home
 
-import androidx.lifecycle.SavedStateHandle
+import androidx.navigation3.runtime.NavKey
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.data.AuthenticationService
 import app.eluvio.wallet.data.entities.deeplink.DeeplinkRequestEntity
@@ -9,31 +9,27 @@ import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.asNewRoot
 import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.util.logging.Log
-import com.ramcosta.composedestinations.generated.destinations.DashboardDestination
-import com.ramcosta.composedestinations.generated.destinations.HomeDestination
-import com.ramcosta.composedestinations.generated.destinations.NftClaimDestination
-import com.ramcosta.composedestinations.generated.destinations.VideoPlayerActivityDestination
-import com.ramcosta.composedestinations.spec.Direction
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
-import javax.inject.Inject
+import app.eluvio.wallet.screens.dashboard.DashboardNavArgs
+import app.eluvio.wallet.screens.deeplink.NftClaimNavArgs
+import app.eluvio.wallet.screens.videoplayer.VideoPlayerArgs
 
-@HiltViewModel
-class HomeViewModel @Inject constructor(
+@HiltNavKeyViewModel
+open class HomeViewModel(
+    @NavArg private val navArgs: DeeplinkArgs,
     private val tokenStore: TokenStore,
     private val deeplinkStore: DeeplinkStore,
     private val authenticationService: AuthenticationService,
-    savedStateHandle: SavedStateHandle,
 ) : BaseViewModel<HomeViewModel.State>(State()) {
     data class State(
         // Loading state isn't shown by default, since usually this screen is only shown for a
         // moment while figuring out where to go next.
         val showLoading: Boolean = false,
     )
-
-    private val navArgs = HomeDestination.argsFrom(savedStateHandle)
 
     override fun onResume() {
         super.onResume()
@@ -50,7 +46,7 @@ class HomeViewModel @Inject constructor(
                 },
                 onComplete = {
                     // No Deeplink, proceed with normal flow
-                    navigateTo(DashboardDestination.asNewRoot())
+                    navigateTo(DashboardNavArgs.asNewRoot())
                 },
                 onError = { }
             )
@@ -79,7 +75,7 @@ class HomeViewModel @Inject constructor(
                     onError = {
                         Log.e("Failed to get fabric token", it)
                         // We failed to get a fabric token, so we just navigate to Discover.
-                        navigateTo(DashboardDestination.asNewRoot())
+                        navigateTo(DashboardNavArgs.asNewRoot())
                     }
                 )
                 .addTo(disposables)
@@ -87,10 +83,10 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun navigateToDeeplink(deepLink: DeeplinkRequestEntity) {
-        navigateTo(DashboardDestination.asNewRoot())
+        navigateTo(DashboardNavArgs.asNewRoot())
         when (deepLink.action) {
-            "items" -> deepLink.toNftClaimDestination()
-            "play" -> deepLink.toVideoPlayerDestination()
+            "items" -> deepLink.toNftClaimTarget()
+            "play" -> deepLink.toVideoPlayerTarget()
             else -> {
                 Log.e("Unknown action: ${deepLink.action}")
                 null
@@ -99,17 +95,17 @@ class HomeViewModel @Inject constructor(
     }
 
 
-    private fun DeeplinkRequestEntity.toVideoPlayerDestination(): Direction {
+    private fun DeeplinkRequestEntity.toVideoPlayerTarget(): NavKey {
         //TODO: fix this hack once we figure out what we actually want to do with ://play actions
-        return VideoPlayerActivityDestination(
+        return VideoPlayerArgs(
             mediaItemId = "fake - won't be used",
             deeplinkhack_contract = contract
         )
     }
 }
 
-fun DeeplinkRequestEntity.toNftClaimDestination(): Direction? {
-    return NftClaimDestination(
+fun DeeplinkRequestEntity.toNftClaimTarget(): NavKey? {
+    return NftClaimNavArgs(
         marketplace = marketplace ?: return null,
         sku = sku ?: return null,
         signedEntitlementMessage = entitlement,

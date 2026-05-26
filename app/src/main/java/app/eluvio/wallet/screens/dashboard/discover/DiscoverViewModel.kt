@@ -2,16 +2,15 @@ package app.eluvio.wallet.screens.dashboard.discover
 
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
-import app.eluvio.wallet.BuildConfig
+import app.eluvio.wallet.core.BuildConfig
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.app.Events
+import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.entities.v2.MediaPropertyEntity
 import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.util.logging.Log
-import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
-import com.ramcosta.composedestinations.generated.destinations.SignInDestination
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.kotlin.addTo
@@ -19,6 +18,8 @@ import io.reactivex.rxjava3.kotlin.combineLatest
 import io.reactivex.rxjava3.kotlin.subscribeBy
 import io.reactivex.rxjava3.processors.PublishProcessor
 import javax.inject.Inject
+import app.eluvio.wallet.screens.property.PropertyDetailNavArgs
+import app.eluvio.wallet.screens.signin.SignInNavArgs
 
 @HiltViewModel
 class DiscoverViewModel @Inject constructor(
@@ -48,11 +49,11 @@ class DiscoverViewModel @Inject constructor(
             val skipLogin: Boolean,
 
             // For displaying Property-specific branding in the Discover screen.
-            val cardImage: String?,
+            val cardImage: FabricUrl?,
             val focusBackgroundUrl: String?,
 
             // For custom, Property-specific builds only.
-            val startScreenLogo: String?,
+            val startScreenLogo: FabricUrl?,
             val startScreenBackground: String?,
         )
     }
@@ -120,18 +121,18 @@ class DiscoverViewModel @Inject constructor(
     }
 
     fun onPropertyClicked(property: State.Property) {
-        val direction = PropertyDetailDestination(property.id)
+        val target = PropertyDetailNavArgs(property.id)
         val loggedInWithSameProvider =
             tokenStore.isLoggedIn && tokenStore.loginProvider.get() == property.loginProvider
         if (property.skipLogin || loggedInWithSameProvider) {
-            navigateTo(direction.asPush())
+            navigateTo(target.asPush())
         } else {
             Log.d("User not signed in, navigating to authFlow and saving propertyId: ${property.id}")
             navigateTo(
-                SignInDestination(
+                SignInNavArgs(
                     property.loginProvider,
                     property.id,
-                    onSignedInDirection = direction
+                    onSignedInTarget = target
                 ).asPush()
             )
         }
@@ -145,10 +146,10 @@ private fun MediaPropertyEntity.toStateProperty(): DiscoverViewModel.State.Prope
         loginProvider = loginProvider,
         skipLogin = loginInfo?.skipLogin == true,
 
-        cardImage = image?.url,
+        cardImage = image,
         focusBackgroundUrl = bgImageWithFallback?.url,
 
-        startScreenLogo = startScreenLogo?.url,
+        startScreenLogo = startScreenLogo,
         startScreenBackground = startScreenBackground?.url
     )
 }

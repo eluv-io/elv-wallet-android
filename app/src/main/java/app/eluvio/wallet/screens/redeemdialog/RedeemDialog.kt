@@ -19,18 +19,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import app.eluvio.wallet.data.entities.RedeemStateEntity
 import app.eluvio.wallet.data.entities.RedeemableOfferEntity
-import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.common.ShimmerImage
@@ -43,12 +40,12 @@ import app.eluvio.wallet.theme.redeemExpiredText
 import app.eluvio.wallet.theme.title_62
 import app.eluvio.wallet.util.compose.requestInitialFocus
 import app.eluvio.wallet.util.subscribeToState
-import com.ramcosta.composedestinations.annotation.Destination
+import app.eluvio.wallet.util.toAnnotatedString
+import app.eluvio.wallet.util.toHtmlSpan
 
-@Destination<MainGraph>(navArgs = RedeemDialogNavArgs::class)
 @Composable
-fun RedeemDialog() {
-    hiltViewModel<RedeemDialogViewModel>().subscribeToState { vm, state ->
+fun RedeemDialog(vm: RedeemDialogViewModel) {
+    vm.subscribeToState { _, state ->
         if (state.title.isNotEmpty()) {
             // ignore empty state
             RedeemDialog(state, onRedeemClicked = { vm.redeemOrShowOffer() })
@@ -109,7 +106,7 @@ private fun RedeemDialog(state: RedeemDialogViewModel.State, onRedeemClicked: ()
                 Spacer(Modifier.height(12.dp))
 
                 Text(
-                    text = state.subtitle,
+                    text = state.subtitle.toAnnotatedString(),
                     style = MaterialTheme.typography.carousel_36
                 )
 
@@ -180,7 +177,7 @@ private fun UnredeemedOfferPreview() = EluvioThemePreview {
     RedeemDialog(
         RedeemDialogViewModel.State(
             title = "Nft reward offer #1",
-            subtitle = AnnotatedString("Very special NFT offer! Don't spend it all at once!\nand another line!"),
+            subtitle = "Very special NFT offer! Don't spend it all at once!\nand another line!".toHtmlSpan(),
             image = null,
             fulfillmentState = RedeemableOfferEntity.FulfillmentState.AVAILABLE,
             dateRange = "January 1, 1970 - January 1, 2042"

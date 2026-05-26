@@ -42,7 +42,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.MaterialTheme
@@ -53,7 +52,6 @@ import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.entities.MediaSectionEntity
 import app.eluvio.wallet.data.entities.RedeemableOfferEntity.FulfillmentState
 import app.eluvio.wallet.navigation.LocalNavigator
-import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.screens.common.DelayedFullscreenLoader
 import app.eluvio.wallet.screens.common.ImageCard
@@ -71,17 +69,17 @@ import app.eluvio.wallet.theme.title_62
 import app.eluvio.wallet.util.compose.FractionBringIntoViewSpec
 import app.eluvio.wallet.util.findActivity
 import app.eluvio.wallet.util.subscribeToState
+import app.eluvio.wallet.util.toAnnotatedString
+import app.eluvio.wallet.util.toHtmlSpan
 import coil.compose.AsyncImage
-import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.generated.destinations.RedeemDialogDestination
 import io.realm.kotlin.ext.realmListOf
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import app.eluvio.wallet.screens.redeemdialog.RedeemDialogNavArgs
 
-@Destination<MainGraph>(navArgs = LegacyNftDetailArgs::class)
 @Composable
-fun LegacyNftDetail() {
-    hiltViewModel<LegacyNftDetailViewModel>().subscribeToState { _, state ->
+fun LegacyNftDetail(vm: LegacyNftDetailViewModel) {
+    vm.subscribeToState { _, state ->
         LegacyNftDetail(state)
     }
 }
@@ -129,7 +127,7 @@ private fun LegacyNftDetail(state: LegacyNftDetailViewModel.State) {
                             end = 260.dp
                         )
                     )
-                    DescriptionText(text = state.subtitle)
+                    DescriptionText(text = state.subtitle.toAnnotatedString())
                 }
                 item {
                     FeaturedMediaAndOffersRow(state)
@@ -270,7 +268,7 @@ private fun FeaturedMediaAndOffersRow(state: LegacyNftDetailViewModel.State) {
             val navigator = LocalNavigator.current
             OfferCard(item) {
                 navigator(
-                    RedeemDialogDestination(
+                    RedeemDialogNavArgs(
                         item.contractAddress,
                         item.tokenId,
                         item.offerId
@@ -406,15 +404,13 @@ private fun NftDetailPreview(@PreviewParameter(BackLinkParameterProvider::class)
             LegacyNftDetailViewModel.State(
                 backLinkUrl = backlink,
                 title = "Superman",
-                subtitle = AnnotatedString(
-                    """
+                subtitle = """
             Superman Web3 Movie Experience includes:
             Immersive menus featuring Fortress of Solitude, Metropolis, and Lex Luthor’s Lair
             Superman The Movie (Theatrical version) • Hours of special features*
             Curated image galleries • Hidden digital easter eggs
             A Voucher Code** for DC3 Super Power Pack: Series Superman from DC NFT Marketplace
-        """.trimIndent()
-                ),
+        """.trimIndent().toHtmlSpan(),
                 featuredMedia = listOf(
                     MediaEntity().apply {
                         name = "Feature Film"

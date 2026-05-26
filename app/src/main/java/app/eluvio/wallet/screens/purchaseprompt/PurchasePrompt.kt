@@ -32,14 +32,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import app.eluvio.wallet.R
 import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.entities.v2.display.thumbnailUrlAndRatio
 import app.eluvio.wallet.navigation.LocalNavigator
-import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.screens.common.MediaItemCard
 import app.eluvio.wallet.screens.common.ShimmerImage
@@ -56,12 +54,10 @@ import app.eluvio.wallet.util.compose.RealisticDevices
 import app.eluvio.wallet.util.compose.requestInitialFocus
 import app.eluvio.wallet.util.subscribeToState
 import coil.compose.AsyncImage
-import com.ramcosta.composedestinations.annotation.Destination
 
-@Destination<MainGraph>(navArgs = PurchasePromptNavArgs::class)
 @Composable
-fun PurchasePrompt() {
-    hiltViewModel<PurchasePromptViewModel>().subscribeToState { vm, state ->
+fun PurchasePrompt(vm: PurchasePromptViewModel) {
+    vm.subscribeToState { _, state ->
         PurchasePrompt(state)
     }
 }
@@ -113,13 +109,14 @@ private fun PurchasePrompt(state: PurchasePromptViewModel.State) {
                     .padding(bottom = 27.dp)
                     .heightIn(min = 250.dp)
             ) {
+                val qrImage = state.qrImage
                 when {
                     // Disabled for now, but you know how UX be.
                     // state.media != null -> MediaPurchaseCard(state.media, state.qrImage)
                     // state.itemPurchase != null -> ItemPurchaseCard(state.itemPurchase, state.qrImage)
-                    state.qrImage != null -> {
+                    qrImage != null -> {
                         Image(
-                            bitmap = state.qrImage.asImageBitmap(), contentDescription = "QR Code",
+                            bitmap = qrImage.asImageBitmap(), contentDescription = "QR Code",
                             modifier = Modifier
                                 .height(250.dp)
                                 .aspectRatio(1f)

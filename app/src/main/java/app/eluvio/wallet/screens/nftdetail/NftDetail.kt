@@ -29,14 +29,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import app.eluvio.wallet.navigation.LocalNavigator
-import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.network.dto.ContractInfoDto
 import app.eluvio.wallet.screens.common.DelayedFullscreenLoader
@@ -49,14 +47,12 @@ import app.eluvio.wallet.theme.carousel_48
 import app.eluvio.wallet.theme.label_24
 import app.eluvio.wallet.util.compose.RealisticDevices
 import app.eluvio.wallet.util.subscribeToState
-import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.generated.destinations.FullscreenQRDialogDestination
-import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
+import app.eluvio.wallet.screens.qrdialogs.generic.FullscreenQRDialogNavArgs
+import app.eluvio.wallet.screens.property.PropertyDetailNavArgs
 
-@Destination<MainGraph>(navArgs = NftDetailNavArgs::class)
 @Composable
-fun NftDetail() {
-    hiltViewModel<NftDetailViewModel>().subscribeToState { vm, state ->
+fun NftDetail(vm: NftDetailViewModel) {
+    vm.subscribeToState { _, state ->
         if (state.loading) {
             DelayedFullscreenLoader()
         } else {
@@ -75,11 +71,12 @@ private fun NftDetail(state: NftDetailViewModel.State) {
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 MediaCard(media = media, onClick = null, modifier = Modifier.weight(1f))
-                if (media.propertyId != null) {
+                val propertyId = media.propertyId
+                if (propertyId != null) {
                     val navigator = LocalNavigator.current
                     TvButton(
                         text = "Go to Property",
-                        onClick = { navigator(PropertyDetailDestination(propertyId = media.propertyId).asPush()) },
+                        onClick = { navigator(PropertyDetailNavArgs(propertyId = propertyId).asPush()) },
                         modifier = Modifier.padding(top = 16.dp)
                     )
                 }
@@ -133,16 +130,17 @@ private enum class NftTabs(val title: String) {
         @Composable
         override fun Content(state: NftDetailViewModel.State, scope: ColumnScope) {
             Column {
-                if (state.contractInfo != null) {
+                val contractInfo = state.contractInfo
+                if (contractInfo != null) {
                     LabeledInfo("Edition", state.media?.subtitle ?: "")
-                    LabeledInfo("Number Minted", state.contractInfo.minted.toString())
-                    LabeledInfo("Number in Circulation", state.contractInfo.totalSupply.toString())
-                    LabeledInfo("Number Burned", state.contractInfo.burned.toString())
+                    LabeledInfo("Number Minted", contractInfo.minted.toString())
+                    LabeledInfo("Number in Circulation", contractInfo.totalSupply.toString())
+                    LabeledInfo("Number Burned", contractInfo.burned.toString())
                     LabeledInfo(
                         "Maximum Possible in Circulation",
-                        (state.contractInfo.cap - state.contractInfo.burned).toString()
+                        (contractInfo.cap - contractInfo.burned).toString()
                     )
-                    LabeledInfo("Cap", state.contractInfo.cap.toString())
+                    LabeledInfo("Cap", contractInfo.cap.toString())
                 }
             }
         }
@@ -153,14 +151,15 @@ private enum class NftTabs(val title: String) {
             LabeledInfo("Contract Address", state.media?.contractAddress ?: "", maxLines = 1)
             LabeledInfo("Hash", state.media?.versionHash ?: "", maxLines = 1)
 
-            if (state.lookoutUrl != null) {
+            val lookoutUrl = state.lookoutUrl
+            if (lookoutUrl != null) {
                 val navigator = LocalNavigator.current
                 TvButton(
                     "See more info on Eluvio Lookout",
                     onClick = {
                         navigator(
-                            FullscreenQRDialogDestination(
-                                url = state.lookoutUrl,
+                            FullscreenQRDialogNavArgs(
+                                url = lookoutUrl,
                                 title = "See More Info on Eluvio Lookout"
                             ).asPush()
                         )

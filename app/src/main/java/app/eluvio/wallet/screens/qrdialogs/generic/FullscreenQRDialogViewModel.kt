@@ -5,16 +5,16 @@ import androidx.compose.runtime.Immutable
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.data.UrlShortener
 import app.eluvio.wallet.screens.common.generateQrCode
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
-import javax.inject.Inject
 
-@HiltViewModel
-class FullscreenQRDialogViewModel @Inject constructor(
+@HiltNavKeyViewModel
+open class FullscreenQRDialogViewModel(
+    @NavArg private val navArgs: FullscreenQRDialogNavArgs,
     private val urlShortener: UrlShortener,
-    private val navArgs: FullscreenQRDialogNavArgs,
 ) : BaseViewModel<FullscreenQRDialogViewModel.State>(
     State(
         title = navArgs.title,

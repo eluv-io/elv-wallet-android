@@ -1,16 +1,19 @@
 package app.eluvio.wallet.screens.home
 
+import androidx.navigation3.runtime.NavKey
 import app.eluvio.wallet.data.entities.deeplink.DeeplinkRequestEntity
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class DeeplinkArgs(
-    val action: String?,
-    val marketplace: String?,
-    val contract: String?,
-    val sku: String?,
-    val jwt: String?,
-    val entitlement: String?,
-    val backLink: String?
-) {
+    val action: String? = null,
+    val marketplace: String? = null,
+    val contract: String? = null,
+    val sku: String? = null,
+    val jwt: String? = null,
+    val entitlement: String? = null,
+    val backLink: String? = null,
+) : NavKey {
     fun toDeeplinkRequest(): DeeplinkRequestEntity? {
         val entity = this
         return DeeplinkRequestEntity().apply {

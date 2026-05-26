@@ -25,12 +25,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import app.eluvio.wallet.R
 import app.eluvio.wallet.navigation.LocalNavigator
-import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.TvButton
@@ -41,19 +39,17 @@ import app.eluvio.wallet.util.compose.RealisticDevices
 import app.eluvio.wallet.util.compose.requestOnce
 import app.eluvio.wallet.util.subscribeToState
 import coil.compose.AsyncImage
-import com.ramcosta.composedestinations.annotation.Destination
 
 
-@Destination<MainGraph>(navArgs = SignInNavArgs::class)
 @Composable
-fun SignIn() {
-    hiltViewModel<SignInViewModel>().subscribeToState { vm, state ->
+fun SignIn(vm: TvSignInViewModel) {
+    vm.subscribeToState { _, state ->
         SignInView(state, onRequestNewToken = vm::requestNewToken)
     }
 }
 
 @Composable
-fun SignInView(state: SignInViewModel.State, onRequestNewToken: () -> Unit) {
+fun SignInView(state: TvSignInViewModel.State, onRequestNewToken: () -> Unit) {
     AsyncImage(
         model = state.bgImageUrl,
         contentDescription = null,
@@ -131,7 +127,7 @@ private fun QrData(qrCode: Bitmap?, userCode: String?) {
 @Preview(device = RealisticDevices.TV_720p)
 private fun SignInViewPreview() = EluvioThemePreview {
     SignInView(
-        SignInViewModel.State(
+        TvSignInViewModel.State(
             loading = false,
             qrCode = generateQrCodeBlocking("https://eluv.io/?code=1234567890"),
             userCode = "ABCDEF",

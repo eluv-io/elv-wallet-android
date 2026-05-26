@@ -14,7 +14,7 @@
 /.idea/deviceManager.xml
 /.kotlin
 .DS_Store
-/build
+**/build
 /captures
 .externalNativeBuild
 .cxx
@@ -25,7 +25,7 @@ secrets.properties
 .claude/
 
 # Firebase — real config is secret. Fetch with `bin/fetch-secrets.sh`.
-app/google-services.json
+**/google-services.json
 
 
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider

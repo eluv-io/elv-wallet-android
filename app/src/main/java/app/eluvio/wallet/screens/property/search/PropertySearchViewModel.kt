@@ -1,7 +1,6 @@
 package app.eluvio.wallet.screens.property.search
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.app.Events.ToastMessage
@@ -21,20 +20,20 @@ import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.Optional
 import app.eluvio.wallet.util.rx.asSharedState
 import app.eluvio.wallet.util.rx.delay
-import com.ramcosta.composedestinations.generated.destinations.PropertySearchDestination
-import com.ramcosta.composedestinations.generated.navArgs
-import dagger.hilt.android.lifecycle.HiltViewModel
+import app.eluvio.wallet.util.toHtmlAnnotated
+import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
 import io.reactivex.rxjava3.processors.BehaviorProcessor
 import io.reactivex.rxjava3.processors.PublishProcessor
-import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
-@HiltViewModel
-class PropertySearchViewModel @Inject constructor(
+@HiltNavKeyViewModel
+open class PropertySearchViewModel(
+    @NavArg private val navArgs: PropertySearchNavArgs,
     private val propertyStore: MediaPropertyStore,
     private val searchStore: PropertySearchStore,
     private val playbackStore: PlaybackStore,
@@ -52,6 +51,9 @@ class PropertySearchViewModel @Inject constructor(
 
         val primaryFilter: SearchFilter? = null,
         val selectedFilters: SelectedFilters? = null,
+
+        /** Whether the view should delegate Back handling to the VM */
+        val handleBackPress: Boolean = true,
     ) {
         /**
          * Represents the currently selected filters.
@@ -72,7 +74,6 @@ class PropertySearchViewModel @Inject constructor(
         )
     }
 
-    private val navArgs = savedStateHandle.navArgs<PropertySearchNavArgs>()
     private val permissionContext = PermissionContext(propertyId = navArgs.propertyId)
     private val property = propertyStore.observeMediaProperty(navArgs.propertyId).asSharedState()
 
@@ -114,7 +115,13 @@ class PropertySearchViewModel @Inject constructor(
                         primaryFilter.values
                             // When filters contain an "All" option, it should be selected by default
                             .firstOrNull { it.value == FilterValueEntity.ALL }
-                            ?.let { value -> State.SelectedFilters(primaryFilter, value.value, value.nextFilter) }
+                            ?.let { value ->
+                                State.SelectedFilters(
+                                    primaryFilter,
+                                    value.value,
+                                    value.nextFilter
+                                )
+                            }
                             ?.let { selectedFilter.onNext(Optional.of(it)) }
                     }
                     updateState {
@@ -159,9 +166,8 @@ class PropertySearchViewModel @Inject constructor(
                     this.selectedFilter.onNext(Optional.empty())
                 }
             }
-            // Using [GoBack] sends us into an infinite loop, so instead we assume we
-            // know the current destination, and pop it.
-            else -> navigateTo(NavigationEvent.PopTo(PropertySearchDestination, true))
+
+            else -> Log.w("Unexpected Back Handling in PropertySearchViewModel")
         }
     }
 
@@ -197,8 +203,9 @@ class PropertySearchViewModel @Inject constructor(
     }
 
     private fun fetchResults(request: SearchRequest): Single<List<MediaPageSectionEntity>> {
-        val propertyToSearch = if (request.subpropertyId != null) {
-            propertyStore.observeMediaProperty(request.subpropertyId, forceRefresh = false)
+        val subpropertyId = request.subpropertyId
+        val propertyToSearch = if (subpropertyId != null) {
+            propertyStore.observeMediaProperty(subpropertyId, forceRefresh = false)
         } else {
             property
         }
@@ -245,6 +252,10 @@ class PropertySearchViewModel @Inject constructor(
                     }
                 }
             }
+            .doOnNext {
+                // While search is non-empty, the vm will handle back presses (by clearing filters).
+                updateState { copy(handleBackPress = it.isNotEmpty()) }
+            }
             .distinctUntilChanged()
             .switchMapMaybe { request ->
                 fetchResults(request)
@@ -273,7 +284,7 @@ class PropertySearchViewModel @Inject constructor(
         return listOf(
             DynamicPageLayoutState.Section.Title(
                 "message_result",
-                AnnotatedString(message)
+                message.toHtmlAnnotated()
             )
         )
     }

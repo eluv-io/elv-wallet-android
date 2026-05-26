@@ -29,23 +29,19 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
-import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.screens.common.ShimmerImage
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.title_62
 import app.eluvio.wallet.util.compose.requestOnce
 import app.eluvio.wallet.util.subscribeToState
-import com.ramcosta.composedestinations.annotation.Destination
 
-@Destination<MainGraph>(navArgs = ImageGalleryNavArgs::class)
 @Composable
-fun ImageGallery() {
-    hiltViewModel<ImageGalleryViewModel>().subscribeToState { vm, state ->
+fun ImageGallery(vm: ImageGalleryViewModel) {
+    vm.subscribeToState { _, state ->
         ImageGallery(state)
     }
 }
@@ -59,14 +55,15 @@ private fun ImageGallery(state: ImageGalleryViewModel.State) {
             contentDescription = image.name,
             Modifier.fillMaxSize()
         )
-        if (state.images.size == 1 && !image.name.isNullOrEmpty()) {
+        val imageName = image.name
+        if (state.images.size == 1 && !imageName.isNullOrEmpty()) {
             // Only show caption in "single image" mode.
             Box(
                 contentAlignment = Alignment.BottomStart,
                 modifier = Modifier.fillMaxSize()
             ) {
                 Text(
-                    text = image.name,
+                    text = imageName,
                     style = MaterialTheme.typography.title_62.copy(fontSize = 22.sp),
                     modifier = Modifier
                         .fillMaxWidth()

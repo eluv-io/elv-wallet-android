@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.realm)
     alias(libs.plugins.gradle.secrets)
     alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.compose.compiler)
 }
 
@@ -108,8 +109,6 @@ dependencies {
 
     implementation(libs.accompanist.placeholder.material)
 
-    implementation(libs.compose.destinations)
-    ksp(libs.compose.destinations.ksp)
 
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)
@@ -136,6 +135,18 @@ dependencies {
     implementation(libs.rxkotlin)
 
     implementation(libs.hilt.navigation.compose)
+
+    implementation(libs.kotlinx.serialization.core)
+    implementation(libs.kotlinx.serialization.json)
+
+    // Navigation 3 — host + runtime + per-entry ViewModel scoping.
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+
+    // nav3-hilt-vm — `@HiltNavKeyViewModel` + `@NavArg` annotations and KSP processor.
+    implementation(libs.stavfx.nav3hiltvm)
+    ksp(libs.stavfx.nav3hiltvm)
 
     implementation(libs.qrcode.kotlin.android)
 

@@ -22,14 +22,12 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.entities.RedeemableOfferEntity
 import app.eluvio.wallet.data.permissions.PermissionContext
-import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.screens.common.DelayedFullscreenLoader
 import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState.CarouselItem
@@ -39,12 +37,10 @@ import app.eluvio.wallet.theme.body_32
 import app.eluvio.wallet.util.compose.fromHex
 import app.eluvio.wallet.util.subscribeToState
 import coil.compose.AsyncImage
-import com.ramcosta.composedestinations.annotation.Destination
 
-@Destination<MainGraph>(navArgs = MediaGridNavArgs::class)
 @Composable
-fun MediaGrid() {
-    hiltViewModel<MediaGridViewModel>().subscribeToState { vm, state ->
+fun MediaGrid(vm: MediaGridViewModel) {
+    vm.subscribeToState { _, state ->
         if (state.loading) {
             DelayedFullscreenLoader()
         } else {
@@ -71,12 +67,13 @@ private fun MediaGrid(state: MediaGridViewModel.State) {
                 horizPadding
             )
         }
-        val bgModifier: Modifier = remember(state.bgColor) {
+        val bgColor = state.bgColor
+        val bgModifier: Modifier = remember(bgColor) {
             // BgImage will be handled separately, so don't give the grid any bg modifier.
             if (state.bgImageUrl != null) {
                 Modifier
-            } else if (state.bgColor != null) {
-                Modifier.background(Color.fromHex(state.bgColor))
+            } else if (bgColor != null) {
+                Modifier.background(Color.fromHex(bgColor))
             } else {
                 // Default background gradient, if no customization is provided.
                 Modifier.background(
@@ -170,7 +167,7 @@ private fun MediaGridPreview() = EluvioThemePreview {
                     fulfillmentState = RedeemableOfferEntity.FulfillmentState.AVAILABLE,
                     contractAddress = "0x123",
                     tokenId = "1",
-                    imageUrl = "https://via.placeholder.com/150",
+                    imageUrl = null,
                     animation = null
                 )
             )

@@ -19,11 +19,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import app.eluvio.wallet.navigation.LocalNavigator
-import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.Overscan
@@ -35,12 +33,10 @@ import app.eluvio.wallet.theme.label_40
 import app.eluvio.wallet.theme.title_62
 import app.eluvio.wallet.util.compose.requestInitialFocus
 import app.eluvio.wallet.util.subscribeToState
-import com.ramcosta.composedestinations.annotation.Destination
 
-@Destination<MainGraph>(navArgs = FulfillmentQrDialogNavArgs::class)
 @Composable
-fun FulfillmentQrDialog() {
-    hiltViewModel<FulfillmentQrDialogViewModel>().subscribeToState { vm, state ->
+fun FulfillmentQrDialog(viewModel: FulfillmentQrDialogViewModel) {
+    viewModel.subscribeToState { _, state ->
         FulfillmentQrDialog(state)
     }
 }
@@ -76,9 +72,10 @@ private fun FulfillmentQrDialog(state: FulfillmentQrDialogViewModel.State) {
             } else {
                 Text(text = state.code, style = MaterialTheme.typography.carousel_48)
                 Spacer(modifier = Modifier.height(6.dp))
-                if (state.qrBitmap != null) {
+                val qrBitmap = state.qrBitmap
+                if (qrBitmap != null) {
                     Image(
-                        bitmap = state.qrBitmap.asImageBitmap(),
+                        bitmap = qrBitmap.asImageBitmap(),
                         contentDescription = "qr code",
                         Modifier.weight(1f)
                     )

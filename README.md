@@ -20,13 +20,26 @@ Entities that need to be persisted must:
 A sensible toString() implementation is encouraged, since `RealmObjects` can't be data classes. 
 
 ### Navigation
-A LocalNavigator is provided as a composition local to allow for navigation between destinations.
-This defaults to "fullscreen/top-level" navigation. For nested navigation, provide your own implementation of Navigator/NavController.
+
+The app uses [Jetpack Navigation 3](https://developer.android.com/guide/navigation/navigation-3). The host
+is `MainNavHost` in `:tv`, which renders a `NavDisplay` over a `NavBackStack<NavKey>` and resolves
+entries through the [nav3-hilt-vm](https://github.com/stavfx/nav3-hilt-vm) library — a small KSP
+processor that generates the Hilt assisted-injection scaffolding from a `@HiltNavKeyViewModel`
+annotation.
+
+For each screen with a `NavKey` + ViewModel, the library generates a `<vm>Entry { vm -> Screen(vm) }`
+extension that wires `hiltViewModel<>(creationCallback = …)`. The host calls these directly.
+
+A `LocalNavigator` is provided as a CompositionLocal for in-app navigation events
+(`navigator(NavigationEvent.Push(…))`). It mutates the backstack list — no `NavController`.
 
 ### File template
 
 There's a lot of boilerplate involved with creating a new Composable/ViewModel pair.
 Use this [Template with multiple files](https://www.jetbrains.com/help/idea/templates-with-multiple-files.html) to generate the files for you.
+
+Register the screen in `MainNavHost` with `${name}Entry { vm -> ${NAME}(vm) }` (the entry helper
+is auto-generated from the `@HiltNavKeyViewModel`-annotated VM in the same package).
 
 ```
 package ${PACKAGE_NAME}
@@ -34,16 +47,12 @@ package ${PACKAGE_NAME}
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.util.subscribeToState
-import com.ramcosta.composedestinations.annotation.Destination
 
-@Destination<MainGraph>(navArgs = ${NAME}NavArgs::class)
 @Composable
-fun ${NAME}() {
-    hiltViewModel<${NAME}ViewModel>().subscribeToState { vm, state ->
+fun ${NAME}(vm: ${NAME}ViewModel) {
+    vm.subscribeToState { _, state ->
         ${NAME}(state)
     }
 }
@@ -60,26 +69,40 @@ private fun ${NAME}Preview() = EluvioThemePreview {
 }
 ```
 
-And create a Child Template File for the ViewModel
+And create a Child Template File for the ViewModel. `@HiltNavKeyViewModel` triggers codegen of the
+Hilt subclass + entry helper; `@NavArg` marks the constructor parameter that carries the route key.
+The class must be `open`.
 
 ```
 package ${PACKAGE_NAME}
 
 import app.eluvio.wallet.app.BaseViewModel
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
+import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.NavArg
 
-@HiltViewModel
-class ${NAME}ViewModel @Inject constructor(
+@HiltNavKeyViewModel
+open class ${NAME}ViewModel(
+    @NavArg private val navArgs: ${NAME}NavArgs,
 ) : BaseViewModel<${NAME}ViewModel.State>(State()) {
     data class State(val tmp: Int = 0)
 }
 ```
 
-And for the NavArgs. Not every screen will need this, but it's easier to delete when not needed, than write it out when it is.
+And the NavArgs. `@Serializable` is required so the route can be persisted in the back stack; the
+class must implement `NavKey` so Nav 3 accepts it as a back-stack entry. No `typeMap` entries
+needed — kotlinx-serialization handles nested types natively now.
 
 ```
 package ${PACKAGE_NAME}
 
-data class ${NAME}NavArgs(val arg1: String)
+import androidx.navigation3.runtime.NavKey
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class ${NAME}NavArgs(val arg1: String) : NavKey
 ```
+
+For screens without nav args (rare — `Dashboard` is the main example), skip `@HiltNavKeyViewModel` /
+`@NavArg`, declare a `@Serializable data object FooNavArgs : NavKey` for the route, use plain
+`@HiltViewModel` / `@Inject` on the VM, and register with raw `entry<FooNavArgs> { Foo() }` in
+`MainNavHost`.

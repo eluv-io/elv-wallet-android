@@ -1,9 +1,7 @@
 package app.eluvio.wallet.screens.redeemdialog
 
-import android.text.Html
+import android.text.Spanned
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.text.AnnotatedString
-import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.app.Events
 import app.eluvio.wallet.data.entities.NftEntity
@@ -17,10 +15,9 @@ import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.util.crypto.Base58
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.realm.toDate
-import app.eluvio.wallet.util.toAnnotatedString
-import com.ramcosta.composedestinations.generated.destinations.FulfillmentQrDialogDestination
-import com.ramcosta.composedestinations.generated.navArgs
-import dagger.hilt.android.lifecycle.HiltViewModel
+import app.eluvio.wallet.util.toHtmlSpan
+import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -29,12 +26,12 @@ import io.reactivex.rxjava3.kotlin.subscribeBy
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
 import kotlin.random.Random
+import app.eluvio.wallet.screens.qrdialogs.fulfillment.FulfillmentQrDialogNavArgs
 
-@HiltViewModel
-class RedeemDialogViewModel @Inject constructor(
-    stateHandle: SavedStateHandle,
+@HiltNavKeyViewModel
+open class RedeemDialogViewModel(
+    @NavArg private val navArgs: RedeemDialogNavArgs,
     private val contentStore: ContentStore,
     private val apiProvider: ApiProvider,
     private val fulfillmentStore: FulfillmentStore,
@@ -42,7 +39,7 @@ class RedeemDialogViewModel @Inject constructor(
     @Immutable
     data class State(
         val title: String = "",
-        val subtitle: AnnotatedString = AnnotatedString(""),
+        val subtitle: Spanned = "".toHtmlSpan(),
         val image: String? = null,
         val fulfillmentState: FulfillmentState = FulfillmentState.AVAILABLE,
         val dateRange: String = "",
@@ -53,7 +50,6 @@ class RedeemDialogViewModel @Inject constructor(
         val _transaction: String? = null,
     )
 
-    private val navArgs = stateHandle.navArgs<RedeemDialogNavArgs>()
     private val offerId = navArgs.offerId
 
     private var refreshDisposable: Disposable? = null
@@ -83,7 +79,7 @@ class RedeemDialogViewModel @Inject constructor(
                 val image = (offer.posterImagePath ?: offer.imagePath)?.let { "$endpoint$it" }
                 State(
                     title = offer.name,
-                    subtitle = Html.fromHtml(offer.description.trim()).toAnnotatedString(),
+                    subtitle = offer.description.trim().toHtmlSpan(),
                     image = image,
                     fulfillmentState = fulfillmentState,
                     dateRange = offer.dateRange,
@@ -106,7 +102,7 @@ class RedeemDialogViewModel @Inject constructor(
             if (it._transaction != null) {
                 // offer already redeemed, show fulfillment dialog
                 Completable.fromAction {
-                    navigateTo(FulfillmentQrDialogDestination(it._transaction).asPush())
+                    navigateTo(FulfillmentQrDialogNavArgs(it._transaction).asPush())
                 }
             } else {
                 redeemOffer(it)

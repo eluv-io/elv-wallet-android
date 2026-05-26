@@ -6,14 +6,14 @@ import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.screens.dashboard.myitems.AllMediaProvider
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.mapNotNull
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
-import javax.inject.Inject
 
-@HiltViewModel
-class NftDetailViewModel @Inject constructor(
-    private val navArgs: NftDetailNavArgs,
+@HiltNavKeyViewModel
+open class NftDetailViewModel(
+    @NavArg private val navArgs: NftDetailNavArgs,
     private val contentStore: ContentStore,
 ) : BaseViewModel<NftDetailViewModel.State>(
     State(

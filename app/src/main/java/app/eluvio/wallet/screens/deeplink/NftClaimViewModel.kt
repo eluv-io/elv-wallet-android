@@ -1,6 +1,5 @@
 package app.eluvio.wallet.screens.deeplink
 
-import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.app.Events
 import app.eluvio.wallet.data.stores.ContentStore
@@ -9,31 +8,28 @@ import app.eluvio.wallet.navigation.asReplace
 import app.eluvio.wallet.screens.dashboard.myitems.AllMediaProvider
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.interval
-import com.ramcosta.composedestinations.generated.destinations.LegacyNftDetailDestination
-import com.ramcosta.composedestinations.generated.destinations.NftClaimDestination
-import com.ramcosta.composedestinations.generated.destinations.NftDetailDestination
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.kotlin.Flowables
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
-import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
+import app.eluvio.wallet.screens.nftdetail.legacy.LegacyNftDetailArgs
+import app.eluvio.wallet.screens.nftdetail.NftDetailNavArgs
 
-@HiltViewModel
-class NftClaimViewModel @Inject constructor(
+@HiltNavKeyViewModel
+open class NftClaimViewModel(
+    @NavArg private val navArgs: NftClaimNavArgs,
     private val contentStore: ContentStore,
     private val nftClaimStore: NftClaimStore,
-    savedStateHandle: SavedStateHandle,
 ) : BaseViewModel<NftClaimViewModel.State>(State()) {
     data class State(
         val loading: Boolean = true,
         val claimingInProgress: Boolean = false,
         val media: AllMediaProvider.Media? = null
     )
-
-    private val navArgs = NftClaimDestination.argsFrom(savedStateHandle)
 
     override fun onResume() {
         super.onResume()
@@ -52,7 +48,7 @@ class NftClaimViewModel @Inject constructor(
                     if (ownership != null) {
                         Log.w("user owns SKU/Entitlement")
                         navigateTo(
-                            LegacyNftDetailDestination(
+                            LegacyNftDetailArgs(
                                 contractAddress = ownership.contractAddress,
                                 tokenId = ownership.tokenId,
                                 marketplaceId = navArgs.marketplace,
@@ -117,7 +113,7 @@ class NftClaimViewModel @Inject constructor(
                         is NftClaimStore.NftClaimResult.Success -> {
                             val tokenId = result.tokenId
                             Log.d("SKU ${navArgs.sku} claimed successfully, navigating to tokenId: $tokenId")
-                            navigateTo(NftDetailDestination(contractAddress, tokenId).asReplace())
+                            navigateTo(NftDetailNavArgs(contractAddress, tokenId).asReplace())
                         }
                     }
                 },

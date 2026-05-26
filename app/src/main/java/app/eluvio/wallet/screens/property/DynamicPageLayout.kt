@@ -39,7 +39,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -58,6 +57,8 @@ import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
+import app.eluvio.wallet.data.FabricUrl
+import app.eluvio.wallet.data.PropertyLink
 import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.entities.RedeemableOfferEntity
 import app.eluvio.wallet.data.entities.v2.DisplayFormat
@@ -71,15 +72,15 @@ import app.eluvio.wallet.screens.common.VideoPlayer
 import app.eluvio.wallet.screens.property.rows.BannerSection
 import app.eluvio.wallet.screens.property.rows.CarouselSection
 import app.eluvio.wallet.screens.property.rows.DescriptionSection
-import app.eluvio.wallet.screens.property.rows.TextSection
+import app.eluvio.wallet.screens.property.rows.SectionHeader
 import app.eluvio.wallet.screens.property.rows.TitleSection
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.util.compose.icons.Eluvio
 import app.eluvio.wallet.util.compose.icons.Search
 import app.eluvio.wallet.util.compose.icons.Switcher
 import app.eluvio.wallet.util.logging.Log
+import app.eluvio.wallet.util.toHtmlAnnotated
 import coil.compose.AsyncImage
-import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 
@@ -99,9 +100,10 @@ fun DynamicPageLayout(state: DynamicPageLayoutState) {
             )
         }
     }
-    if (state.backgroundVideo != null) {
+    val backgroundVideo = state.backgroundVideo
+    if (backgroundVideo != null) {
         VideoPlayer(
-            mediaSource = state.backgroundVideo,
+            mediaSource = backgroundVideo,
             modifier = Modifier.fillMaxSize(),
             fallback = bgImage
         )
@@ -154,7 +156,7 @@ fun LazyListScope.sections(
 
                 is DynamicPageLayoutState.Section.Title -> TitleSection(item = section, modifier)
 
-                is DynamicPageLayoutState.Section.Text -> TextSection(item = section, modifier)
+                is DynamicPageLayoutState.Section.SectionHeader -> SectionHeader(item = section, modifier)
             }
         }
     }
@@ -266,7 +268,7 @@ private fun PropertySwitcher(state: DynamicPageLayoutState) {
                                 expanded = false
                                 if (!property.isCurrent) {
                                     navigator(
-                                        PropertyDetailDestination(
+                                        PropertyDetailNavArgs(
                                             property.id,
                                             propertyLinks = ArrayList(state.propertyLinks)
                                         ).asReplace()
@@ -353,21 +355,27 @@ private fun DynamicPageLayoutPreview() = EluvioThemePreview {
         DynamicPageLayoutState(
             searchNavigationEvent = NavigationEvent.GoBack,
             propertyLinks = listOf(
-                DynamicPageLayoutState.PropertyLink(
+                PropertyLink(
                     id = "1",
                     name = "Link 1",
                     isCurrent = true,
                 ),
-                DynamicPageLayoutState.PropertyLink(
+                PropertyLink(
                     id = "2",
                     name = "Link 2",
                     isCurrent = false,
                 ),
             ),
             sections = listOf(
-                DynamicPageLayoutState.Section.Title("1", AnnotatedString("Title")),
-                DynamicPageLayoutState.Section.Banner("2", "https://foo.com/image.jpg"),
-                DynamicPageLayoutState.Section.Description("3", AnnotatedString("Description")),
+                DynamicPageLayoutState.Section.Title("1", "Title".toHtmlAnnotated()),
+                DynamicPageLayoutState.Section.Banner(
+                    "2",
+                    object : FabricUrl {
+                        override val url = "https://foo.com/image.jpg"
+                        override val imageHash = null
+                    },
+                ),
+                DynamicPageLayoutState.Section.Description("3", "Description".toHtmlAnnotated()),
                 DynamicPageLayoutState.Section.Carousel(
                     permissionContext = PermissionContext(propertyId = "p", sectionId = "4"),
                     displaySettings = SimpleDisplaySettings(
@@ -394,7 +402,7 @@ private fun DynamicPageLayoutPreview() = EluvioThemePreview {
                             fulfillmentState = RedeemableOfferEntity.FulfillmentState.AVAILABLE,
                             contractAddress = "0x123",
                             tokenId = "1",
-                            imageUrl = "https://via.placeholder.com/150",
+                            imageUrl = null,
                             animation = null,
                         )
                     )

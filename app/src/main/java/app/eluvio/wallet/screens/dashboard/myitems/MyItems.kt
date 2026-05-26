@@ -51,11 +51,11 @@ import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.util.isKeyUpOf
 import app.eluvio.wallet.util.rememberToaster
 import app.eluvio.wallet.util.subscribeToState
-import com.ramcosta.composedestinations.generated.destinations.LegacyNftDetailDestination
-import com.ramcosta.composedestinations.generated.destinations.NftDetailDestination
 import kotlinx.coroutines.launch
 import java.util.UUID
 import kotlin.math.roundToInt
+import app.eluvio.wallet.screens.nftdetail.legacy.LegacyNftDetailArgs
+import app.eluvio.wallet.screens.nftdetail.NftDetailNavArgs
 
 @Composable
 fun MyItems() {
@@ -79,20 +79,21 @@ private fun MyItems(
         MyItemsGrid(
             state,
             onItemClick = {
-                if (it.tokenId == null) {
+                val tokenId = it.tokenId
+                if (tokenId == null) {
                     toaster.toast("NFT Packs not supported yet")
                 } else if (it.propertyId != null) {
                     navigator(
-                        NftDetailDestination(
+                        NftDetailNavArgs(
                             contractAddress = it.contractAddress,
-                            tokenId = it.tokenId,
+                            tokenId = tokenId,
                         ).asPush()
                     )
                 } else {
                     navigator(
-                        LegacyNftDetailDestination(
+                        LegacyNftDetailArgs(
                             contractAddress = it.contractAddress,
-                            tokenId = it.tokenId,
+                            tokenId = tokenId,
                         ).asPush()
                     )
                 }

@@ -29,11 +29,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
-import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.TvButton
 import app.eluvio.wallet.screens.dashboard.myitems.MediaCard
@@ -43,12 +41,10 @@ import app.eluvio.wallet.theme.label_24
 import app.eluvio.wallet.theme.title_62
 import app.eluvio.wallet.util.compose.requestOnce
 import app.eluvio.wallet.util.subscribeToState
-import com.ramcosta.composedestinations.annotation.Destination
 
-@Destination<MainGraph>(navArgs = NftClaimNavArgs::class)
 @Composable
-fun NftClaim() {
-    hiltViewModel<NftClaimViewModel>().subscribeToState { vm, state ->
+fun NftClaim(vm: NftClaimViewModel) {
+    vm.subscribeToState { _, state ->
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxSize()

@@ -1,9 +1,9 @@
 package app.eluvio.wallet.screens.property
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.media3.exoplayer.source.MediaSource
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.app.Events
+import app.eluvio.wallet.data.PropertyLink
 import app.eluvio.wallet.data.VideoOptionsFetcher
 import app.eluvio.wallet.data.entities.v2.MediaPageEntity
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
@@ -25,29 +25,31 @@ import app.eluvio.wallet.util.rx.asSharedState
 import app.eluvio.wallet.util.rx.combineLatest
 import app.eluvio.wallet.util.rx.interval
 import app.eluvio.wallet.util.rx.mapNotNull
-import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
-import com.ramcosta.composedestinations.generated.destinations.PropertySearchDestination
-import com.ramcosta.composedestinations.generated.destinations.PurchasePromptDestination
+import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.NavArg
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.kotlin.Flowables
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
-import javax.inject.Inject
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import app.eluvio.wallet.screens.property.search.PropertySearchNavArgs
+import app.eluvio.wallet.screens.purchaseprompt.PurchasePromptNavArgs
 
-@HiltViewModel
-class PropertyDetailViewModel @Inject constructor(
+@HiltNavKeyViewModel
+open class PropertyDetailViewModel(
+    @NavArg private val navArgs: PropertyDetailNavArgs,
     private val propertyStore: MediaPropertyStore,
     private val propertySearchStore: PropertySearchStore,
     private val videoOptionsFetcher: VideoOptionsFetcher,
     private val playbackStore: PlaybackStore,
-    savedStateHandle: SavedStateHandle
 ) : BaseViewModel<DynamicPageLayoutState>(DynamicPageLayoutState()) {
 
-    private val navArgs = PropertyDetailDestination.argsFrom(savedStateHandle)
     private val propertyId = navArgs.propertyId
 
     private val property = propertyStore.observeMediaProperty(propertyId)
@@ -97,13 +99,17 @@ class PropertyDetailViewModel @Inject constructor(
         super.onResume()
 
         // Always display Search button.
-        updateState { copy(searchNavigationEvent = PropertySearchDestination(propertyId).asPush()) }
+        updateState { copy(searchNavigationEvent = PropertySearchNavArgs(propertyId).asPush()) }
 
         updateSections()
 
         updateBackground()
 
         updateSubpropertySelector()
+
+        property
+            .subscribeBy { updateState { copy(headerLogo = it.headerLogoUrl) } }
+            .addTo(disposables)
     }
 
     private fun updateSections() {
@@ -121,7 +127,9 @@ class PropertyDetailViewModel @Inject constructor(
                     when (exception) {
                         is ShowPurchaseOptionsRedirectException -> {
                             Log.e("Show purchase options detected. Navigating.")
-                            navigateTo(PurchasePromptDestination(exception.permissionContext).asReplace())
+                            navigateTo(
+                                PurchasePromptNavArgs(exception.permissionContext).asReplace()
+                            )
                         }
 
                         is CircularRedirectException -> {
@@ -150,13 +158,13 @@ class PropertyDetailViewModel @Inject constructor(
         } else {
             property.mapNotNull {
                 val subpropertyLinks = it.subpropertySelection.mapNotNull { subproperty ->
-                    DynamicPageLayoutState.PropertyLink(
+                    PropertyLink(
                         id = subproperty.id,
                         name = subproperty.title ?: return@mapNotNull null,
                         isCurrent = subproperty.id == propertyId
                     )
                 }
-                val thisProperty = DynamicPageLayoutState.PropertyLink(
+                val thisProperty = PropertyLink(
                     id = it.id,
                     name = it.name,
                     isCurrent = it.id == propertyId
@@ -179,7 +187,7 @@ class PropertyDetailViewModel @Inject constructor(
                             }
                     }
                 Flowable.combineLatest(optionalLinksFlowable) { optionalLinks ->
-                    optionalLinks.filterIsInstance<Optional<DynamicPageLayoutState.PropertyLink>>()
+                    optionalLinks.filterIsInstance<Optional<PropertyLink>>()
                         .mapNotNull { it.orDefault(null) }
                 }
             }
@@ -219,7 +227,7 @@ class PropertyDetailViewModel @Inject constructor(
                         Log.e("Error fetching video options", it)
                         Optional.empty()
                     }
-                    .map { display.heroBackgroundImageUrl?.url to it.orDefault(null) }
+                    .map { display.heroBackgroundImageUrl to it.orDefault(null) }
             }
             .subscribeBy(
                 onNext = { (bgImageUrl, bgVideo) ->

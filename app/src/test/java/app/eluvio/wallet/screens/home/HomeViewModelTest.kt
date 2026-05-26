@@ -8,7 +8,6 @@ import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.asNewRoot
 import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.testing.TestLogRule
-import com.ramcosta.composedestinations.generated.destinations.DashboardDestination
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
@@ -20,6 +19,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import app.eluvio.wallet.screens.dashboard.DashboardNavArgs
 
 class HomeViewModelTest {
     @get:Rule
@@ -52,7 +52,7 @@ class HomeViewModelTest {
         vm.onResume()
 
         // THEN
-        verify { vm.navigateTo(DashboardDestination.asNewRoot()) }
+        verify { vm.navigateTo(DashboardNavArgs.asNewRoot()) }
     }
 
     @Test
@@ -72,8 +72,8 @@ class HomeViewModelTest {
 
         // THEN
         verify {
-            vm.navigateTo(DashboardDestination.asNewRoot())
-            vm.navigateTo(deeplink.toNftClaimDestination()?.asPush()!!)
+            vm.navigateTo(DashboardNavArgs.asNewRoot())
+            vm.navigateTo(deeplink.toNftClaimTarget()?.asPush()!!)
         }
     }
 
@@ -97,8 +97,8 @@ class HomeViewModelTest {
         // THEN
         verify { tokenStore.idToken.set("test_jwt") }
         verify {
-            vm.navigateTo(DashboardDestination.asNewRoot())
-            vm.navigateTo(deeplink.toNftClaimDestination()?.asPush()!!)
+            vm.navigateTo(DashboardNavArgs.asNewRoot())
+            vm.navigateTo(deeplink.toNftClaimTarget()?.asPush()!!)
         }
     }
 
@@ -121,7 +121,7 @@ class HomeViewModelTest {
 
         // THEN
         // Verify we DON'T navigate to the dashboard
-        verify(exactly = 1) { vm.navigateTo(DashboardDestination.asNewRoot()) }
+        verify(exactly = 1) { vm.navigateTo(DashboardNavArgs.asNewRoot()) }
     }
 
     private fun createViewModelAndSpy(): HomeViewModel {

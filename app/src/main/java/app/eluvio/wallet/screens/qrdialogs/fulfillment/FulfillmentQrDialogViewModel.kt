@@ -2,23 +2,22 @@ package app.eluvio.wallet.screens.qrdialogs.fulfillment
 
 import android.graphics.Bitmap
 import androidx.compose.runtime.Immutable
-import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.data.stores.FulfillmentStore
 import app.eluvio.wallet.screens.common.generateQrCode
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.mapNotNull
-import com.ramcosta.composedestinations.generated.destinations.FulfillmentQrDialogDestination
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
-import javax.inject.Inject
 
-@HiltViewModel
-class FulfillmentQrDialogViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+@HiltNavKeyViewModel
+open class FulfillmentQrDialogViewModel(
+    @NavArg private val navArgs: FulfillmentQrDialogNavArgs,
     private val fulfillmentStore: FulfillmentStore,
 ) : BaseViewModel<FulfillmentQrDialogViewModel.State>(State()) {
+
     @Immutable
     data class State(
         val loading: Boolean = true,
@@ -26,13 +25,10 @@ class FulfillmentQrDialogViewModel @Inject constructor(
         val qrBitmap: Bitmap? = null
     )
 
-    private val transactionHash =
-        FulfillmentQrDialogDestination.argsFrom(savedStateHandle).transactionHash
-
     override fun onResume() {
         super.onResume()
 
-        fulfillmentStore.observeFulfillmentData(transactionHash)
+        fulfillmentStore.observeFulfillmentData(navArgs.transactionHash)
             .mapNotNull {
                 val url = it.url ?: return@mapNotNull null
                 val code = it.code ?: return@mapNotNull null
@@ -45,7 +41,7 @@ class FulfillmentQrDialogViewModel @Inject constructor(
                 onNext = { updateState { it } },
                 onError = {
                     Log.e(
-                        "Error loading fulfillment for transaction $transactionHash",
+                        "Error loading fulfillment for transaction ${navArgs.transactionHash}",
                         it
                     )
                 }

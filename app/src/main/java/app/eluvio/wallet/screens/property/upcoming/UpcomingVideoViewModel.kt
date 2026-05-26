@@ -3,6 +3,7 @@ package app.eluvio.wallet.screens.property.upcoming
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
+import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
 import app.eluvio.wallet.data.permissions.PermissionContext
@@ -15,23 +16,23 @@ import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.realm.millis
 import app.eluvio.wallet.util.rx.mapNotNull
 import app.eluvio.wallet.util.rx.timer
-import com.ramcosta.composedestinations.generated.destinations.VideoPlayerActivityDestination
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.kotlin.Flowables
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
-import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import app.eluvio.wallet.screens.videoplayer.VideoPlayerArgs
 
-@HiltViewModel
-class UpcomingVideoViewModel @Inject constructor(
+@HiltNavKeyViewModel
+open class UpcomingVideoViewModel(
+    @NavArg private val navArgs: UpcomingVideoNavArgs,
     private val contentStore: ContentStore,
     private val propertyStore: MediaPropertyStore,
     private val apiProvider: ApiProvider,
-    private val navArgs: UpcomingVideoNavArgs,
     private val permissionContextResolver: PermissionContextResolver,
     savedStateHandle: SavedStateHandle,
 ) : BaseViewModel<UpcomingVideoViewModel.State>(
@@ -41,7 +42,7 @@ class UpcomingVideoViewModel @Inject constructor(
     @Immutable
     data class State(
         val imagesBaseUrl: String? = null,
-        val backgroundImageUrl: String? = null,
+        val backgroundImageUrl: FabricUrl? = null,
         val mediaItemId: String = "",
         val propertyId: String = "",
         val title: String = "",
@@ -63,7 +64,7 @@ class UpcomingVideoViewModel @Inject constructor(
         }
         propertyStore.observeMediaProperty(navArgs.propertyId)
             .subscribeBy {
-                updateState { copy(backgroundImageUrl = it.mainPage?.backgroundImageUrl?.url) }
+                updateState { copy(backgroundImageUrl = it.mainPage?.backgroundImageUrl) }
             }
             .addTo(disposables)
 
@@ -101,7 +102,7 @@ class UpcomingVideoViewModel @Inject constructor(
             Flowables.timer(remainingTime)
                 .doOnNext {
                     navigateTo(
-                        VideoPlayerActivityDestination(
+                        VideoPlayerArgs(
                             propertyId = navArgs.propertyId,
                             mediaItemId = navArgs.mediaItemId
                         ).asReplace()
@@ -138,7 +139,7 @@ class UpcomingVideoViewModel @Inject constructor(
                     }
             }
             .subscribeBy {
-                updateState { copy(backgroundImageUrl = it.url) }
+                updateState { copy(backgroundImageUrl = it) }
             }
             .addTo(disposables)
     }

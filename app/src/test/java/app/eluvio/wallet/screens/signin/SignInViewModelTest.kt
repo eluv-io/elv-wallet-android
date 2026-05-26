@@ -1,6 +1,7 @@
 package app.eluvio.wallet.screens.signin
 
 import android.graphics.Bitmap
+import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.data.UrlShortener
 import app.eluvio.wallet.data.entities.v2.MediaPageEntity
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
@@ -9,13 +10,10 @@ import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.DeviceActivationStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.asReplace
-import app.eluvio.wallet.network.api.authd.CsatResponse
 import app.eluvio.wallet.network.api.authd.ActivationCodeResponse
 import app.eluvio.wallet.screens.common.generateQrCode
 import app.eluvio.wallet.testing.TestLogRule
 import app.eluvio.wallet.util.entity.getFirstAuthorizedPage
-import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
-import com.ramcosta.composedestinations.generated.navargs.toSavedStateHandle
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -31,8 +29,9 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.util.concurrent.TimeUnit
+import app.eluvio.wallet.screens.property.PropertyDetailNavArgs
 
-class SignInViewModelTest {
+class TvSignInViewModelTest {
 
     @get:Rule
     val testLogRule = TestLogRule()
@@ -65,16 +64,17 @@ class SignInViewModelTest {
     }
 
     private val navArgs = SignInNavArgs(
-        "ory",
-        property.id,
-        onSignedInDirection = PropertyDetailDestination(property.id)
+        provider = "ory",
+        propertyId = property.id,
+        onSignedInTarget = PropertyDetailNavArgs(propertyId = property.id),
     )
-    private val vm = SignInViewModel(
+    private val vm = TvSignInViewModel(
         propertyStore = propertyStore,
         tokenStore = tokenStore,
         urlShortener = urlShortener,
-        deviceActivationStore,
-        savedStateHandle = navArgs.toSavedStateHandle(),
+        deviceActivationStore = deviceActivationStore,
+        navArgs = navArgs,
+        savedStateHandle = SavedStateHandle(),
     )
 
     @Before
@@ -151,7 +151,7 @@ class SignInViewModelTest {
 
         // Post-auth navigation happens
         verify {
-            vm.navigateTo(PropertyDetailDestination(property.id).asReplace())
+            vm.navigateTo(PropertyDetailNavArgs(propertyId = property.id).asReplace())
         }
         RxJavaPlugins.reset()
     }

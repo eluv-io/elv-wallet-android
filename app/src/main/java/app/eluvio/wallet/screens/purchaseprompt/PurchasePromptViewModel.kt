@@ -17,31 +17,31 @@ import app.eluvio.wallet.data.stores.Environment
 import app.eluvio.wallet.data.stores.EnvironmentStore
 import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.TokenStore
-import app.eluvio.wallet.navigation.onClickDirection
+import app.eluvio.wallet.navigation.onClickTarget
 import app.eluvio.wallet.screens.common.generateQrCode
 import app.eluvio.wallet.util.crypto.Base58
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.Optional
 import app.eluvio.wallet.util.rx.asSharedState
 import app.eluvio.wallet.util.rx.mapNotNull
-import com.ramcosta.composedestinations.generated.destinations.PropertyDetailDestination
-import com.ramcosta.composedestinations.generated.navArgs
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
+import app.eluvio.wallet.screens.property.PropertyDetailNavArgs
 
-@HiltViewModel
-class PurchasePromptViewModel @Inject constructor(
+@HiltNavKeyViewModel
+open class PurchasePromptViewModel(
+    @NavArg private val navArgs: PurchasePromptNavArgs,
     private val propertyStore: MediaPropertyStore,
     permissionContextResolver: PermissionContextResolver,
     private val environmentStore: EnvironmentStore,
     private val urlShortener: UrlShortener,
     private val tokenStore: TokenStore,
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
 ) : BaseViewModel<PurchasePromptViewModel.State>(State(), savedStateHandle) {
 
     @Immutable
@@ -57,7 +57,6 @@ class PurchasePromptViewModel @Inject constructor(
         data class ItemPurchase(val displaySettings: DisplaySettings?)
     }
 
-    private val navArgs = savedStateHandle.navArgs<PurchasePromptNavArgs>()
     private val permissionContext = navArgs.permissionContext
 
     private val resolvedContext = permissionContextResolver.resolve(permissionContext)
@@ -157,12 +156,13 @@ class PurchasePromptViewModel @Inject constructor(
                     // Note: This is really the only case we are officially supporting for now.
                     // Non-media sources are technically possible, but not expected in practice.
                     resolved.mediaItem != null -> {
-                        resolved.mediaItem.resolvedPermissions
+                        val mediaItem = resolved.mediaItem!!
+                        mediaItem.resolvedPermissions
                             ?.takeIf { it.authorized == true }
                             ?.let {
                                 // Side effect to display "Success" state.
                                 updateState { copy(complete = true) }
-                                resolved.mediaItem.onClickDirection(permissionContext)
+                                mediaItem.onClickTarget(permissionContext)
                             }
                     }
 
@@ -173,17 +173,18 @@ class PurchasePromptViewModel @Inject constructor(
                     }
 
                     resolved.page != null -> {
-                        resolved.page.pagePermissions
+                        val page = resolved.page!!
+                        page.pagePermissions
                             ?.takeIf { it.authorized == true }
                             ?.let {
-                                PropertyDetailDestination(resolved.property.id, resolved.page.id)
+                                PropertyDetailNavArgs(resolved.property.id, page.id)
                             }
                     }
 
                     else -> {
                         resolved.property.propertyPermissions
                             ?.takeIf { it.authorized == true }
-                            ?.let { PropertyDetailDestination(resolved.property.id) }
+                            ?.let { PropertyDetailNavArgs(resolved.property.id) }
                     }
                 }
             }

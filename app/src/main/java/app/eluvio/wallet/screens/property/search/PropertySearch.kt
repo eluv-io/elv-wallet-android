@@ -37,7 +37,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
@@ -50,7 +49,6 @@ import app.eluvio.wallet.data.entities.v2.DisplayFormat
 import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
 import app.eluvio.wallet.data.entities.v2.search.SearchFilter
 import app.eluvio.wallet.data.permissions.PermissionContext
-import app.eluvio.wallet.navigation.MainGraph
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.common.SearchBox
@@ -62,16 +60,14 @@ import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.carousel_36
 import app.eluvio.wallet.util.subscribeToState
 import coil.compose.AsyncImage
-import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.collections.immutable.persistentListOf
 
-@Destination<MainGraph>(navArgs = PropertySearchNavArgs::class)
 @Composable
-fun PropertySearch() {
+fun PropertySearch(vm: PropertySearchViewModel) {
     var query by rememberSaveable { mutableStateOf("") }
-    hiltViewModel<PropertySearchViewModel>().subscribeToState(
+    vm.subscribeToState(
         onState = { vm, state ->
-            BackHandler { vm.onBackPressed() }
+            BackHandler(enabled = state.handleBackPress) { vm.onBackPressed() }
             PropertySearch(
                 state,
                 query,
@@ -144,7 +140,9 @@ fun FilterSelector(
     onPrimaryFilterClick: (SearchFilter.Value) -> Unit,
     onSecondaryFilterClick: (SearchFilter.Value) -> Unit
 ) {
-    if (state.primaryFilter == null || state.primaryFilter.values.isEmpty()) {
+    val primaryFilter = state.primaryFilter
+    val selectedFilters = state.selectedFilters
+    if (primaryFilter == null || primaryFilter.values.isEmpty()) {
         return
     }
     Column(
@@ -153,18 +151,18 @@ fun FilterSelector(
             .padding(top = 20.dp, bottom = 10.dp)
     ) {
         FiltersRow(
-            filter = state.primaryFilter,
-            selectedFilterValue = state.selectedFilters?.primaryFilterValue,
+            filter = primaryFilter,
+            selectedFilterValue = selectedFilters?.primaryFilterValue,
             onClick = onPrimaryFilterClick,
             label = "Filters"
         )
 
-        val secondaryFilters = state.selectedFilters?.secondaryFilterAttribute
+        val secondaryFilters = selectedFilters?.secondaryFilterAttribute
         if (secondaryFilters != null && secondaryFilters.values.isNotEmpty()) {
             Spacer(Modifier.height(10.dp))
             FiltersRow(
                 filter = secondaryFilters,
-                selectedFilterValue = state.selectedFilters.secondaryFilterValue,
+                selectedFilterValue = selectedFilters.secondaryFilterValue,
                 onClick = onSecondaryFilterClick,
             )
         }
@@ -323,7 +321,7 @@ private fun PropertySearchPreview() = EluvioThemePreview {
                             fulfillmentState = RedeemableOfferEntity.FulfillmentState.AVAILABLE,
                             contractAddress = "0x123",
                             tokenId = "1",
-                            imageUrl = "https://via.placeholder.com/150",
+                            imageUrl = null,
                             animation = null
                         )
                     )

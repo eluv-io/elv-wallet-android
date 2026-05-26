@@ -19,13 +19,11 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import app.eluvio.wallet.navigation.LocalNavigator
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.navigation.callbackFor
-import app.eluvio.wallet.screens.common.FullscreenDialogStyle
 import app.eluvio.wallet.screens.common.TvButton
 import app.eluvio.wallet.screens.common.generateQrCodeBlocking
 import app.eluvio.wallet.theme.EluvioThemePreview
@@ -33,16 +31,10 @@ import app.eluvio.wallet.theme.label_40
 import app.eluvio.wallet.theme.title_62
 import app.eluvio.wallet.util.compose.requestInitialFocus
 import app.eluvio.wallet.util.subscribeToState
-import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.annotation.RootGraph
 
-@Destination<RootGraph>(
-    style = FullscreenDialogStyle::class,
-    navArgs = FullscreenQRDialogNavArgs::class
-)
 @Composable
-fun FullscreenQRDialog() {
-    hiltViewModel<FullscreenQRDialogViewModel>().subscribeToState { vm, state ->
+fun FullscreenQRDialog(vm: FullscreenQRDialogViewModel) {
+    vm.subscribeToState { _, state ->
         FullscreenQRDialog(state)
     }
 }
@@ -63,9 +55,10 @@ private fun FullscreenQRDialog(
             style = MaterialTheme.typography.title_62,
             modifier = Modifier.padding(bottom = 18.dp)
         )
-        if (state.subtitle != null) {
+        val subtitle = state.subtitle
+        if (subtitle != null) {
             Text(
-                text = state.subtitle,
+                text = subtitle,
                 style = MaterialTheme.typography.label_40.copy(fontSize = 26.sp),
                 modifier = Modifier.padding(bottom = 18.dp)
             )
@@ -75,9 +68,10 @@ private fun FullscreenQRDialog(
                 .padding(bottom = 27.dp)
                 .heightIn(min = 250.dp)
         ) {
-            if (state.qrImage != null) {
+            val qrImage = state.qrImage
+            if (qrImage != null) {
                 Image(
-                    bitmap = state.qrImage.asImageBitmap(),
+                    bitmap = qrImage.asImageBitmap(),
                     contentDescription = "QR Code",
                     modifier = Modifier
                         .height(250.dp)

@@ -1,8 +1,7 @@
 package app.eluvio.wallet.screens.nftdetail.legacy
 
-import android.text.Html
+import android.text.Spanned
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.text.AnnotatedString
 import androidx.media3.exoplayer.source.MediaSource
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.app.Events
@@ -19,27 +18,27 @@ import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.network.api.fabric.MarketplaceApi
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.mapNotNull
-import app.eluvio.wallet.util.toAnnotatedString
+import app.eluvio.wallet.util.toHtmlSpan
 import com.google.common.base.Optional
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
-import javax.inject.Inject
 
-@HiltViewModel
-class LegacyNftDetailViewModel @Inject constructor(
+@HiltNavKeyViewModel
+open class LegacyNftDetailViewModel(
+    @NavArg private val navArgs: LegacyNftDetailArgs,
     private val contentStore: ContentStore,
     private val fulfillmentStore: FulfillmentStore,
     private val apiProvider: ApiProvider,
     private val videoOptionsFetcher: VideoOptionsFetcher,
-    private val navArgs: LegacyNftDetailArgs,
 ) : BaseViewModel<LegacyNftDetailViewModel.State>(State()) {
     @Immutable
     data class State(
         val title: String = "",
-        val subtitle: AnnotatedString = AnnotatedString(""),
+        val subtitle: Spanned = "".toHtmlSpan(),
         val featuredMedia: List<MediaEntity> = emptyList(),
         val sections: List<MediaSectionEntity> = emptyList(),
         val redeemableOffers: List<Offer> = emptyList(),
@@ -90,9 +89,7 @@ class LegacyNftDetailViewModel @Inject constructor(
                     updateState {
                         copy(
                             title = nft.displayName,
-                            subtitle = nft.descriptionRichText?.let {
-                                Html.fromHtml(it).toAnnotatedString()
-                            } ?: AnnotatedString(nft.description),
+                            subtitle = (nft.descriptionRichText ?: nft.description).toHtmlSpan(),
                             featuredMedia = nft.featuredMedia,
                             sections = nft.mediaSections,
                             backgroundImage = backgroundImage,

@@ -4,9 +4,9 @@ import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class LegacyNftDetailArgs(
-    val contractAddress: String,
-    val tokenId: String,
-    val marketplaceId: String? = null,
-    val backLink: String? = null,
+data class LockedMediaDialogNavArgs(
+    val name: String,
+    val imageUrl: String,
+    val subtitle: String? = null,
+    val aspectRatio: Float,
 ) : NavKey

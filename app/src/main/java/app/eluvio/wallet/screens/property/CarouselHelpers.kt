@@ -1,7 +1,5 @@
 package app.eluvio.wallet.screens.property
 
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.unit.sp
 import app.eluvio.wallet.data.entities.v2.DisplayFormat
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
 import app.eluvio.wallet.data.entities.v2.PropertySearchFiltersEntity
@@ -12,12 +10,11 @@ import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.data.stores.PlaybackStore
 import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState.CarouselItem
-import app.eluvio.wallet.screens.property.mediagrid.GridContentOverride
-import app.eluvio.wallet.theme.DefaultTypography
-import app.eluvio.wallet.theme.carousel_48
+import app.eluvio.wallet.data.GridContentOverride
 import app.eluvio.wallet.util.logging.Log
-import com.ramcosta.composedestinations.generated.destinations.MediaGridDestination
+import app.eluvio.wallet.util.toHtmlAnnotated
 import kotlinx.collections.immutable.toImmutableList
+import app.eluvio.wallet.screens.property.mediagrid.MediaGridNavArgs
 
 /**
  * The maximum number of items to display in a carousel before showing a "View All" button for "carousel" sections.
@@ -50,10 +47,9 @@ fun MediaPageSectionEntity.toDynamicSections(
         MediaPageSectionEntity.TYPE_CONTAINER -> {
             // Create a title row if it exists
             val titleRow = listOfNotNull(displaySettings?.title?.let {
-                DynamicPageLayoutState.Section.Text(
+                DynamicPageLayoutState.Section.SectionHeader(
                     id,
-                    AnnotatedString("\n${it}"),
-                    DefaultTypography.carousel_48.copy(fontSize = 22.sp),
+                    "\n${it}".toHtmlAnnotated(),
                 )
             })
             // For now, just swap out container sections with their sub-sections.
@@ -98,7 +94,7 @@ private fun MediaPageSectionEntity.toCarouselSection(
         displaySettings = displaySettings,
         items = items.take(displayLimit).toImmutableList(),
         filterAttribute = filterAttribute,
-        viewAllNavigationEvent = MediaGridDestination(permissionContext, gridContentOverride)
+        viewAllNavigationEvent = MediaGridNavArgs(permissionContext, gridContentOverride)
             .takeIf { showViewAll }
             ?.asPush()
     )
@@ -108,19 +104,19 @@ private fun MediaPageSectionEntity.toHeroSections(): List<DynamicPageLayoutState
     return items.flatMap { item ->
         val sectionIdPrefix = "${this.id}-${item.id}"
         listOfNotNull(
-            item.displaySettings?.logoUrl?.url?.let {
+            item.displaySettings?.logoUrl?.let {
                 DynamicPageLayoutState.Section.Banner("${sectionIdPrefix}-banner", it)
             },
             item.displaySettings?.title?.ifEmpty { null }?.let {
                 DynamicPageLayoutState.Section.Title(
                     sectionId = "$sectionIdPrefix-title",
-                    text = AnnotatedString(it)
+                    text = it.toHtmlAnnotated()
                 )
             },
             item.displaySettings?.description?.ifEmpty { null }?.let {
                 DynamicPageLayoutState.Section.Description(
                     sectionId = "$sectionIdPrefix-description",
-                    text = AnnotatedString(it)
+                    text = it.toHtmlAnnotated()
                 )
             }
         )
@@ -133,7 +129,7 @@ fun List<SectionItemEntity>.toCarouselItems(
     playbackStore: PlaybackStore,
 ): List<CarouselItem> {
     return mapNotNull { item ->
-        val bannerImage = item.bannerImageUrl?.url
+        val bannerImage = item.bannerImageUrl
         val isBannerSection = sectionDisplaySettings?.displayFormat == DisplayFormat.BANNER
         if (isBannerSection && bannerImage == null) {
             Log.w("Section item inside a Banner section, doesn't have a banner image configured")

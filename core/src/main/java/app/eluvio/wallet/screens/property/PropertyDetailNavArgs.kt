@@ -9,5 +9,5 @@ data class PropertyDetailNavArgs(
     val propertyId: String,
     /** Only required to navigate to a specific page. Usually due to showAltPage permission behavior */
     val pageId: String? = null,
-    val propertyLinks: ArrayList<PropertyLink> = arrayListOf(),
+    val propertyLinks: List<PropertyLink> = emptyList(),
 ) : NavKey

@@ -81,7 +81,7 @@ private fun MediaPageSectionEntity.toCarouselSection(
 
     val gridContentOverride = this.items
         .takeIf { type == MediaPageSectionEntity.TYPE_SEARCH }
-        ?.mapNotNullTo(arrayListOf()) { it.media?.id }
+        ?.mapNotNull { it.media?.id }
         ?.let { mediaItemIds ->
             GridContentOverride(
                 title = displaySettings?.title ?: "",

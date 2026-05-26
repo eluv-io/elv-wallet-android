@@ -270,7 +270,7 @@ private fun PropertySwitcher(state: DynamicPageLayoutState) {
                                     navigator(
                                         PropertyDetailNavArgs(
                                             property.id,
-                                            propertyLinks = ArrayList(state.propertyLinks)
+                                            propertyLinks = state.propertyLinks
                                         ).asReplace()
                                     )
                                 }

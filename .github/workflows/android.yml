@@ -30,14 +30,22 @@ jobs:
     - name: Decode Keystore
       run: echo "${{ secrets.KEYSTORE_FILE }}" | base64 --decode > ${{ github.workspace }}/keystore.jks
 
-    - name: Decode google-services.json
-      run: echo "${{ secrets.GOOGLE_SERVICES_JSON_B64 }}" | base64 --decode > ${{ github.workspace }}/app/google-services.json
+    - name: Decode tv google-services.json
+      run: echo "${{ secrets.GOOGLE_SERVICES_JSON_TV_B64 }}" | base64 --decode > ${{ github.workspace }}/tv/google-services.json
+
+    - name: Decode mobile google-services.json
+      run: |
+        if [ -n "${{ secrets.GOOGLE_SERVICES_JSON_MOBILE_B64 }}" ]; then
+          echo "${{ secrets.GOOGLE_SERVICES_JSON_MOBILE_B64 }}" | base64 --decode > ${{ github.workspace }}/mobile/google-services.json
+        else
+          echo "GOOGLE_SERVICES_JSON_MOBILE_B64 not set; Firebase will be disabled in mobile build"
+        fi
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build with Gradle
       run: |
-        ./gradlew assembleDefaultDebug assembleDefaultRelease \
+        ./gradlew :tv:assembleDebug :tv:assembleRelease :mobile:assembleDebug :mobile:assembleRelease \
           -Pci_build_number=${{ github.run_number }} \
           -Pandroid.injected.signing.store.file='${{ github.workspace }}/keystore.jks' \
           -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
@@ -47,17 +55,31 @@ jobs:
     - name: Save version info
       run: |
         sha=$(git rev-parse --short ${{ github.sha }})
-        app_version=$(./gradlew -q printVersion -Pci_build_number=${{ github.run_number }})
-        apk_version=$(echo "$app_version-$sha")
-        echo "APK_VERSION=$apk_version" >> $GITHUB_ENV
+        tv_version=$(./gradlew -q :tv:printVersion -Pci_build_number=${{ github.run_number }})
+        mobile_version=$(./gradlew -q :mobile:printVersion -Pci_build_number=${{ github.run_number }})
+        echo "TV_APK_VERSION=$tv_version-$sha" >> $GITHUB_ENV
+        echo "MOBILE_APK_VERSION=$mobile_version-$sha" >> $GITHUB_ENV
 
     - name: Rename APKs
       run: |
-        mv app/build/outputs/apk/default/debug/app-default-debug.apk media-wallet-debug-${{ env.APK_VERSION }}.apk
-        mv app/build/outputs/apk/default/release/app-default-release.apk media-wallet-release-${{ env.APK_VERSION }}.apk
+        mkdir -p out/tv out/mobile
+        mv tv/build/outputs/apk/debug/tv-debug.apk \
+           out/tv/media-wallet-tv-debug-${{ env.TV_APK_VERSION }}.apk
+        mv tv/build/outputs/apk/release/tv-release.apk \
+           out/tv/media-wallet-tv-release-${{ env.TV_APK_VERSION }}.apk
+        mv mobile/build/outputs/apk/debug/mobile-debug.apk \
+           out/mobile/media-wallet-mobile-debug-${{ env.MOBILE_APK_VERSION }}.apk
+        mv mobile/build/outputs/apk/release/mobile-release.apk \
+           out/mobile/media-wallet-mobile-release-${{ env.MOBILE_APK_VERSION }}.apk
 
-    - name: Upload APKs
+    - name: Upload TV APKs
       uses: actions/upload-artifact@v4
       with:
-        name: APKs (${{ env.APK_VERSION }})
-        path: media-wallet-*.apk
+        name: tv-apks-${{ env.TV_APK_VERSION }}
+        path: out/tv/*.apk
+
+    - name: Upload Mobile APKs
+      uses: actions/upload-artifact@v4
+      with:
+        name: mobile-apks-${{ env.MOBILE_APK_VERSION }}
+        path: out/mobile/*.apk

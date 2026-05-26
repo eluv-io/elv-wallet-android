@@ -21,6 +21,9 @@
 local.properties
 secrets.properties
 
+# Claude Code — local agent config
+.claude/
+
 # Firebase — real config is secret. Fetch with `bin/fetch-secrets.sh`.
 app/google-services.json
 

@@ -21,7 +21,7 @@ import app.eluvio.wallet.util.rx.Optional
 import app.eluvio.wallet.util.rx.asSharedState
 import app.eluvio.wallet.util.rx.delay
 import app.eluvio.wallet.util.toHtmlAnnotated
-import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavArgViewModel
 import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Single
@@ -31,7 +31,7 @@ import io.reactivex.rxjava3.processors.BehaviorProcessor
 import io.reactivex.rxjava3.processors.PublishProcessor
 import kotlin.time.Duration.Companion.milliseconds
 
-@HiltNavKeyViewModel
+@HiltNavArgViewModel
 open class PropertySearchViewModel(
     @NavArg private val navArgs: PropertySearchNavArgs,
     private val propertyStore: MediaPropertyStore,

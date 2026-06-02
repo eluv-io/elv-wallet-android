@@ -7,12 +7,12 @@ import app.eluvio.wallet.data.stores.FulfillmentStore
 import app.eluvio.wallet.screens.common.generateQrCode
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.mapNotNull
-import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavArgViewModel
 import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
 
-@HiltNavKeyViewModel
+@HiltNavArgViewModel
 open class FulfillmentQrDialogViewModel(
     @NavArg private val navArgs: FulfillmentQrDialogNavArgs,
     private val fulfillmentStore: FulfillmentStore,

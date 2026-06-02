@@ -91,13 +91,13 @@ dependencies {
     api(libs.androidx.navigation3.runtime)
     api(libs.androidx.lifecycle.viewmodel.navigation3)
 
-    // nav3-hilt-vm — `@HiltNavKeyViewModel` + `@NavArg` annotations (api so :tv/:mobile use them
+    // nav3-hilt-vm — `@HiltNavArgViewModel` + `@NavArg` annotations (api so :tv/:mobile use them
     // on their own VMs without redeclaring) and the KSP processor that generates one Hilt
     // subclass + entry helper per VM. Each module with annotated VMs needs its own
     // `ksp(libs.stavfx.nav3hiltvm)`. The generated entry helpers call hiltViewModel<VM, F>(), which
     // lives in hilt-navigation-compose — pulled in as api for the same reason.
-    api(libs.stavfx.nav3hiltvm)
-    ksp(libs.stavfx.nav3hiltvm)
+    api(libs.stavfx.nav3hiltvm.annotations)
+    ksp(libs.stavfx.nav3hiltvm.compiler)
     api(libs.hilt.navigation.compose)
 
     implementation(libs.timber)

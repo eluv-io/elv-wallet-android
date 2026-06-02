@@ -16,7 +16,7 @@ import app.eluvio.wallet.util.crypto.Base58
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.realm.toDate
 import app.eluvio.wallet.util.toHtmlSpan
-import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavArgViewModel
 import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Flowable
@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 import app.eluvio.wallet.screens.qrdialogs.fulfillment.FulfillmentQrDialogNavArgs
 
-@HiltNavKeyViewModel
+@HiltNavArgViewModel
 open class RedeemDialogViewModel(
     @NavArg private val navArgs: RedeemDialogNavArgs,
     private val contentStore: ContentStore,

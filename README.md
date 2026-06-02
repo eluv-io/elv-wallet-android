@@ -24,7 +24,7 @@ A sensible toString() implementation is encouraged, since `RealmObjects` can't b
 The app uses [Jetpack Navigation 3](https://developer.android.com/guide/navigation/navigation-3). The host
 is `MainNavHost` in `:tv`, which renders a `NavDisplay` over a `NavBackStack<NavKey>` and resolves
 entries through the [nav3-hilt-vm](https://github.com/stavfx/nav3-hilt-vm) library — a small KSP
-processor that generates the Hilt assisted-injection scaffolding from a `@HiltNavKeyViewModel`
+processor that generates the Hilt assisted-injection scaffolding from a `@HiltNavArgViewModel`
 annotation.
 
 For each screen with a `NavKey` + ViewModel, the library generates a `<vm>Entry { vm -> Screen(vm) }`
@@ -39,7 +39,7 @@ There's a lot of boilerplate involved with creating a new Composable/ViewModel p
 Use this [Template with multiple files](https://www.jetbrains.com/help/idea/templates-with-multiple-files.html) to generate the files for you.
 
 Register the screen in `MainNavHost` with `${name}Entry { vm -> ${NAME}(vm) }` (the entry helper
-is auto-generated from the `@HiltNavKeyViewModel`-annotated VM in the same package).
+is auto-generated from the `@HiltNavArgViewModel`-annotated VM in the same package).
 
 ```
 package ${PACKAGE_NAME}
@@ -69,7 +69,7 @@ private fun ${NAME}Preview() = EluvioThemePreview {
 }
 ```
 
-And create a Child Template File for the ViewModel. `@HiltNavKeyViewModel` triggers codegen of the
+And create a Child Template File for the ViewModel. `@HiltNavArgViewModel` triggers codegen of the
 Hilt subclass + entry helper; `@NavArg` marks the constructor parameter that carries the route key.
 The class must be `open`.
 
@@ -77,10 +77,10 @@ The class must be `open`.
 package ${PACKAGE_NAME}
 
 import app.eluvio.wallet.app.BaseViewModel
-import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavArgViewModel
 import com.stavfx.nav3hiltvm.annotations.NavArg
 
-@HiltNavKeyViewModel
+@HiltNavArgViewModel
 open class ${NAME}ViewModel(
     @NavArg private val navArgs: ${NAME}NavArgs,
 ) : BaseViewModel<${NAME}ViewModel.State>(State()) {
@@ -102,7 +102,7 @@ import kotlinx.serialization.Serializable
 data class ${NAME}NavArgs(val arg1: String) : NavKey
 ```
 
-For screens without nav args (rare — `Dashboard` is the main example), skip `@HiltNavKeyViewModel` /
+For screens without nav args (rare — `Dashboard` is the main example), skip `@HiltNavArgViewModel` /
 `@NavArg`, declare a `@Serializable data object FooNavArgs : NavKey` for the route, use plain
 `@HiltViewModel` / `@Inject` on the VM, and register with raw `entry<FooNavArgs> { Foo() }` in
 `MainNavHost`.

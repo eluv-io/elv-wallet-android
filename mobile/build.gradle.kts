@@ -86,7 +86,7 @@ dependencies {
 
     // nav3-hilt-vm — annotation classes come transitively via :core's api dep, but the KSP
     // processor must be applied per-module that has annotated VMs.
-    ksp(libs.stavfx.nav3hiltvm)
+    ksp(libs.stavfx.nav3hiltvm.compiler)
 
     implementation(libs.realm)
 

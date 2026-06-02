@@ -6,12 +6,12 @@ import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.screens.dashboard.myitems.AllMediaProvider
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.mapNotNull
-import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavArgViewModel
 import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
 
-@HiltNavKeyViewModel
+@HiltNavArgViewModel
 open class NftDetailViewModel(
     @NavArg private val navArgs: NftDetailNavArgs,
     private val contentStore: ContentStore,

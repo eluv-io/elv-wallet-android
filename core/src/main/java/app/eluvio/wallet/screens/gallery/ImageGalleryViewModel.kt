@@ -5,12 +5,12 @@ import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.di.ApiProvider
-import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavArgViewModel
 import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
 
-@HiltNavKeyViewModel
+@HiltNavArgViewModel
 open class ImageGalleryViewModel(
     @NavArg private val navArgs: ImageGalleryNavArgs,
     private val contentStore: ContentStore,

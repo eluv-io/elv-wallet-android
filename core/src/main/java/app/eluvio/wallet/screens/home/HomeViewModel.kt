@@ -9,7 +9,7 @@ import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.asNewRoot
 import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.util.logging.Log
-import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavArgViewModel
 import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.kotlin.addTo
@@ -18,7 +18,7 @@ import app.eluvio.wallet.screens.dashboard.DashboardNavArgs
 import app.eluvio.wallet.screens.deeplink.NftClaimNavArgs
 import app.eluvio.wallet.screens.videoplayer.VideoPlayerArgs
 
-@HiltNavKeyViewModel
+@HiltNavArgViewModel
 open class HomeViewModel(
     @NavArg private val navArgs: DeeplinkArgs,
     private val tokenStore: TokenStore,

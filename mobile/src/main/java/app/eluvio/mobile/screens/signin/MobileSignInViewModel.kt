@@ -8,7 +8,7 @@ import app.eluvio.wallet.navigation.asReplace
 import app.eluvio.wallet.network.api.authd.ActivationCodeResponse
 import app.eluvio.wallet.screens.signin.SignInNavArgs
 import app.eluvio.wallet.util.logging.Log
-import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavArgViewModel
 import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.kotlin.addTo
@@ -21,7 +21,7 @@ import io.reactivex.rxjava3.kotlin.subscribeBy
  * On success, replaces this screen with `onSignedInTarget` if one was supplied (typical case
  * when the user tapped a property from Discover while logged out), otherwise pops back.
  */
-@HiltNavKeyViewModel
+@HiltNavArgViewModel
 open class MobileSignInViewModel(
     @NavArg private val navArgs: SignInNavArgs,
     private val activationFlow: DeviceActivationFlow,

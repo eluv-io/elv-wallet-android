@@ -25,7 +25,7 @@ import app.eluvio.wallet.util.rx.asSharedState
 import app.eluvio.wallet.util.rx.combineLatest
 import app.eluvio.wallet.util.rx.interval
 import app.eluvio.wallet.util.rx.mapNotNull
-import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavArgViewModel
 import com.stavfx.nav3hiltvm.annotations.NavArg
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -41,7 +41,7 @@ import kotlin.time.Duration.Companion.seconds
 import app.eluvio.wallet.screens.property.search.PropertySearchNavArgs
 import app.eluvio.wallet.screens.purchaseprompt.PurchasePromptNavArgs
 
-@HiltNavKeyViewModel
+@HiltNavArgViewModel
 open class PropertyDetailViewModel(
     @NavArg private val navArgs: PropertyDetailNavArgs,
     private val propertyStore: MediaPropertyStore,

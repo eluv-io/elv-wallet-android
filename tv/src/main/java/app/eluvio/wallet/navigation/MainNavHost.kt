@@ -101,14 +101,14 @@ fun MainNavHost(
             entry<LockedMediaDialogNavArgs>(metadata = { FullscreenDialog }) { args ->
                 LockedMediaDialog(args)
             }
-            fullscreenQRDialogEntry(extraMetadata = FullscreenDialog) { vm -> FullscreenQRDialog(vm) }
-            externalMediaQrDialogEntry(extraMetadata = FullscreenDialog) { vm ->
+            fullscreenQRDialogEntry(metadata = FullscreenDialog) { vm -> FullscreenQRDialog(vm) }
+            externalMediaQrDialogEntry(metadata = FullscreenDialog) { vm ->
                 ExternalMediaQrDialog(vm)
             }
-            fulfillmentQrDialogEntry(extraMetadata = DefaultDialog) { vm ->
+            fulfillmentQrDialogEntry(metadata = DefaultDialog) { vm ->
                 FulfillmentQrDialog(vm)
             }
-            redeemDialogEntry(extraMetadata = DefaultDialog) { vm -> RedeemDialog(vm) }
+            redeemDialogEntry(metadata = DefaultDialog) { vm -> RedeemDialog(vm) }
 
             // VideoPlayerArgs launches VideoPlayerActivity directly — handled in ComposeNavigator.
         },

@@ -8,7 +8,7 @@ import app.eluvio.wallet.navigation.asReplace
 import app.eluvio.wallet.screens.dashboard.myitems.AllMediaProvider
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.interval
-import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavArgViewModel
 import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Single
@@ -19,7 +19,7 @@ import kotlin.time.Duration.Companion.seconds
 import app.eluvio.wallet.screens.nftdetail.legacy.LegacyNftDetailArgs
 import app.eluvio.wallet.screens.nftdetail.NftDetailNavArgs
 
-@HiltNavKeyViewModel
+@HiltNavArgViewModel
 open class NftClaimViewModel(
     @NavArg private val navArgs: NftClaimNavArgs,
     private val contentStore: ContentStore,

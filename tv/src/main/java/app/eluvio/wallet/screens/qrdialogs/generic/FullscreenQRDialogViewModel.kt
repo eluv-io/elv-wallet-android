@@ -5,13 +5,13 @@ import androidx.compose.runtime.Immutable
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.data.UrlShortener
 import app.eluvio.wallet.screens.common.generateQrCode
-import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavArgViewModel
 import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
 
-@HiltNavKeyViewModel
+@HiltNavArgViewModel
 open class FullscreenQRDialogViewModel(
     @NavArg private val navArgs: FullscreenQRDialogNavArgs,
     private val urlShortener: UrlShortener,

@@ -11,7 +11,7 @@ import app.eluvio.wallet.data.VideoOptionsFetcher
 import app.eluvio.wallet.data.stores.PlaybackStore
 import app.eluvio.wallet.screens.videoplayer.VideoPlayerArgs
 import app.eluvio.wallet.util.logging.Log
-import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavArgViewModel
 import com.stavfx.nav3hiltvm.annotations.NavArg
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
@@ -27,7 +27,7 @@ import io.reactivex.rxjava3.subjects.PublishSubject
  * view lifecycle; this VM keeps the player buffering and the playout request in-flight so
  * rotation doesn't re-fetch or re-buffer the stream.
  */
-@HiltNavKeyViewModel
+@HiltNavArgViewModel
 open class MobileVideoPlayerViewModel(
     @NavArg private val args: VideoPlayerArgs,
     @ApplicationContext context: Context,

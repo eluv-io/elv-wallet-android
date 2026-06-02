@@ -22,7 +22,7 @@ material = "1.13.0"
 androidx-activity-compose = "1.11.0"
 androidx-lifecycle = "2.10.0"
 androidx-navigation3 = "1.1.2"
-stavfx-nav3hiltvm = "0.1.0"
+stavfx-nav3hiltvm = "0.4.0"
 kotlinpoet = "2.2.0"
 androidx-junit = "1.3.0"
 accompanist = "0.36.0"
@@ -83,7 +83,8 @@ androidx-fragment = { module = "androidx.fragment:fragment-ktx", version.ref = "
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "androidx-navigation3" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "androidx-navigation3" }
 androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "androidx-lifecycle" }
-stavfx-nav3hiltvm = { module = "com.stavfx:nav3-hilt-vm", version.ref = "stavfx-nav3hiltvm" }
+stavfx-nav3hiltvm-annotations = { module = "com.stavfx.nav3hiltvm:nav3-hilt-vm-annotations", version.ref = "stavfx-nav3hiltvm" }
+stavfx-nav3hiltvm-compiler = { module = "com.stavfx.nav3hiltvm:nav3-hilt-vm-compiler", version.ref = "stavfx-nav3hiltvm" }
 ksp-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 kotlinpoet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlinpoet" }

@@ -24,7 +24,7 @@ import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.Optional
 import app.eluvio.wallet.util.rx.asSharedState
 import app.eluvio.wallet.util.rx.mapNotNull
-import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavArgViewModel
 import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
@@ -33,7 +33,7 @@ import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 import app.eluvio.wallet.screens.property.PropertyDetailNavArgs
 
-@HiltNavKeyViewModel
+@HiltNavArgViewModel
 open class PurchasePromptViewModel(
     @NavArg private val navArgs: PurchasePromptNavArgs,
     private val propertyStore: MediaPropertyStore,

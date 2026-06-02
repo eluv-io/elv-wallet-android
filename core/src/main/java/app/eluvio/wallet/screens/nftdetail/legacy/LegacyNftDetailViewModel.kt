@@ -20,14 +20,14 @@ import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rx.mapNotNull
 import app.eluvio.wallet.util.toHtmlSpan
 import com.google.common.base.Optional
-import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavArgViewModel
 import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
 
-@HiltNavKeyViewModel
+@HiltNavArgViewModel
 open class LegacyNftDetailViewModel(
     @NavArg private val navArgs: LegacyNftDetailArgs,
     private val contentStore: ContentStore,

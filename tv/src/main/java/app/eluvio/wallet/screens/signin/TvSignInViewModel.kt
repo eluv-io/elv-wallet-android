@@ -12,7 +12,7 @@ import app.eluvio.wallet.navigation.asReplace
 import app.eluvio.wallet.network.api.authd.ActivationCodeResponse
 import app.eluvio.wallet.screens.common.generateQrCode
 import app.eluvio.wallet.util.logging.Log
-import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavArgViewModel
 import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.kotlin.addTo
@@ -22,7 +22,7 @@ import io.reactivex.rxjava3.kotlin.subscribeBy
  * TV's device-activation sign-in screen. Renders the activation URL as a QR code; the
  * shared polling / token storage / property prefetch lives in [DeviceActivationFlow].
  */
-@HiltNavKeyViewModel
+@HiltNavArgViewModel
 open class TvSignInViewModel(
     @NavArg private val navArgs: SignInNavArgs,
     private val propertyStore: MediaPropertyStore,

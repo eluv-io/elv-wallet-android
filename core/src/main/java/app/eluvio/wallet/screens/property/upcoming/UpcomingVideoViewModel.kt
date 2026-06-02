@@ -16,7 +16,7 @@ import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.realm.millis
 import app.eluvio.wallet.util.rx.mapNotNull
 import app.eluvio.wallet.util.rx.timer
-import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavArgViewModel
 import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Maybe
@@ -27,7 +27,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import app.eluvio.wallet.screens.videoplayer.VideoPlayerArgs
 
-@HiltNavKeyViewModel
+@HiltNavArgViewModel
 open class UpcomingVideoViewModel(
     @NavArg private val navArgs: UpcomingVideoNavArgs,
     private val contentStore: ContentStore,

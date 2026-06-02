@@ -13,13 +13,13 @@ import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.di.ApiProvider
 import app.eluvio.wallet.screens.common.generateQrCode
 import app.eluvio.wallet.util.logging.Log
-import com.stavfx.nav3hiltvm.annotations.HiltNavKeyViewModel
+import com.stavfx.nav3hiltvm.annotations.HiltNavArgViewModel
 import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
 import kotlinx.parcelize.Parcelize
 
-@HiltNavKeyViewModel
+@HiltNavArgViewModel
 open class ExternalMediaQrDialogViewModel(
     @NavArg private val navArgs: ExternalMediaQrDialogNavArgs,
     private val contentStore: ContentStore,

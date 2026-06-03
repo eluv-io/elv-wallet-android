@@ -1,5 +1,6 @@
 package app.eluvio.mobile.screens.property
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -30,15 +31,57 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.eluvio.mobile.R
+import app.eluvio.wallet.navigation.NavigationEvent
+import app.eluvio.wallet.navigation.asPush
+import app.eluvio.wallet.navigation.onClickTarget
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState.CarouselItem
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState.Section
+import app.eluvio.wallet.screens.property.PropertyDetailViewModel
+import app.eluvio.wallet.screens.videoplayer.VideoPlayerArgs
+import app.eluvio.wallet.util.subscribeToState
 import coil.compose.AsyncImage
+
+/**
+ * Entry body for [app.eluvio.mobile.navigation.PropertyDetailNavArgs]: binds
+ * [PropertyDetailViewModel] state to the stateless overload below and resolves carousel item
+ * clicks into navigation events (only video is wired up today; everything else toasts).
+ */
+@Composable
+internal fun PropertyDetailScreen(vm: PropertyDetailViewModel) {
+    val context = LocalContext.current
+    vm.subscribeToState { _, state ->
+        PropertyDetailScreen(
+            state = state,
+            onItemClick = { item ->
+                val real = (item as? CarouselItem.BannerWrapper)?.delegate ?: item
+                if (real !is CarouselItem.Media) {
+                    Toast.makeText(context, "Not supported yet: $real", Toast.LENGTH_SHORT).show()
+                    return@PropertyDetailScreen
+                }
+                when (val target = real.entity.onClickTarget(real.permissionContext)) {
+                    is VideoPlayerArgs -> vm.navigateTo(target.asPush())
+                    null -> Toast.makeText(context, "No access to this item", Toast.LENGTH_SHORT)
+                        .show()
+
+                    else -> Toast.makeText(
+                        context,
+                        "Not supported yet: $target",
+                        Toast.LENGTH_SHORT
+                    )
+                        .show()
+                }
+            },
+            onNavigateUp = { vm.navigateTo(NavigationEvent.GoBack) },
+        )
+    }
+}
 
 /**
  * Compose body for [PropertyDetailFragment]. Caller is responsible for wrapping in

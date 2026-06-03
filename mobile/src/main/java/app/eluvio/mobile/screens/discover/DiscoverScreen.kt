@@ -33,8 +33,22 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import app.eluvio.wallet.screens.dashboard.discover.DiscoverViewModel
+import app.eluvio.wallet.util.subscribeToState
 import coil.compose.AsyncImage
+
+/**
+ * Entry body for [app.eluvio.mobile.navigation.DiscoverRoute]: binds [DiscoverViewModel] state
+ * to the stateless overload below.
+ */
+@Composable
+internal fun DiscoverScreen() {
+    val vm: DiscoverViewModel = hiltViewModel()
+    vm.subscribeToState { _, state ->
+        DiscoverScreen(state = state, onPropertyClick = vm::onPropertyClicked, onRetry = vm::retry)
+    }
+}
 
 @Composable
 fun DiscoverScreen(

@@ -2,6 +2,7 @@ package app.eluvio.mobile.screens.videoplayer
 
 import android.app.Activity
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -19,9 +20,47 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
+import app.eluvio.wallet.navigation.LocalNavigator
+import app.eluvio.wallet.navigation.NavigationEvent
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.kotlin.addTo
+import io.reactivex.rxjava3.kotlin.subscribeBy
+
+/**
+ * Entry body for the video-player route. [MobileVideoPlayerViewModel] extends `ViewModel`
+ * directly (not `BaseViewModel`) since the player itself is the "state" — so there's no
+ * `subscribeToState` here. We tap [LocalNavigator] directly to navigate back on load errors.
+ */
+@Composable
+internal fun VideoPlayerScreen(vm: MobileVideoPlayerViewModel) {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    DisposableEffect(vm) {
+        val listener = object : Player.Listener {
+            override fun onPlayerError(error: PlaybackException) {
+                app.eluvio.wallet.util.logging.Log.e(
+                    "Error playing video ${error.errorCodeName}", error
+                )
+            }
+        }
+        vm.exoPlayer.addListener(listener)
+        val disposables = CompositeDisposable()
+        vm.loadErrors.subscribeBy {
+            Toast.makeText(context, "Error loading video. Try again later.", Toast.LENGTH_SHORT)
+                .show()
+            navigator(NavigationEvent.GoBack)
+        }.addTo(disposables)
+        onDispose {
+            vm.exoPlayer.removeListener(listener)
+            disposables.clear()
+        }
+    }
+    VideoPlayerScreen(player = vm.exoPlayer)
+}
 
 @OptIn(UnstableApi::class)
 @Composable

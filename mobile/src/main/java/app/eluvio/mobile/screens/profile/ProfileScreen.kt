@@ -33,13 +33,34 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import app.eluvio.mobile.R
 import app.eluvio.wallet.screens.dashboard.profile.ProfileViewModel
+import app.eluvio.wallet.util.subscribeToState
+
+/**
+ * Entry body for [app.eluvio.mobile.navigation.ProfileRoute]: binds [ProfileViewModel] state to
+ * the stateless overload below and wires the hidden debug env-switcher tap.
+ */
+@Composable
+internal fun ProfileScreen() {
+    val vm: ProfileViewModel = hiltViewModel()
+    val tapper = rememberNetworkRowTapper()
+    val context = LocalContext.current
+    vm.subscribeToState { _, state ->
+        ProfileScreen(
+            state = state,
+            onSignOut = vm::signOut,
+            onNetworkRowTap = { if (tapper.tap()) context.launchEnvSwitcherIfDebug() },
+        )
+    }
+}
 
 @Composable
 fun ProfileScreen(

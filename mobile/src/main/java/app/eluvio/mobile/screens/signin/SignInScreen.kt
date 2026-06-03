@@ -33,6 +33,23 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import app.eluvio.mobile.R
 import app.eluvio.wallet.util.logging.Log
+import app.eluvio.wallet.util.subscribeToState
+
+/**
+ * Entry body for the sign-in route: binds [MobileSignInViewModel] state to the stateless
+ * overload below.
+ */
+@Composable
+internal fun SignInScreen(vm: MobileSignInViewModel) {
+    vm.subscribeToState { _, state ->
+        SignInScreen(
+            signInUrl = state.signInUrl,
+            loadingContent = state.loadingContent,
+            onAuthCaptured = vm::onAuthCaptured,
+            onAuthTabDismissed = vm::onAuthTabDismissed,
+        )
+    }
+}
 
 /**
  * Translucent overlay rendered as a fullscreen dialog above the previous back-stack entry.

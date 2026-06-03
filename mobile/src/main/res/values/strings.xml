@@ -11,5 +11,9 @@
     <string name="profile_label_session">Session expires</string>
     <string name="profile_label_version">App version</string>
     <string name="profile_sign_out">Sign out</string>
+    <string name="profile_sign_out_confirm_title">Sign out?</string>
+    <string name="profile_sign_out_confirm_message">You\'ll need to sign in again to access your items.</string>
+    <string name="profile_sign_out_confirm">Sign out</string>
+    <string name="cancel">Cancel</string>
     <string name="sign_in_almost_done">Almost done</string>
 </resources>

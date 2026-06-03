@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +15,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -23,7 +23,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -33,7 +38,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import app.eluvio.mobile.R
 import app.eluvio.wallet.screens.dashboard.profile.ProfileViewModel
 
@@ -45,6 +49,7 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
 ) {
     val loggedIn = state.address.isNotBlank()
+    var showSignOutConfirmation by remember { mutableStateOf(false) }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -76,11 +81,35 @@ fun ProfileScreen(
                     add(LabelValueRow(R.string.profile_label_email, state.email!!))
                 }
                 if (loggedIn) {
-                    add(LabelValueRow(R.string.profile_label_user_id, state.userId, monospace = true))
-                    add(LabelValueRow(R.string.profile_label_address, state.address, monospace = true, valueSmall = true))
-                    add(LabelValueRow(R.string.profile_label_session, state.sessionExpiration.orEmpty()))
+                    add(
+                        LabelValueRow(
+                            R.string.profile_label_user_id,
+                            state.userId,
+                            monospace = true
+                        )
+                    )
+                    add(
+                        LabelValueRow(
+                            R.string.profile_label_address,
+                            state.address,
+                            monospace = true,
+                            valueSmall = true
+                        )
+                    )
+                    add(
+                        LabelValueRow(
+                            R.string.profile_label_session,
+                            state.sessionExpiration.orEmpty()
+                        )
+                    )
                 }
-                add(LabelValueRow(R.string.profile_label_network, state.network?.name.orEmpty(), onClick = onNetworkRowTap))
+                add(
+                    LabelValueRow(
+                        R.string.profile_label_network,
+                        state.network?.name.orEmpty(),
+                        onClick = onNetworkRowTap
+                    )
+                )
                 add(LabelValueRow(R.string.profile_label_version, state.appVersion))
             }
             rows.forEachIndexed { index, row ->
@@ -89,17 +118,45 @@ fun ProfileScreen(
             }
         }
 
-        OutlinedButton(
-            onClick = onSignOut,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 24.dp),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colorScheme.error,
-            ),
-        ) {
-            Text(stringResource(R.string.profile_sign_out))
+        if (loggedIn) {
+            OutlinedButton(
+                onClick = { showSignOutConfirmation = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 24.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error,
+                ),
+            ) {
+                Text(stringResource(R.string.profile_sign_out))
+            }
         }
+    }
+
+    if (showSignOutConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showSignOutConfirmation = false },
+            title = { Text(stringResource(R.string.profile_sign_out_confirm_title)) },
+            text = { Text(stringResource(R.string.profile_sign_out_confirm_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSignOutConfirmation = false
+                        onSignOut()
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error,
+                    ),
+                ) {
+                    Text(stringResource(R.string.profile_sign_out_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSignOutConfirmation = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
     }
 }
 

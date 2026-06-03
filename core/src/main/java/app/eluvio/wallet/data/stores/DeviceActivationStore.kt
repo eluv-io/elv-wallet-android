@@ -71,14 +71,14 @@ class DeviceActivationStore @Inject constructor(
      * Only returns a value when activation is complete and fabric token has been obtained.
      * Otherwise returns an empty [Maybe].
      */
-    fun checkToken(activationData: ActivationCodeResponse): Maybe<String> {
+    fun checkToken(activationData: ActivationCodeResponse, provider: String): Maybe<String> {
         return apiProvider.getApi(AuthServicesApi::class)
             .flatMap { api -> api.checkToken(activationData.code, activationData.passcode) }
             .mapNotNull { httpResponse ->
                 Log.d("check token result $httpResponse")
                 val response = httpResponse.body() ?: return@mapNotNull null
                 // Poll successful. Store login information.
-                tokenStore.login(response.payload)
+                tokenStore.login(response.payload, provider)
                 // Return any non-null value to signal completion.
                 return@mapNotNull response.payload.fabricToken
             }

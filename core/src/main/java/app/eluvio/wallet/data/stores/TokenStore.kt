@@ -46,9 +46,11 @@ interface TokenStore {
 }
 
 /**
- * Save login information from a [CsatResponse] into the [TokenStore].
+ * Save login information from a [CheckTokenPayload] into the [TokenStore]. [provider] is
+ * recorded atomically with the token so login state is never half-committed: callers must
+ * not split it into a separate write that a cancelled subscription could skip.
  */
-fun TokenStore.login(payload: CheckTokenPayload) {
+fun TokenStore.login(payload: CheckTokenPayload, provider: String) {
     update(
         fabricToken to payload.fabricToken,
         fabricTokenExpiration to payload.expiresAt?.toString(),
@@ -56,6 +58,7 @@ fun TokenStore.login(payload: CheckTokenPayload) {
         walletAddress to payload.address,
         clusterToken to payload.clusterToken,
         userEmail to payload.email,
+        loginProvider to provider,
 
         // idToken is what we get directly from Auth0 before we obtain the fabricToken from authd.
         // Once we have a fabricToken, it's no longer needed.

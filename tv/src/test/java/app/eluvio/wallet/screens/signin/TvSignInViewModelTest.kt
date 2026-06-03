@@ -138,7 +138,7 @@ class TvSignInViewModelTest {
         every { vm.navigateTo(any()) } returns Unit
 
         // WHEN
-        every { deviceActivationStore.checkToken(any()) } returns Maybe.just("success")
+        every { deviceActivationStore.checkToken(any(), any()) } returns Maybe.just("success")
         vm.onResume()
         // Wait for polling to start
         testScheduler.advanceTimeBy(10, TimeUnit.SECONDS)

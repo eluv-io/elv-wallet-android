@@ -66,7 +66,7 @@ class DeviceActivationFlow @Inject constructor(
     ): Completable {
         return Flowables.interval(POLL_INTERVAL)
             .doOnSubscribe { Log.d("starting to poll token for code=${activationData.code}") }
-            .flatMapMaybe { deviceActivationStore.checkToken(activationData) }
+            .flatMapMaybe { deviceActivationStore.checkToken(activationData, provider) }
             .firstOrError()
             .doOnError {
                 Log.e("Activation polling error! This shouldn't happen, restarting polling.", it)
@@ -78,10 +78,6 @@ class DeviceActivationFlow @Inject constructor(
             }
             .flatMapCompletable {
                 prefetchPropertyAndSections(propertyId)
-            }
-            .doOnComplete {
-                Log.d("Activation complete, recording login provider.")
-                tokenStore.update(tokenStore.loginProvider to provider)
             }
     }
 
@@ -102,15 +98,11 @@ class DeviceActivationFlow @Inject constructor(
     ): Completable {
         return Completable.fromAction {
             val payload = decodeAuthRedirectToken(clientAuthToken)
-            tokenStore.login(payload)
+            tokenStore.login(payload, provider)
             Log.d("Stored wallet auth envelope from redirect callback (addr=${payload.address}, expiresAt=${payload.expiresAt})")
             refreshAllPropertiesAsync()
         }
             .andThen(prefetchPropertyAndSections(propertyId))
-            .doOnComplete {
-                Log.d("Sign-in complete, recording login provider.")
-                tokenStore.update(tokenStore.loginProvider to provider)
-            }
     }
 
     /**

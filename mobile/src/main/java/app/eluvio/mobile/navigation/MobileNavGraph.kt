@@ -65,7 +65,10 @@ fun mobileEntryProvider(): (NavKey) -> NavEntry<NavKey> =
         entry<DiscoverRoute> { DiscoverNavScreen() }
         entry<MyItemsRoute> { MyItemsScreen() }
         entry<ProfileRoute> { ProfileNavScreen() }
-        mobileSignInEntry { vm -> SignInNavScreen(vm) }
+        // Sign-in renders translucent on top of the previous entry — see SignInScreen.
+        mobileSignInEntry(metadata = FadeDialogSceneStrategy.fullScreenDialog()) { vm ->
+            SignInNavScreen(vm)
+        }
         propertyDetailEntry { vm -> PropertyDetailNavScreen(vm) }
         mobileVideoPlayerEntry { vm -> VideoPlayerNavScreen(vm) }
     }
@@ -97,7 +100,9 @@ private fun SignInNavScreen(vm: MobileSignInViewModel) {
     vm.subscribeToState { _, state ->
         SignInScreen(
             signInUrl = state.signInUrl,
-            onNavigateUp = { vm.navigateTo(NavigationEvent.GoBack) },
+            loadingContent = state.loadingContent,
+            onAuthCaptured = vm::onAuthCaptured,
+            onAuthTabDismissed = vm::onAuthTabDismissed,
         )
     }
 }

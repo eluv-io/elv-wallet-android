@@ -97,6 +97,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.media3.ui)
 
+    // Custom Tabs / Auth Tab — hosts the device-activation sign-in flow.
+    implementation(libs.androidx.browser)
+
     // Compose
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))

@@ -20,6 +20,7 @@ androidx-fragment = "1.8.9"
 androidx-recyclerview = "1.4.0"
 material = "1.13.0"
 androidx-activity-compose = "1.11.0"
+androidx-browser = "1.10.0"
 androidx-lifecycle = "2.10.0"
 androidx-navigation3 = "1.1.2"
 stavfx-nav3hiltvm = "0.4.0"
@@ -97,6 +98,7 @@ hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt-
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt-android" }
 hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hilt-navigation-compose" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidx-activity-compose" }
+androidx-browser = { module = "androidx.browser:browser", version.ref = "androidx-browser" }
 installReferrer = { module = "com.android.installreferrer:installreferrer", version = "2.2" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 ok2curl = { module = "com.github.mrmike:ok2curl", version.ref = "ok2curl" }

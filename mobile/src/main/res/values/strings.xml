@@ -4,7 +4,6 @@
     <string name="tab_discover">Discover</string>
     <string name="tab_my_items">My Items</string>
     <string name="tab_profile">Profile</string>
-    <string name="sign_in_title">Sign In</string>
     <string name="profile_label_address">Wallet address</string>
     <string name="profile_label_email">Email</string>
     <string name="profile_label_user_id">User ID</string>
@@ -12,4 +11,5 @@
     <string name="profile_label_session">Session expires</string>
     <string name="profile_label_version">App version</string>
     <string name="profile_sign_out">Sign out</string>
+    <string name="sign_in_almost_done">Almost done</string>
 </resources>

@@ -118,3 +118,29 @@ data class CheckTokenPayload(
     @field:Json(name = "clusterToken") val clusterToken: String?,
     @field:Json(name = "email") val email: String?,
 )
+
+/**
+ * The payload returned from the Auth Tab redirect URI, which is a base58-encoded JSON envelope
+ * built by elv-client-js. It has the same fields as [CheckTokenPayload], but with different JSON
+ * field names, so we parse it separately rather than reusing the Moshi adapter.
+ */
+@JsonClass(generateAdapter = true)
+data class AuthRedirectPayload(
+    val fabricToken: String,
+    val expiresAt: Long?,
+    val refreshToken: String?,
+    val address: String,
+    val clusterToken: String?,
+    val email: String?,
+) {
+    fun toCheckTokenPayload(): CheckTokenPayload {
+        return CheckTokenPayload(
+            fabricToken = fabricToken,
+            expiresAt = expiresAt,
+            refreshToken = refreshToken,
+            address = address,
+            clusterToken = clusterToken,
+            email = email,
+        )
+    }
+}

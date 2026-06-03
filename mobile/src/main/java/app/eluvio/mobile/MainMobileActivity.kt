@@ -28,8 +28,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.NavDisplay
 import app.eluvio.mobile.navigation.DiscoverRoute
+import app.eluvio.mobile.navigation.FadeDialogSceneStrategy
 import app.eluvio.mobile.navigation.MobileNavigationState
 import app.eluvio.mobile.navigation.MyItemsRoute
 import app.eluvio.mobile.navigation.ProfileRoute
@@ -86,6 +88,11 @@ private fun EluvioMobileApp() {
         }
     }
 
+    // FadeDialogSceneStrategy renders entries marked with dialog metadata (e.g. the translucent
+    // sign-in overlay) as a Dialog on top of the previous entry, cross-faded via the overlay
+    // scene's onRemove hook.
+    val sceneStrategies = remember { listOf(FadeDialogSceneStrategy<NavKey>()) }
+
     CompositionLocalProvider(LocalNavigator provides navigator) {
         Box(Modifier.fillMaxSize()) {
             Scaffold(
@@ -99,6 +106,7 @@ private fun EluvioMobileApp() {
             ) { innerPadding ->
                 NavDisplay(
                     entries = entries,
+                    sceneStrategies = sceneStrategies,
                     onBack = { navState.handleMobileNavEvent(NavigationEvent.GoBack) {} },
                     modifier = Modifier.padding(innerPadding),
                 )

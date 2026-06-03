@@ -1,5 +1,6 @@
 package app.eluvio.wallet.data.stores
 
+import android.net.Uri
 import app.eluvio.wallet.di.ApiProvider
 import app.eluvio.wallet.network.api.authd.ActivationCodeRequest
 import app.eluvio.wallet.network.api.authd.ActivationCodeResponse
@@ -24,13 +25,26 @@ class DeviceActivationStore @Inject constructor(
     private val installation: Installation,
 ) {
 
-    fun observeActivationData(propertyId: String): Flowable<ActivationCodeResponse> {
+    fun observeActivationData(
+        propertyId: String,
+        redirect: String? = null,
+    ): Flowable<ActivationCodeResponse> {
         return apiProvider.getApi(AuthServicesApi::class)
             .zipWith(environmentStore.observeSelectedEnvironment().firstOrError())
             .flatMap { (api, env) ->
                 val dest = buildString {
                     append(env.walletUrl)
-                    append("?action=login&mode=login&response=code&source=code")
+                    append("?action=login&mode=login")
+                    if (redirect != null) {
+                        // window.location-based redirect — wallet appends ?elvToken=<token> and
+                        // navigates the browser, letting Auth Tab intercept the custom scheme.
+                        append("&response=redirect")
+                        append("&redirect=${Uri.encode(redirect)}")
+                    } else {
+                        // Device-activation code flow — wallet POSTs the token to the auth
+                        // service keyed by the activation code; caller polls.
+                        append("&response=code&source=code")
+                    }
                     append("&pid=$propertyId")
                     append("&installId=${installation.id.sha512}")
                     append("&origin=${Device.NAME}")
@@ -38,6 +52,7 @@ class DeviceActivationStore @Inject constructor(
                     append("#/login")
                 }
                 api.generateActivationCode(ActivationCodeRequest(dest))
+                    .doOnSuccess { Log.i("got activation code: $it") }
             }
             // Make observable never-ending so we can restart it even after getting successful result from auth0
             .mergeWith(Single.never())

@@ -1,6 +1,7 @@
 package app.eluvio.mobile.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,7 +28,7 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
  */
 class MobileNavigationState(
     val startRoute: NavKey,
-    topLevelRoute: androidx.compose.runtime.MutableState<NavKey>,
+    topLevelRoute: MutableState<NavKey>,
     val backStacks: Map<NavKey, NavBackStack<NavKey>>,
 ) {
     var topLevelRoute: NavKey by topLevelRoute

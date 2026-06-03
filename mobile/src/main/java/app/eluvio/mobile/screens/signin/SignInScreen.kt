@@ -1,112 +1,131 @@
 package app.eluvio.mobile.screens.signin
 
-import android.annotation.SuppressLint
-import android.webkit.CookieManager
-import android.webkit.WebStorage
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.app.Activity
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.browser.auth.AuthTabIntent
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import app.eluvio.mobile.R
+import app.eluvio.wallet.util.logging.Log
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Translucent overlay rendered as a fullscreen dialog above the previous back-stack entry.
+ * Window-level concerns (dialog dim, platform animation suppression, enter/exit fade) are
+ * handled by [app.eluvio.mobile.navigation.FadeDialogSceneStrategy] — this screen only
+ * renders the scrim + spinner and hosts the Auth Tab launcher.
+ *
+ * Completion is redirect-driven: the wallet web app is launched with `&response=redirect&
+ * redirect=elvwallet://auth-complete`, so on success it hard-redirects to that URL with
+ * `?elvToken=<token>` appended. The Auth Tab matches [AUTH_REDIRECT_SCHEME] and closes,
+ * delivering the URI to [onAuthCaptured]. If the user dismisses the tab without completing
+ * auth, [onAuthTabDismissed] fires instead.
+ */
 @Composable
 fun SignInScreen(
     signInUrl: String?,
-    onNavigateUp: () -> Unit,
+    loadingContent: Boolean,
+    onAuthCaptured: (Uri) -> Unit,
+    onAuthTabDismissed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.sign_in_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateUp) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_arrow_back),
-                            contentDescription = null,
-                        )
-                    }
-                },
-            )
-        },
-    ) { padding ->
+    val launcher = rememberLauncherForActivityResult(
+        AuthTabIntent.AuthenticateUserResultContract()
+    ) { result ->
+        Log.i("Auth Tab closed with resultCode=${result.resultCode}")
+        val uri = result.resultUri
+        if (result.resultCode == Activity.RESULT_OK && uri != null) {
+            Log.i("Auth Tab captured callback uri=$uri")
+            onAuthCaptured(uri)
+        } else {
+            onAuthTabDismissed()
+        }
+    }
+
+    var launchedUrl by rememberSaveable { mutableStateOf<String?>(null) }
+    LaunchedEffect(signInUrl, loadingContent) {
+        if (!loadingContent && signInUrl != null && signInUrl != launchedUrl) {
+            launchedUrl = signInUrl
+            Log.d("Launching Auth Tab for url=$signInUrl")
+            AuthTabIntent.Builder()
+                .setEphemeralBrowsingEnabled(false)
+                .setColorScheme(CustomTabsIntent.COLOR_SCHEME_DARK)
+                .build()
+                .launch(launcher, signInUrl.toUri(), AUTH_REDIRECT_SCHEME)
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(SCRIM_COLOR),
+        contentAlignment = Alignment.Center,
+    ) {
         Column(
-            Modifier
-                .padding(padding)
-                .fillMaxSize()
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            SignInWebView(signInUrl = signInUrl, modifier = Modifier.fillMaxSize())
+            CircularProgressIndicator()
+            // Only after the Auth Tab returns with a captured token — the post-auth prefetch
+            // is in flight, so it's worth signaling that we're not stuck.
+            if (loadingContent) {
+                OutlinedText(text = stringResource(R.string.sign_in_almost_done))
+            }
         }
     }
 }
 
-@SuppressLint("SetJavaScriptEnabled")
 @Composable
-private fun SignInWebView(
-    signInUrl: String?,
+private fun OutlinedText(
+    text: String,
     modifier: Modifier = Modifier,
+    style: TextStyle = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold),
+    outlineWidth: Dp = 1.dp,
 ) {
-    // Tracks the URL we last asked the WebView to load. Used to dedupe redundant loadUrl
-    // calls across recompositions, which would otherwise wipe in-progress form input (email,
-    // password, etc.) whenever the VM emits an unrelated state tick (e.g. a new userCode
-    // alongside the same signInUrl).
-    //
-    // Plain class — *not* MutableState — because nothing observes this value. Using
-    // MutableState would invite a future reader to subscribe from a composable, silently
-    // turning every URL change into an extra recomposition. We can't use `webView.url`
-    // either: it drifts as the page navigates through auth-provider redirects, so it
-    // doesn't reliably represent "the URL we asked to load".
-    val lastLoaded = remember { LoadedUrl() }
-
-    AndroidView(
-        modifier = modifier,
-        factory = { context ->
-            WebView(context).apply {
-                settings.javaScriptEnabled = true
-                settings.domStorageEnabled = true
-                // Without a WebViewClient, every navigation goes through Android's intent
-                // dispatcher, which blocks programmatic cross-origin redirects with "Denied
-                // starting an intent without a user gesture". Setting any WebViewClient keeps
-                // loads inside this view — the auth provider redirect (e.g. Auth0) needs this.
-                webViewClient = WebViewClient()
-            }
-        },
-        update = { webView ->
-            if (signInUrl != null && signInUrl != lastLoaded.url) {
-                lastLoaded.url = signInUrl
-                webView.loadUrl(signInUrl)
-            }
-        },
-        // Two things happen on leaving composition:
-        //  1. `destroy()` — WebView holds heavy native state (JS engine, rendering thread)
-        //     that view teardown alone won't release.
-        //  2. Cookie + localStorage wipe — the auth provider's session cookies persist
-        //     across our app-level sign-outs and would silently re-auth the same account
-        //     on the next entry. We don't need them after this screen exits: the app
-        //     exchanges the auth code for a token via the API client, not the WebView.
-        onRelease = { webView ->
-            webView.destroy()
-            CookieManager.getInstance().removeAllCookies(null)
-            WebStorage.getInstance().deleteAllData()
-        },
-    )
+    val strokePx = with(LocalDensity.current) { outlineWidth.toPx() }
+    Box(modifier) {
+        // Stroke pass — drawn behind the fill so the outline hugs the glyphs.
+        Text(
+            text,
+            style = style.copy(
+                color = Color.Black,
+                drawStyle = Stroke(width = strokePx, join = StrokeJoin.Round),
+            ),
+        )
+        Text(text, style = style)
+    }
 }
 
-private class LoadedUrl {
-    var url: String? = null
-}
+/**
+ * Custom scheme handed to the Auth Tab. The wallet web app redirects to
+ * `elvwallet://auth-complete?elvToken=<token>` on successful sign-in; Auth Tab matches the
+ * scheme and closes, delivering the URI as the activity result.
+ */
+private const val AUTH_REDIRECT_SCHEME = "elvwallet"
+
+private val SCRIM_COLOR = Color(0x99000000)

@@ -1,10 +1,5 @@
 package app.eluvio.mobile.screens.signin
 
-import android.app.Activity
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.browser.auth.AuthTabIntent
-import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,73 +25,37 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.net.toUri
 import app.eluvio.mobile.R
-import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.subscribeToState
 
 /**
- * Entry body for the sign-in route: binds [MobileSignInViewModel] state to the stateless
- * overload below.
+ * Mobile sign-in screen. A translucent fullscreen-dialog overlay rendered above the previous
+ * back-stack entry (window-level concerns — dialog dim, animation suppression, enter/exit fade —
+ * are handled by [app.eluvio.mobile.navigation.FadeDialogSceneStrategy]).
+ *
+ * It renders a scrim + spinner and drives a [SignInFlow]: once the activation URL is ready it
+ * launches the flow, and the flow's [SignInResult] is handed back to
+ * [MobileSignInViewModel.onSignInResult]. All the per-flow launch/capture/cancel logic lives in
+ * [rememberSignInFlow]; this screen only owns the "launch once" guard and the UI.
  */
 @Composable
 internal fun SignInScreen(vm: MobileSignInViewModel) {
+    val flow = rememberSignInFlow(onResult = vm::onSignInResult)
     vm.subscribeToState { _, state ->
-        SignInScreen(
-            signInUrl = state.signInUrl,
-            loadingContent = state.loadingContent,
-            onAuthCaptured = vm::onAuthCaptured,
-            onAuthTabDismissed = vm::onAuthTabDismissed,
-        )
+        var launchedUrl by rememberSaveable { mutableStateOf<String?>(null) }
+        LaunchedEffect(state.signInUrl, state.loadingContent) {
+            val url = state.signInUrl
+            if (!state.loadingContent && url != null && url != launchedUrl) {
+                launchedUrl = url
+                flow.launch(url)
+            }
+        }
+        SignInOverlay(loadingContent = state.loadingContent)
     }
 }
 
-/**
- * Translucent overlay rendered as a fullscreen dialog above the previous back-stack entry.
- * Window-level concerns (dialog dim, platform animation suppression, enter/exit fade) are
- * handled by [app.eluvio.mobile.navigation.FadeDialogSceneStrategy] — this screen only
- * renders the scrim + spinner and hosts the Auth Tab launcher.
- *
- * Completion is redirect-driven: the wallet web app is launched with `&response=redirect&
- * redirect=elvwallet://auth-complete`, so on success it hard-redirects to that URL with
- * `?elvToken=<token>` appended. The Auth Tab matches [AUTH_REDIRECT_SCHEME] and closes,
- * delivering the URI to [onAuthCaptured]. If the user dismisses the tab without completing
- * auth, [onAuthTabDismissed] fires instead.
- */
 @Composable
-fun SignInScreen(
-    signInUrl: String?,
-    loadingContent: Boolean,
-    onAuthCaptured: (Uri) -> Unit,
-    onAuthTabDismissed: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val launcher = rememberLauncherForActivityResult(
-        AuthTabIntent.AuthenticateUserResultContract()
-    ) { result ->
-        Log.i("Auth Tab closed with resultCode=${result.resultCode}")
-        val uri = result.resultUri
-        if (result.resultCode == Activity.RESULT_OK && uri != null) {
-            Log.i("Auth Tab captured callback uri=$uri")
-            onAuthCaptured(uri)
-        } else {
-            onAuthTabDismissed()
-        }
-    }
-
-    var launchedUrl by rememberSaveable { mutableStateOf<String?>(null) }
-    LaunchedEffect(signInUrl, loadingContent) {
-        if (!loadingContent && signInUrl != null && signInUrl != launchedUrl) {
-            launchedUrl = signInUrl
-            Log.d("Launching Auth Tab for url=$signInUrl")
-            AuthTabIntent.Builder()
-                .setEphemeralBrowsingEnabled(false)
-                .setColorScheme(CustomTabsIntent.COLOR_SCHEME_DARK)
-                .build()
-                .launch(launcher, signInUrl.toUri(), AUTH_REDIRECT_SCHEME)
-        }
-    }
-
+private fun SignInOverlay(loadingContent: Boolean, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -108,7 +67,7 @@ fun SignInScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             CircularProgressIndicator()
-            // Only after the Auth Tab returns with a captured token — the post-auth prefetch
+            // Only after the redirect is captured with a token — the post-auth prefetch
             // is in flight, so it's worth signaling that we're not stuck.
             if (loadingContent) {
                 OutlinedText(text = stringResource(R.string.sign_in_almost_done))
@@ -137,12 +96,5 @@ private fun OutlinedText(
         Text(text, style = style)
     }
 }
-
-/**
- * Custom scheme handed to the Auth Tab. The wallet web app redirects to
- * `elvwallet://auth-complete?elvToken=<token>` on successful sign-in; Auth Tab matches the
- * scheme and closes, delivering the URI as the activity result.
- */
-private const val AUTH_REDIRECT_SCHEME = "elvwallet"
 
 private val SCRIM_COLOR = Color(0x99000000)

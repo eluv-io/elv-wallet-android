@@ -17,10 +17,19 @@
 
         <activity
             android:name=".MainMobileActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Captures the sign-in redirect when a non-Auth-Tab browser is used. Scheme/host
+                 must match AuthRedirect (mobile/.../screens/signin/AuthRedirect.kt). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="elvauth" android:host="auth-complete" />
             </intent-filter>
         </activity>
     </application>

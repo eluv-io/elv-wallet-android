@@ -17,13 +17,14 @@ import io.reactivex.rxjava3.kotlin.subscribeBy
 /**
  * Mobile sign-in. Backs a translucent fullscreen-dialog entry that overlays the previous
  * screen — see [SignInScreen]. Uses the wallet web app's `response=redirect` mode: the
- * wallet hard-redirects to [AUTH_CALLBACK_URL] with `?elvToken=<token>` on success, and the
- * Auth Tab intercepts the custom scheme and delivers the URI to [onAuthCaptured].
+ * wallet hard-redirects to [AUTH_CALLBACK_URL] with `?elvToken=<token>` on success.
  *
- * Because the Auth Tab is a separate activity, our activity pauses for the duration of auth
- * and resumes when the result is delivered. The activation-code fetch is kicked off from
- * [init] (not [onResume]) on [bgDisposables] so the URL is ready by the time Compose
- * composes — saves the construction → composition → onResume gap.
+ * This VM is flow-agnostic: [SignInScreen]/[SignInFlow] own how the browser is launched and how
+ * the redirect is captured (Auth Tab result vs. `elvauth://` deep-link intent on the activity);
+ * the VM just fetches the activation URL and turns a [SignInResult] into token storage + nav.
+ *
+ * The activation-code fetch is kicked off from [init] (not [onResume]) on [bgDisposables] so the
+ * URL is ready by the time Compose composes — saves the construction → composition gap.
  */
 @HiltNavArgViewModel
 open class MobileSignInViewModel(
@@ -34,7 +35,7 @@ open class MobileSignInViewModel(
 
     data class State(
         val signInUrl: String? = null,
-        /** True once the auth token is in hand; tells the screen not to re-launch the Auth Tab while the prefetch is in flight. */
+        /** True once the auth token is in hand; tells the screen not to re-launch sign-in while the prefetch is in flight. */
         val loadingContent: Boolean = false,
     )
 
@@ -45,25 +46,34 @@ open class MobileSignInViewModel(
     private val bgDisposables = CompositeDisposable()
 
     init {
-        // run on init and not onResume so it doesn't re-trigger when the user comes back
-        // from the Auth Tab.
         observeActivationData()
     }
 
+    /** Handles the outcome of the [SignInFlow], whichever browser mechanism produced it. */
+    fun onSignInResult(result: SignInResult) {
+        when (result) {
+            is SignInResult.Captured -> completeSignIn(result.uri)
+            SignInResult.Cancelled -> {
+                Log.d("Sign-in cancelled — navigating back")
+                navigateTo(NavigationEvent.GoBack)
+            }
+        }
+    }
+
     /**
-     * Called with the Auth-Tab-captured redirect URI on successful sign-in. The `elvToken`
-     * query param is a base58-encoded JSON envelope built by elv-client-js; the activation
-     * flow decodes it and writes all token fields (fabric, refresh, address, email, ...) to
-     * the [app.eluvio.wallet.data.stores.TokenStore].
+     * Completes sign-in from a captured redirect URI. The `elvToken` query param is a base58
+     * JSON envelope built by elv-client-js; the activation flow decodes it and writes all token
+     * fields (fabric, refresh, address, email, ...) to the
+     * [app.eluvio.wallet.data.stores.TokenStore].
      */
-    fun onAuthCaptured(uri: Uri) {
+    private fun completeSignIn(uri: Uri) {
         val clientAuthToken = uri.getQueryParameter("elvToken")
         if (clientAuthToken.isNullOrBlank()) {
-            Log.w("Auth Tab callback URI missing elvToken: $uri — treating as cancel")
+            Log.w("Redirect URI missing elvToken: $uri — treating as cancel")
             navigateTo(NavigationEvent.GoBack)
             return
         }
-        Log.d("Got clientAuthToken from Auth Tab callback — completing sign-in")
+        Log.d("Got clientAuthToken from redirect — completing sign-in")
         updateState { copy(loadingContent = true) }
 
         activationFlow.completeSignInWithAuthToken(
@@ -82,20 +92,14 @@ open class MobileSignInViewModel(
             .addTo(bgDisposables)
     }
 
-    /** Called when the Auth Tab returns without a captured redirect (user dismissed). */
-    fun onAuthTabDismissed() {
-        Log.d("Auth tab dismissed before auth completed — navigating back")
-        navigateTo(NavigationEvent.GoBack)
-    }
-
     private fun observeActivationData() {
         activationFlow.observeActivationData(propertyId, redirect = AUTH_CALLBACK_URL)
             .firstElement()
             .subscribeBy(
                 onError = { Log.e("observeActivationData errored", it) },
-                onSuccess = { activationData ->
-                    Log.d("Activation code received: ${activationData.code} (exp=${activationData.expiration})")
-                    updateState { copy(signInUrl = activationData.url) }
+                onSuccess = {
+                    Log.d("Activation code received: ${it.code} (exp=${it.expiration}) url=${it.url}")
+                    updateState { copy(signInUrl = it.url) }
                 },
             )
             .addTo(bgDisposables)
@@ -109,8 +113,7 @@ open class MobileSignInViewModel(
 
 /**
  * Sent to the wallet web app as `&redirect=` so it can `window.location` to here on
- * sign-in success with `?elvToken=<token>` appended. The scheme must match
- * [app.eluvio.mobile.screens.signin.AUTH_REDIRECT_SCHEME] in `SignInScreen` for the
- * Auth Tab to intercept the redirect and close.
+ * sign-in success with `?elvToken=<token>` appended. Defined by [AuthRedirect] so the Auth
+ * Tab scheme, the manifest `<intent-filter>`, and this URL can't drift apart.
  */
-private const val AUTH_CALLBACK_URL = "elvwallet://auth-complete"
+private const val AUTH_CALLBACK_URL = AuthRedirect.URL

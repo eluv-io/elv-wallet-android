@@ -37,6 +37,12 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import dagger.hilt.android.AndroidEntryPoint
 
+/**
+ * Marker typealias for the main activity on TV, to make it easy to search in IDE.
+ * Renaming a launcher activity is non-trivial, so this is an easy compromise.
+ */
+typealias MainTvActivity = MainActivity
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

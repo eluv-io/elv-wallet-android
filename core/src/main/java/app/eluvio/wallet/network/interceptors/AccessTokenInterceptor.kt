@@ -116,8 +116,8 @@ class AccessTokenInterceptor @Inject constructor(
         val retry = response.request
         val noRetry: Request? = null
 
-        val url = response.request.url.toString()
-        val isAuthRelatedRequest = authRequestPaths.any { path -> path in url }
+        val requestPath = response.request.url.encodedPath
+        val isAuthRelatedRequest = authRequestPaths.any { path -> path in requestPath }
         if (isAuthRelatedRequest) {
             log("Auth related requested, no special handling for 401.")
             return noRetry
@@ -134,17 +134,19 @@ class AccessTokenInterceptor @Inject constructor(
             return signOut()
         }
 
+        log("Awaiting token refresh lock...")
         synchronized(this) {
             // use [networkResponse.request], since [request] won't have any headers set from the Network Interceptors.
             response.networkResponse?.request?.authToken
                 // Check if the token has changed since the original request was made.
                 ?.takeIf { originalToken -> originalToken != tokenStore.fabricToken.get() }
                 ?.let {
-                    log("Token changed since original request. Retrying with new token.")
+                    log("Token changed since original request. Retrying with new token. $requestPath")
                     // While we were waiting on the Synchronized block, another call must have refreshed the token.
                     return retry
                 }
 
+            log("Starting token refresh flow for request to $requestPath")
             try {
                 val csatResponse = apiProvider.get()
                     .getApi(AuthServicesApi::class)
@@ -163,6 +165,7 @@ class AccessTokenInterceptor @Inject constructor(
                     }
                     .blockingGet()
 
+                log("Token refresh successful. Updating token store and retrying original request. ${response.request.url.encodedPath}")
                 tokenStore.refresh(csatResponse)
 
                 return retry

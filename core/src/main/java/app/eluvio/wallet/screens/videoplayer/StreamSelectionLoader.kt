@@ -27,8 +27,7 @@ class StreamSelectionLoader @Inject constructor(
                     StreamItem.AdditionalView.from(view, index)
                 }
 
-                val isLive = media.liveVideoInfo?.ended == false
-                val apiStreams = if (isLive && propertyId != null) {
+                val apiStreams = if (propertyId != null) {
                     apiProvider.getApi(MediaWalletV2Api::class)
                         .flatMap { api -> api.getStreamSelections(propertyId) }
                         .zipWith(apiProvider.getFabricEndpoint())

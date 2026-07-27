@@ -1,5 +1,6 @@
 package app.eluvio.wallet.network.interceptors
 
+import app.eluvio.wallet.app.AppInfo
 import app.eluvio.wallet.data.SignOutHandler
 import app.eluvio.wallet.data.stores.FabricConfigStore
 import app.eluvio.wallet.data.stores.InMemoryTokenStore
@@ -67,7 +68,13 @@ class AccessTokenInterceptorTest {
         signOutHandler,
         { apiProvider },
         installation,
-        configStore
+        configStore,
+        AppInfo(
+            applicationId = "app.eluvio.wallet",
+            versionName = "1.0.0",
+            versionCode = 1,
+            isDebug = true,
+        )
     )
 
     private val server by lazy { apiTestingRule.server }

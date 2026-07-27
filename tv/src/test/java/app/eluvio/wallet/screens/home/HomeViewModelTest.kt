@@ -1,12 +1,12 @@
 package app.eluvio.wallet.screens.home
 
-import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.data.AuthenticationService
 import app.eluvio.wallet.data.entities.deeplink.DeeplinkRequestEntity
 import app.eluvio.wallet.data.stores.DeeplinkStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.asNewRoot
 import app.eluvio.wallet.navigation.asPush
+import app.eluvio.wallet.screens.dashboard.DashboardNavArgs
 import app.eluvio.wallet.testing.TestLogRule
 import io.mockk.every
 import io.mockk.mockk
@@ -19,7 +19,6 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import app.eluvio.wallet.screens.dashboard.DashboardNavArgs
 
 class HomeViewModelTest {
     @get:Rule
@@ -28,7 +27,6 @@ class HomeViewModelTest {
     private val tokenStore: TokenStore = mockk()
     private val deeplinkStore: DeeplinkStore = mockk()
     private val authenticationService: AuthenticationService = mockk()
-    private val savedStateHandle: SavedStateHandle = SavedStateHandle()
 
     @Before
     fun setup() {
@@ -124,8 +122,8 @@ class HomeViewModelTest {
         verify(exactly = 1) { vm.navigateTo(DashboardNavArgs.asNewRoot()) }
     }
 
-    private fun createViewModelAndSpy(): HomeViewModel {
-        val vm = HomeViewModel(tokenStore, deeplinkStore, authenticationService, savedStateHandle)
+    private fun createViewModelAndSpy(navArgs: DeeplinkArgs = DeeplinkArgs()): HomeViewModel {
+        val vm = HomeViewModel(navArgs, tokenStore, deeplinkStore, authenticationService)
         return spyk(vm).also {
             every { it.navigateTo(any()) } returns Unit
         }

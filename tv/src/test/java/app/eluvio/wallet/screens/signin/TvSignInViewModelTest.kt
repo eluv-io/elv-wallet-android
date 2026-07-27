@@ -2,6 +2,7 @@ package app.eluvio.wallet.screens.signin
 
 import android.graphics.Bitmap
 import androidx.lifecycle.SavedStateHandle
+import app.eluvio.wallet.data.DeviceActivationFlow
 import app.eluvio.wallet.data.UrlShortener
 import app.eluvio.wallet.data.entities.v2.MediaPageEntity
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
@@ -14,6 +15,7 @@ import app.eluvio.wallet.network.api.authd.ActivationCodeResponse
 import app.eluvio.wallet.screens.common.generateQrCode
 import app.eluvio.wallet.testing.TestLogRule
 import app.eluvio.wallet.util.entity.getFirstAuthorizedPage
+import com.squareup.moshi.Moshi
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -63,17 +65,23 @@ class TvSignInViewModelTest {
         )
     }
 
+    private val activationFlow = DeviceActivationFlow(
+        deviceActivationStore = deviceActivationStore,
+        tokenStore = tokenStore,
+        propertyStore = propertyStore,
+        moshi = Moshi.Builder().build(),
+    )
+
     private val navArgs = SignInNavArgs(
         provider = "ory",
         propertyId = property.id,
         onSignedInTarget = PropertyDetailNavArgs(propertyId = property.id),
     )
     private val vm = TvSignInViewModel(
-        propertyStore = propertyStore,
-        tokenStore = tokenStore,
-        urlShortener = urlShortener,
-        deviceActivationStore = deviceActivationStore,
         navArgs = navArgs,
+        propertyStore = propertyStore,
+        urlShortener = urlShortener,
+        activationFlow = activationFlow,
         savedStateHandle = SavedStateHandle(),
     )
 

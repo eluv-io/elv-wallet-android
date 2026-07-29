@@ -1,75 +1,86 @@
 package app.eluvio.wallet.screens.dashboard.discover
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.BoxWithConstraintsScope
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.ui.PlayerView
 import androidx.tv.material3.ClickableSurfaceDefaults
+import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import app.eluvio.wallet.R
-import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
-import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.common.ShimmerImage
+import app.eluvio.wallet.screens.common.TvButton
 import app.eluvio.wallet.screens.dashboard.discover.DiscoverViewModel.State
 import app.eluvio.wallet.theme.EluvioThemePreview
-import app.eluvio.wallet.theme.borders
-import app.eluvio.wallet.theme.focusedBorder
 import app.eluvio.wallet.theme.label_40
 import app.eluvio.wallet.util.compose.FractionBringIntoViewSpec
 import app.eluvio.wallet.util.compose.RealisticDevices
-import app.eluvio.wallet.util.compose.thenIf
-import app.eluvio.wallet.util.isKeyUpOf
+import app.eluvio.wallet.util.compose.requestInitialFocus
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.subscribeToState
-import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
+import coil3.compose.AsyncImage
+import kotlinx.coroutines.delay
 
 @Composable
 fun Discover(onBackgroundImageSet: (FabricUrl?) -> Unit) {
@@ -85,7 +96,7 @@ private fun Discover(
     onPropertyClicked: (State.Property) -> Unit,
     onRetryClicked: () -> Unit,
 ) {
-    BoxWithConstraints(
+    Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier.fillMaxSize()
     ) {
@@ -97,11 +108,10 @@ private fun Discover(
                 onRetryClicked = onRetryClicked
             )
         } else {
-            DiscoverGrid(
+            // The redesigned Discover page draws its own hero background.
+            LaunchedEffect(Unit) { onBackgroundImageSet(null) }
+            DiscoverPage(
                 state,
-                onPropertyFocused = { property ->
-                    onBackgroundImageSet(property.focusBackgroundUrl)
-                },
                 onPropertyClicked = onPropertyClicked,
                 onRetryClicked = onRetryClicked
             )
@@ -109,126 +119,337 @@ private fun Discover(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+/**
+ * The redesigned Discover page: full-bleed hero (video/image) driven by the focused property,
+ * property logo + action buttons, and categorized rows of property cards.
+ */
 @Composable
-private fun BoxWithConstraintsScope.DiscoverGrid(
+private fun DiscoverPage(
     state: State,
-    onPropertyFocused: (State.Property) -> Unit,
     onPropertyClicked: (State.Property) -> Unit,
-    onRetryClicked: () -> Unit
+    onRetryClicked: () -> Unit,
 ) {
-    val width by rememberUpdatedState(maxWidth)
-    val horizontalPadding = 50.dp
-    val cardSpacing = 15.dp
-    val desiredCardWidth = 170.dp
-    val columnCount = remember(width, horizontalPadding, desiredCardWidth, cardSpacing) {
-        val availableWidth = width - horizontalPadding
-        val cardWidth = desiredCardWidth + cardSpacing
-        (availableWidth / cardWidth).roundToInt()
+    if (state.loading) {
+        EluvioLoadingSpinner()
+        return
     }
-    val scrollState = rememberLazyGridState()
-    val scope = rememberCoroutineScope()
+    if (state.showRetryButton) {
+        RetryButton(onRetryClicked)
+        return
+    }
+    if (state.rows.isEmpty()) {
+        Text(stringResource(R.string.no_content_warning))
+        return
+    }
 
-    // The focus problems here were hard to solve, I got some hints from:
-    // https://stackoverflow.com/questions/76281554/android-jetpack-compose-tv-focus-restoring
-    // But ultimately I had to make some adjustments because we also wanted to restore focus when
-    // moving to the nav drawer and coming back, as well as focusing the first item on launch.
+    var focusedProperty by remember { mutableStateOf<State.Property?>(null) }
+    var browsingRows by remember { mutableStateOf(false) }
+    val displayedProperty = focusedProperty
+        ?: state.rows.firstOrNull()?.properties?.firstOrNull()
 
-    /**
-     * Always keep track of the last focused property, but there's more logic involved in actually
-     * restoring focus to it.
-     */
-    val currentFocusedProperty = rememberSaveable { mutableStateOf<String?>(null) }
-
-    /**
-     * We save a clicked property, so we can restore focus to it when navigating back to this
-     * screen. This is different than restoring focus when navigating between other elements on screen.
-     */
-    val lastClickedProperty = rememberSaveable { mutableStateOf<String?>(null) }
-
-    /**
-     * This is a trigger to let the corresponding Property item know that it should request focus
-     * right now.
-     */
-    val onDemandFocusRestore = rememberSaveable { mutableStateOf<String?>(null) }
-
-    val bivs = remember { FractionBringIntoViewSpec(parentFraction = 0.45f) }
-    val properties = state.properties
-    CompositionLocalProvider(LocalBringIntoViewSpec provides bivs) {
-        LazyVerticalGrid(
-            state = scrollState,
-            columns = GridCells.Fixed(columnCount),
-            horizontalArrangement = Arrangement.spacedBy(cardSpacing),
-            verticalArrangement = Arrangement.spacedBy(cardSpacing),
-            contentPadding = PaddingValues(horizontal = horizontalPadding),
+    Box(Modifier.fillMaxSize()) {
+        DiscoverHero(displayedProperty)
+        Column(
+            verticalArrangement = Arrangement.Bottom,
             modifier = Modifier
-                .fillMaxHeight()
-                .onFocusChanged {
-                    if (it.hasFocus && lastClickedProperty.value == null) {
-                        // We're gaining focus, but don't have a last clicked property: this means we
-                        // are gaining focus back from an element on screen, rather than coming back
-                        // from a different screen.
-                        onDemandFocusRestore.value = currentFocusedProperty.value
-                    }
-                }
-                .onPreviewKeyEvent {
-                    val firstPropertyId = properties.firstOrNull()?.id
-                    if (firstPropertyId != null && it.isKeyUpOf(Key.Back) && currentFocusedProperty.value != firstPropertyId) {
-                        // User clicked back while not focused on first item. Scroll to top and
-                        // trigger focus request.
-                        scope.launch {
-                            scrollState.animateScrollToItem(0)
-                        }
-                        onDemandFocusRestore.value = firstPropertyId
-                        return@onPreviewKeyEvent true
-                    }
-                    false
-                }
+                .fillMaxSize()
+                .padding(start = 70.dp)
         ) {
-            item(contentType = { "header" }, span = { GridItemSpan(maxLineSpan) }) {
-                Image(
-                    painter = painterResource(id = R.drawable.discover_logo),
-                    contentDescription = "Eluvio Logo",
-                    alignment = Alignment.CenterStart,
-                    modifier = Modifier
-                        .padding(top = Overscan.verticalPadding)
-                        .height(105.dp)
+            PropertyLogo(displayedProperty, Modifier.padding(start = 5.dp))
+            HeroButtons(
+                property = displayedProperty,
+                // While browsing rows, the primary action is shown pre-selected, hinting at
+                // what pressing "up" will focus.
+                highlightPrimary = browsingRows,
+                onPropertyClicked = onPropertyClicked,
+                modifier = Modifier.padding(start = 5.dp, top = 22.dp, bottom = 10.dp)
+            )
+            DiscoverRows(
+                rows = state.rows,
+                onPropertyFocused = { focusedProperty = it },
+                onPropertyClicked = onPropertyClicked,
+                modifier = Modifier.onFocusChanged { browsingRows = it.hasFocus }
+            )
+        }
+    }
+}
+
+@Composable
+private fun DiscoverHero(property: State.Property?, modifier: Modifier = Modifier) {
+    Box(modifier.fillMaxSize()) {
+        Crossfade(
+            targetState = property?.focusBackgroundUrl,
+            label = "Hero background"
+        ) { url ->
+            if (url != null) {
+                AsyncImage(
+                    model = url,
+                    contentDescription = "Background",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
                 )
             }
+        }
+        HeroVideo(property?.heroVideoUrl)
+        // Left scrim, so logo/buttons stay readable over the hero.
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.horizontalGradient(
+                        0f to HeroBaseColor.copy(alpha = 0.96f),
+                        0.26f to HeroBaseColor.copy(alpha = 0.72f),
+                        0.52f to HeroBaseColor.copy(alpha = 0.15f),
+                        0.72f to Color.Transparent,
+                    )
+                )
+        )
+        // Bottom scrim, so the rows stay readable over the hero.
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        0.45f to Color.Transparent,
+                        0.74f to HeroBaseColor.copy(alpha = 0.55f),
+                        0.98f to HeroBaseColor.copy(alpha = 0.98f),
+                    )
+                )
+        )
+    }
+}
 
-            if (state.loading) {
-                item(contentType = { "spinner" }, span = { GridItemSpan(maxLineSpan) }) {
-                    EluvioLoadingSpinner(Modifier.padding(top = 100.dp))
+@androidx.annotation.OptIn(UnstableApi::class)
+@Composable
+private fun HeroVideo(videoUrl: String?) {
+    // Only start video playback once focus has settled on a property for a bit,
+    // otherwise quickly browsing through cards would spawn a player per property.
+    var activeUrl by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(videoUrl) {
+        if (activeUrl != videoUrl) {
+            activeUrl = null
+            if (videoUrl != null) {
+                delay(1200)
+                activeUrl = videoUrl
+            }
+        }
+    }
+    val url = activeUrl ?: return
+    val context = LocalContext.current
+    key(url) {
+        // PlayerView's SurfaceView "punches a hole" through the window, hiding the hero image
+        // even before the video has anything to show. Only attach the PlayerView once the
+        // player is READY, so the hero image stays visible until then (or forever, if
+        // playback fails).
+        var ready by remember { mutableStateOf(false) }
+        val player = remember {
+            // TODO: Fake data returns plain video urls. Once the server model is ready, hero
+            //  videos will presumably be fabric links going through VideoOptionsFetcher.
+            val mediaSource =
+                DefaultMediaSourceFactory(context).createMediaSource(MediaItem.fromUri(url))
+            ExoPlayer.Builder(context)
+                .build()
+                .apply {
+                    setMediaSource(mediaSource)
+                    repeatMode = Player.REPEAT_MODE_ALL
+                    playWhenReady = true
+                    volume = 0f
+                    addListener(object : Player.Listener {
+                        override fun onPlaybackStateChanged(playbackState: Int) {
+                            if (playbackState == Player.STATE_READY) {
+                                ready = true
+                            }
+                        }
+
+                        override fun onPlayerError(error: PlaybackException) {
+                            Log.e("Hero video error", error)
+                            ready = false
+                        }
+                    })
+                    prepare()
                 }
-            } else if (state.properties.isNotEmpty()) {
-                itemsIndexed(
-                    properties,
-                    contentType = { _, _ -> "property_card" },
-                    key = { _, property -> property.id }
-                ) { index, property ->
-                    PropertyCard(
-                        index = index,
-                        property = property,
-                        scrollState = scrollState,
-                        lastClickedProperty = lastClickedProperty,
-                        currentFocusedProperty = currentFocusedProperty,
-                        onDemandFocusRestore = onDemandFocusRestore,
-                        onPropertyClicked = onPropertyClicked,
-                        onPropertyFocused = onPropertyFocused
+        }
+        DisposableEffect(Unit) {
+            onDispose { player.release() }
+        }
+        if (ready) {
+            AndroidView(
+                factory = {
+                    PlayerView(it).apply {
+                        useController = false
+                        this.player = player
+                    }
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
+}
+
+@Composable
+private fun PropertyLogo(property: State.Property?, modifier: Modifier = Modifier) {
+    Box(modifier.height(86.dp), contentAlignment = Alignment.BottomStart) {
+        Crossfade(targetState = property, label = "Property logo") { prop ->
+            val logoUrl = prop?.logo?.url
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomStart) {
+                if (logoUrl != null) {
+                    AsyncImage(
+                        model = logoUrl,
+                        contentDescription = prop.name,
+                        alignment = Alignment.BottomStart,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .fillMaxWidth(0.4f)
+                    )
+                } else if (prop != null) {
+                    Text(
+                        text = prop.name,
+                        style = MaterialTheme.typography.label_40.copy(fontSize = 24.sp),
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFF4F4F5),
                     )
                 }
-            } else if (state.showRetryButton) {
-                item(contentType = "button", span = { GridItemSpan(maxLineSpan) }) {
-                    RetryButton(onRetryClicked, Modifier.padding(top = 100.dp))
-                }
-            } else {
-                // Technically unreachable code, because [loading = (properties.isEmpty())]
-                item(span = { GridItemSpan(maxLineSpan) }, contentType = "label") {
-                    Text(stringResource(R.string.no_content_warning))
-                }
             }
-            item(contentType = { "footer" }, span = { GridItemSpan(maxLineSpan) }) {
-                Spacer(Modifier.height(20.dp))
+        }
+    }
+}
+
+@Composable
+private fun HeroButtons(
+    property: State.Property?,
+    highlightPrimary: Boolean,
+    onPropertyClicked: (State.Property) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val hasProgress = property?.hasWatchProgress == true
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier
+    ) {
+        HeroButton(
+            text = if (hasProgress) "Resume" else "Explore",
+            icon = if (hasProgress) Icons.Default.PlayArrow else Icons.Default.Search,
+            highlight = highlightPrimary,
+            onClick = { property?.let(onPropertyClicked) },
+            modifier = Modifier.requestInitialFocus()
+        )
+        if (hasProgress) {
+            HeroButton(
+                text = "More Info",
+                icon = Icons.Outlined.Info,
+                highlight = false,
+                onClick = { property?.let(onPropertyClicked) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun HeroButton(
+    text: String,
+    icon: ImageVector,
+    highlight: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val container = if (highlight) ButtonFocusedContainer else ButtonContainer
+    val content = if (highlight) ButtonFocusedContent else ButtonContent
+    TvButton(
+        onClick = onClick,
+        colors = ClickableSurfaceDefaults.colors(
+            containerColor = container,
+            contentColor = content,
+            focusedContainerColor = ButtonFocusedContainer,
+            focusedContentColor = ButtonFocusedContent,
+        ),
+        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(4.dp)),
+        modifier = modifier
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(horizontal = 15.dp, vertical = 8.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(14.dp)
+            )
+            Text(
+                text = text,
+                style = MaterialTheme.typography.label_40.copy(fontSize = 11.sp),
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun DiscoverRows(
+    rows: List<State.Row>,
+    onPropertyFocused: (State.Property) -> Unit,
+    onPropertyClicked: (State.Property) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    // Pin the focused row near the top of the viewport (rows "rise" as you move down).
+    // The fraction leaves enough room above the focused card for the row title
+    // (~18dp text + 4dp margin + 12dp of LazyRow padding) plus the top fading edge.
+    val verticalSpec = remember { FractionBringIntoViewSpec(parentFraction = 0.13f) }
+    CompositionLocalProvider(LocalBringIntoViewSpec provides verticalSpec) {
+        LazyColumn(
+            // Top padding keeps the first row's title clear of the top fading edge, and lines
+            // it up with where BringIntoView pins the other rows' titles.
+            contentPadding = PaddingValues(top = 10.dp, bottom = 140.dp),
+            modifier = modifier
+                .height(342.dp)
+                .verticalFadingEdges()
+        ) {
+            itemsIndexed(
+                rows,
+                contentType = { _, _ -> "discover_row" },
+                key = { index, row -> "$index:${row.title}" }
+            ) { _, row ->
+                DiscoverRow(row, onPropertyFocused, onPropertyClicked)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun DiscoverRow(
+    row: State.Row,
+    onPropertyFocused: (State.Property) -> Unit,
+    onPropertyClicked: (State.Property) -> Unit,
+) {
+    Column {
+        Text(
+            text = row.title,
+            style = MaterialTheme.typography.label_40.copy(fontSize = 13.sp),
+            fontWeight = FontWeight.Normal,
+            color = Color(0xFFF4F4F5),
+            modifier = Modifier.padding(start = 5.dp, bottom = 4.dp)
+        )
+        val horizontalSpec = remember { FractionBringIntoViewSpec(parentFraction = 0.02f) }
+        CompositionLocalProvider(LocalBringIntoViewSpec provides horizontalSpec) {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                // Vertical padding leaves room for the focused-card scale to draw without
+                // clipping, horizontal padding does the same for the first/last cards.
+                contentPadding = PaddingValues(start = 5.dp, end = 75.dp, top = 12.dp, bottom = 12.dp),
+            ) {
+                items(
+                    row.properties,
+                    contentType = { "property_card" },
+                    key = { property -> property.id }
+                ) { property ->
+                    PropertyCard(
+                        property = property,
+                        onPropertyFocused = onPropertyFocused,
+                        onPropertyClicked = onPropertyClicked
+                    )
+                }
             }
         }
     }
@@ -236,40 +457,24 @@ private fun BoxWithConstraintsScope.DiscoverGrid(
 
 @Composable
 private fun PropertyCard(
-    index: Int,
     property: State.Property,
-    scrollState: LazyGridState,
-    lastClickedProperty: MutableState<String?>,
-    currentFocusedProperty: MutableState<String?>,
-    onDemandFocusRestore: MutableState<String?>,
-    onPropertyClicked: (State.Property) -> Unit,
     onPropertyFocused: (State.Property) -> Unit,
+    onPropertyClicked: (State.Property) -> Unit,
 ) {
-    val focusRequester = remember { FocusRequester() }
+    var focused by remember { mutableStateOf(false) }
     Surface(
-        onClick = {
-            lastClickedProperty.value = property.id
-            onPropertyClicked(property)
-        },
-        border = MaterialTheme.borders.focusedBorder,
-        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(2.dp)),
+        onClick = { onPropertyClicked(property) },
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.08f),
+        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(6.dp)),
+        colors = ClickableSurfaceDefaults.colors(
+            containerColor = CardBackground,
+            focusedContainerColor = CardBackground,
+        ),
         modifier = Modifier
-            // Assume aspect ratio,
-            // this will avoid un-selectable cards
-            .aspectRatio(AspectRatio.POSTER)
-            .focusRequester(focusRequester)
-            .thenIf(property.id == lastClickedProperty.value) {
-                onGloballyPositioned {
-                    Log.e("Restoring focus after navigation to ${property.id} ")
-                    focusRequester.requestFocus()
-                }
-            }
+            .size(width = 116.dp, height = 174.dp)
             .onFocusChanged {
-                if (it.hasFocus) {
-                    currentFocusedProperty.value = property.id
-                    // When any items gains focus, clear lastClickedProperty. It either
-                    // doesn't need handling, or has already been handled.
-                    lastClickedProperty.value = null
+                focused = it.isFocused
+                if (it.isFocused) {
                     onPropertyFocused(property)
                 }
             }
@@ -287,8 +492,8 @@ private fun PropertyCard(
             Text(
                 text = property.name,
                 style = MaterialTheme.typography.label_40.copy(
-                    fontSize = 22.sp,
-                    lineHeight = 24.sp
+                    fontSize = 14.sp,
+                    lineHeight = 16.sp
                 ),
                 textAlign = TextAlign.Center,
                 modifier = Modifier
@@ -296,38 +501,78 @@ private fun PropertyCard(
                     .padding(10.dp)
             )
         }
-    }
-    LaunchedEffect(property.id == onDemandFocusRestore.value) {
-        if (property.id == onDemandFocusRestore.value) {
-            Log.e("On-demand focus restore for: ${property.id}")
-            onDemandFocusRestore.value = null
-            focusRequester.requestFocus()
-            // +1 because header is at index 0
-            scrollState.animateScrollToItem(index + 1)
+        if (focused) {
+            // Top "sheen" highlight on the focused card.
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            0f to Color.White.copy(alpha = 0.45f),
+                            0.16f to Color.White.copy(alpha = 0.16f),
+                            0.42f to Color.Transparent,
+                        )
+                    )
+            )
         }
     }
 }
 
-@Composable
-@Preview(device = RealisticDevices.TV_720p)
-private fun DiscoverPreview() = EluvioThemePreview {
-    Discover(
-        State(
-            loading = false,
-            isLoggedIn = false,
-            properties = (1..50).map {
+/**
+ * Fades out content near the top and bottom edges of the rows viewport.
+ */
+private fun Modifier.verticalFadingEdges(): Modifier = this
+    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+    .drawWithContent {
+        drawContent()
+        drawRect(
+            brush = Brush.verticalGradient(
+                0f to Color.Transparent,
+                0.03f to Color.Black,
+                0.55f to Color.Black,
+                1f to Color.Transparent,
+            ),
+            blendMode = BlendMode.DstIn
+        )
+    }
+
+private val HeroBaseColor = Color(0xFF08090C)
+private val CardBackground = Color(0xFF15161A)
+private val ButtonContainer = Color(0x6B787882)
+private val ButtonContent = Color(0xFFF4F4F5)
+private val ButtonFocusedContainer = Color(0xFFF4F4F5)
+private val ButtonFocusedContent = Color(0xFF0A0A0B)
+
+private fun previewState() = State(
+    loading = false,
+    isLoggedIn = false,
+    rows = (1..4).map { rowIndex ->
+        State.Row(
+            title = "Row $rowIndex",
+            properties = (1..15).map {
                 State.Property(
-                    id = "$it",
+                    id = "$rowIndex-$it",
                     name = "Property $it",
                     loginProvider = "ory",
                     skipLogin = false,
                     cardImage = null,
                     focusBackgroundUrl = null,
+                    logo = null,
+                    heroVideoUrl = null,
+                    hasWatchProgress = it % 2 == 0,
                     startScreenLogo = null,
                     startScreenBackground = null
                 )
             }
-        ),
+        )
+    }
+)
+
+@Composable
+@Preview(device = RealisticDevices.TV_720p)
+private fun DiscoverPreview() = EluvioThemePreview {
+    Discover(
+        previewState(),
         onBackgroundImageSet = {},
         onPropertyClicked = {},
         onRetryClicked = {},

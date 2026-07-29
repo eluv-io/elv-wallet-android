@@ -7,6 +7,7 @@ import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.app.Events
 import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.entities.v2.MediaPropertyEntity
+import app.eluvio.wallet.data.stores.DiscoverRowsStore
 import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.asNewRoot
@@ -25,6 +26,7 @@ import app.eluvio.wallet.screens.signin.SignInNavArgs
 @HiltViewModel
 class DiscoverViewModel @Inject constructor(
     private val propertyStore: MediaPropertyStore,
+    private val discoverRowsStore: DiscoverRowsStore,
     private val tokenStore: TokenStore,
     savedStateHandle: SavedStateHandle
 ) : BaseViewModel<DiscoverViewModel.State>(
@@ -36,12 +38,25 @@ class DiscoverViewModel @Inject constructor(
     data class State(
         val loading: Boolean = true,
         val isLoggedIn: Boolean,
-        val properties: List<Property> = emptyList(),
+        val rows: List<Row> = emptyList(),
         val showRetryButton: Boolean = false,
 
         // For custom, Property-specific builds only.
         val singlePropertyMode: Boolean = BuildConfig.DEFAULT_PROPERTY_ID != null,
     ) {
+        /**
+         * Flat list of unique properties, for UIs that don't render categorized rows
+         * (single-property mode, mobile grid).
+         */
+        val properties: List<Property>
+            get() = rows.flatMap { it.properties }.distinctBy { it.id }
+
+        @Immutable
+        data class Row(
+            val title: String,
+            val properties: List<Property>,
+        )
+
         @Immutable
         data class Property(
             val id: String,
@@ -52,6 +67,11 @@ class DiscoverViewModel @Inject constructor(
             // For displaying Property-specific branding in the Discover screen.
             val cardImage: FabricUrl?,
             val focusBackgroundUrl: FabricUrl?,
+            val logo: FabricUrl?,
+
+            // FAKE (server data model not ready yet, see DiscoverRowsStore).
+            val heroVideoUrl: String?,
+            val hasWatchProgress: Boolean,
 
             // For custom, Property-specific builds only.
             val startScreenLogo: FabricUrl?,
@@ -77,7 +97,7 @@ class DiscoverViewModel @Inject constructor(
             .doOnNext {
                 Log.i("Restart triggered, resetting state.")
                 updateState {
-                    copy(loading = true, properties = emptyList(), showRetryButton = false)
+                    copy(loading = true, rows = emptyList(), showRetryButton = false)
                 }
             }
             // Start with a fake "retry" that doesn't affect state, just to start observing data.
@@ -90,9 +110,10 @@ class DiscoverViewModel @Inject constructor(
                     propertyStore.observeMediaProperty(
                         BuildConfig.DEFAULT_PROPERTY_ID,
                         forceRefresh = true
-                    ).map { listOf(it) }
+                    ).map { listOf(State.Row(title = "", properties = listOf(it.toStateProperty()))) }
                 } else {
-                    propertyStore.observeDiscoverableProperties(true)
+                    discoverRowsStore.observeDiscoverRows(true)
+                        .map { rows -> rows.map { it.toStateRow() } }
                 }
                     .doOnError {
                         Log.e("Error observing properties ${it.message}, offering retry")
@@ -102,17 +123,17 @@ class DiscoverViewModel @Inject constructor(
                     .onErrorResumeWith(Flowable.never())
             }
             .subscribeBy(
-                onNext = { properties ->
-                    val stateProperties = properties.map { it.toStateProperty() }
+                onNext = { rows ->
                     // Assume that Properties will never be empty once fetched from Server
                     updateState {
                         copy(
-                            properties = stateProperties,
-                            loading = properties.isEmpty(),
+                            rows = rows,
+                            loading = rows.isEmpty(),
                             showRetryButton = false
                         )
                     }
-                    stateProperties.firstOrNull()?.let { skipStartScreenIfSignedIn(it) }
+                    rows.firstOrNull()?.properties?.firstOrNull()
+                        ?.let { skipStartScreenIfSignedIn(it) }
                 },
                 onError = {
                     Log.e("Reached on onError that should never happen")
@@ -163,7 +184,17 @@ class DiscoverViewModel @Inject constructor(
     }
 }
 
-private fun MediaPropertyEntity.toStateProperty(): DiscoverViewModel.State.Property {
+private fun DiscoverRowsStore.Row.toStateRow(): DiscoverViewModel.State.Row {
+    return DiscoverViewModel.State.Row(
+        title = title,
+        properties = items.map { it.property.toStateProperty(it.heroVideoUrl, it.hasWatchProgress) }
+    )
+}
+
+private fun MediaPropertyEntity.toStateProperty(
+    heroVideoUrl: String? = null,
+    hasWatchProgress: Boolean = false,
+): DiscoverViewModel.State.Property {
     return DiscoverViewModel.State.Property(
         id = id,
         name = name,
@@ -172,6 +203,10 @@ private fun MediaPropertyEntity.toStateProperty(): DiscoverViewModel.State.Prope
 
         cardImage = image,
         focusBackgroundUrl = bgImageWithFallback,
+        logo = headerLogoUrl,
+
+        heroVideoUrl = heroVideoUrl,
+        hasWatchProgress = hasWatchProgress,
 
         startScreenLogo = startScreenLogo,
         startScreenBackground = startScreenBackground

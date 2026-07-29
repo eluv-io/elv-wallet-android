@@ -68,7 +68,7 @@ jobs:
     - name: Upload TV APKs
       uses: actions/upload-artifact@v4
       with:
-        name: APKs (${{ env.TV_APK_VERSION }})
+        name: TV APKs (${{ env.TV_APK_VERSION }})
         path: media-wallet-*.apk
 
     # Mobile APKs are distributed to testers via Firebase App Distribution

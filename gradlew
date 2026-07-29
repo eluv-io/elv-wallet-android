@@ -84,8 +84,10 @@ CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
 
 
 # pick up 'javaHome' from local.properties if set
-DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-source $DIR/local.properties 2>/dev/null
+DIR=$( cd "$( dirname "$0" )" && pwd )
+if [ -f "$DIR/local.properties" ]; then
+    . "$DIR/local.properties" 2>/dev/null
+fi
 
 if ! [ -z "$javaHome" ]
 then

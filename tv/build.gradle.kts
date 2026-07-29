@@ -71,6 +71,18 @@ android {
             applicationIdSuffix = ".debug"
             isDebuggable = true
         }
+
+        // Debug-fast iteration + release-realistic ART perf. The only reliable way to
+        // gut-check Compose perf locally is with `isDebuggable = false`, but a full
+        // `release` build pays for R8 every time. This variant inherits from `debug`
+        // (so the .debug applicationIdSuffix lets it coexist on-device with a real
+        // release install) and just flips off debuggability — no R8, no release signing.
+        create("compose") {
+            initWith(getByName("debug"))
+            isDebuggable = false
+            // :core only has debug + release variants; route this build to :core's debug.
+            matchingFallbacks += listOf("debug")
+        }
     }
 
     compileOptions {

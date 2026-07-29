@@ -83,6 +83,6 @@ jobs:
         fi
         echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_B64 }}" | base64 --decode > "$GOOGLE_APPLICATION_CREDENTIALS"
         notes="$(git log -1 --format='%h %s' ${{ github.sha }})"
-        ./gradlew :mobile:appDistributionUploadDebug --releaseNotes="$notes" \
-                  :mobile:appDistributionUploadRelease --releaseNotes="$notes" \
+        ./gradlew :mobile:appDistributionUploadDebug --releaseNotes="$notes" --groups="eluvio-internal" \
+                  :mobile:appDistributionUploadRelease --releaseNotes="$notes" --groups="eluvio-internal" \
           -Pci_build_number=${{ github.run_number }}

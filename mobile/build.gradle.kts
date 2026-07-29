@@ -16,6 +16,7 @@ plugins {
 if (file("google-services.json").exists()) {
     apply(plugin = libs.plugins.google.services.get().pluginId)
     apply(plugin = libs.plugins.firebase.crashlytics.get().pluginId)
+    apply(plugin = libs.plugins.firebase.appdistribution.get().pluginId)
 } else {
     logger.warn("google-services.json missing — Firebase disabled for this build. Run bin/fetch-secrets.sh to enable.")
 }
@@ -29,6 +30,14 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1"
+        // CI stamps a unique versionCode so Firebase App Distribution releases are distinguishable
+        project.ext
+            .takeIf { it.has("ci_build_number") }
+            ?.get("ci_build_number")
+            ?.let { build ->
+                versionCode = build.toString().toInt()
+                versionName = "$versionName-b$build"
+            }
     }
 
     buildTypes {

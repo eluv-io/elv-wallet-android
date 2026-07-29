@@ -45,6 +45,7 @@ realm = "3.2.9"
 kotlinx-coroutines = "1.10.2"
 firebase-bom = "33.12.0"
 firebase-crashlytics-plugin = "3.0.3"
+firebase-appdistribution-plugin = "5.3.0"
 google-services = "4.4.2"
 gradle-secrets = "2.0.1"
 junit = "4.13.2"
@@ -141,6 +142,7 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = 'com.google.devtools.ksp', version.ref = 'ksp' }
 realm = { id = "com.infomaniak.realm.kotlin", version.ref = "realm" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebase-crashlytics-plugin" }
+firebase-appdistribution = { id = "com.google.firebase.appdistribution", version.ref = "firebase-appdistribution-plugin" }
 google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
 gradle-secrets = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "gradle-secrets" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin_version" }

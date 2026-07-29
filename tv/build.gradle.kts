@@ -19,6 +19,7 @@ plugins {
 if (file("google-services.json").exists()) {
     apply(plugin = libs.plugins.google.services.get().pluginId)
     apply(plugin = libs.plugins.firebase.crashlytics.get().pluginId)
+    logger.warn("google-services.json loaded.")
 } else {
     logger.warn("google-services.json missing — Firebase disabled for this build. Run bin/fetch-secrets.sh to enable.")
 }

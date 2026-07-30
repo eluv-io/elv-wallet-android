@@ -15,21 +15,21 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import app.eluvio.wallet.R
-import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.TvButton
+import app.eluvio.wallet.screens.dashboard.DashboardBackground
 import app.eluvio.wallet.util.compose.requestOnce
 import coil3.compose.AsyncImage
 
 @Composable
 fun SinglePropertyPage(
     state: DiscoverViewModel.State,
-    @Suppress("UNUSED_PARAMETER") onBackgroundImageSet: (FabricUrl?) -> Unit,
+    @Suppress("UNUSED_PARAMETER") onBackgroundSet: (DashboardBackground?) -> Unit,
     onPropertyClicked: (DiscoverViewModel.State.Property) -> Unit,
     onRetryClicked: () -> Unit
 ) {
     val property = state.properties.firstOrNull()
-    // The background is drawn here rather than handed to Dashboard via onBackgroundImageSet
+    // The background is drawn here rather than handed to Dashboard via onBackgroundSet
     // (which stays on the signature for parity with DiscoverGrid, but goes deliberately
     // unused): this page assumes it owns the full screen, so there's no side nav rail or other
     // element outside this composable's bounds to account for. Drawing it here also lets the

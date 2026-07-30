@@ -1,6 +1,9 @@
 package app.eluvio.wallet.screens.dashboard
 
+import android.view.LayoutInflater
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -14,6 +17,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,6 +32,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
@@ -38,7 +44,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.ui.PlayerView
 import androidx.tv.material3.DrawerValue
 import androidx.tv.material3.Icon
 import androidx.tv.material3.ModalNavigationDrawer
@@ -47,6 +61,7 @@ import androidx.tv.material3.NavigationDrawerItemDefaults
 import androidx.tv.material3.NavigationDrawerScope
 import androidx.tv.material3.Text
 import app.eluvio.wallet.BuildConfig
+import app.eluvio.wallet.R
 import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.screens.dashboard.discover.Discover
 import app.eluvio.wallet.screens.dashboard.myitems.MyItems
@@ -54,14 +69,15 @@ import app.eluvio.wallet.screens.dashboard.profile.Profile
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.util.compose.thenIf
 import app.eluvio.wallet.util.isKeyUpOf
+import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.rememberToaster
 import app.eluvio.wallet.util.subscribeToState
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import coil3.transition.CrossfadeDrawable
 import io.reactivex.rxjava3.processors.PublishProcessor
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.coroutines.delay
 import java.util.concurrent.TimeUnit
 
 @Composable
@@ -78,11 +94,11 @@ fun Dashboard(tabs: ImmutableList<Tabs>) {
         // This is a vestige of the never-used no-auth flow.
         selectedTab = tabs.first()
     }
-    // Not rememberSaveable (FabricUrl isn't Bundle-able): Discover re-sets the background on
-    // focus restoration, so it survives recreation anyway.
-    var backgroundImage by remember { mutableStateOf<FabricUrl?>(null) }
+    // Not rememberSaveable: tabs (re)set the background on composition, so it survives
+    // recreation without a custom Saver.
+    var background by remember { mutableStateOf<DashboardBackground?>(null) }
 
-    AnimatedBackground(url = backgroundImage)
+    AnimatedBackground(background)
 
     val showDrawer = tabs.size > 1
     val contentFocusRequester = remember { FocusRequester() }
@@ -120,7 +136,7 @@ fun Dashboard(tabs: ImmutableList<Tabs>) {
             } else {
                 TabContent(
                     selectedTab = selectedTab,
-                    onBackgroundImageSet = { backgroundImage = it },
+                    onBackgroundSet = { background = it },
                     modifier = modifier
                 )
             }
@@ -188,14 +204,28 @@ private fun NavigationDrawerScope.DrawerContent(
     }
 }
 
+/**
+ * A background the Dashboard draws behind everything, including the nav drawer, so it can be
+ * truly full-bleed (tab content is inset by the drawer's width).
+ *
+ * [imageUrl] is shown until [videoUrl] actually starts playing (or forever, if there's no
+ * video or it fails to play).
+ */
+data class DashboardBackground(
+    // FabricUrl (not a plain url string), so the app-wide ThumbHash placeholder factory can
+    // pick up the image's hash.
+    val imageUrl: FabricUrl? = null,
+    val videoUrl: String? = null,
+)
+
 @Composable
 private fun TabContent(
     selectedTab: Tabs,
-    onBackgroundImageSet: (FabricUrl?) -> Unit,
+    onBackgroundSet: (DashboardBackground?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (selectedTab != Tabs.Discover) {
-        onBackgroundImageSet(null)
+        onBackgroundSet(null)
     }
     AnimatedContent(
         targetState = selectedTab,
@@ -203,11 +233,11 @@ private fun TabContent(
         modifier = modifier
     ) { tab ->
         when (tab) {
-            Tabs.Discover -> Discover(onBackgroundImageSet = {
+            Tabs.Discover -> Discover(onBackgroundSet = {
                 if (selectedTab == Tabs.Discover) {
                     // This can get called when navigating away from Discover so we need to
                     // consider the targetState
-                    onBackgroundImageSet(it)
+                    onBackgroundSet(it)
                 }
             })
 
@@ -218,16 +248,25 @@ private fun TabContent(
 }
 
 @Composable
-private fun AnimatedBackground(url: FabricUrl?, modifier: Modifier = Modifier) {
-    val animationDuration = CrossfadeDrawable.DEFAULT_DURATION
+private fun AnimatedBackground(background: DashboardBackground?, modifier: Modifier = Modifier) {
+    val animationDuration = 300
+    val videoShowing = BackgroundVideo(url = background?.videoUrl)
+    // The image is drawn on top of the video: it fades out to reveal the video once it's
+    // playing, and fades back in over the (still playing) outgoing video when it goes away.
+    val imageAlpha by animateFloatAsState(
+        targetValue = if (videoShowing) 0f else 1f,
+        animationSpec = tween(durationMillis = if (videoShowing) 1000 else 500),
+        label = "bgImageAlpha"
+    )
     AnimatedContent(
-        targetState = url,
+        targetState = background?.imageUrl,
         transitionSpec = {
-            // Default transition spec has a scale animation and we don't want that
-            (fadeIn(animationSpec = tween(animationDuration, delayMillis = 90)))
-                .togetherWith(fadeOut(animationSpec = tween(90)))
+            // A true crossfade: both images animate together at all times. Asymmetric specs
+            // (like the AnimatedContent default) dip to the blank background in between.
+            fadeIn(tween(animationDuration)) togetherWith fadeOut(tween(animationDuration))
         },
-        label = "bgImage"
+        label = "bgImage",
+        modifier = modifier.graphicsLayer { alpha = imageAlpha }
     ) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
@@ -236,6 +275,112 @@ private fun AnimatedBackground(url: FabricUrl?, modifier: Modifier = Modifier) {
                 .build(),
             contentScale = ContentScale.FillWidth,
             contentDescription = "background",
+            modifier = Modifier.fillMaxSize()
+        )
+    }
+}
+
+/**
+ * Renders [url] as a full-bleed, muted, looping video. Returns whether the video is actually
+ * attached and playing (as opposed to still loading, or failed).
+ */
+@Composable
+private fun BackgroundVideo(url: String?): Boolean {
+    // Only start video playback once the url has settled for a bit, otherwise quickly
+    // browsing through Discover cards would spawn a player per property.
+    var activeUrl by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(url) {
+        if (activeUrl != url) {
+            activeUrl = null
+            if (url != null) {
+                delay(1200)
+                activeUrl = url
+            }
+        }
+    }
+    // The url whose player is currently ready and attached. Can lag behind [activeUrl]: it's
+    // the outgoing video's url while one is still fading out.
+    var readyUrl by remember { mutableStateOf<String?>(null) }
+    AnimatedContent(
+        targetState = activeUrl,
+        transitionSpec = {
+            // No enter animation: an incoming video is revealed by the image fading out
+            // above it. The exit fade keeps the outgoing video playing while the image
+            // fades back in over it.
+            // No sizeTransform: when the target content is empty (url == null), the default
+            // one shrink-clips the exiting video down to zero instead of just fading it.
+            (EnterTransition.None togetherWith fadeOut(tween(500)))
+                .using(sizeTransform = null)
+        },
+        label = "bgVideo",
+        modifier = Modifier.fillMaxSize()
+    ) { videoUrl ->
+        if (videoUrl != null) {
+            VideoPlayer(
+                url = videoUrl,
+                onReadyChanged = { ready ->
+                    readyUrl = when {
+                        ready -> videoUrl
+                        readyUrl == videoUrl -> null
+                        else -> readyUrl
+                    }
+                }
+            )
+        }
+    }
+    return readyUrl != null && readyUrl == activeUrl
+}
+
+@androidx.annotation.OptIn(UnstableApi::class)
+@Composable
+private fun VideoPlayer(url: String, onReadyChanged: (Boolean) -> Unit) {
+    // Only attach the PlayerView once the player is READY, so the background image stays
+    // visible until the video actually has something to show (or forever, if playback fails).
+    var ready by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val player = remember {
+        // TODO: Fake data returns plain video urls. Once the server model is ready, hero
+        //  videos will presumably be fabric links going through VideoOptionsFetcher.
+        val mediaSource =
+            DefaultMediaSourceFactory(context).createMediaSource(MediaItem.fromUri(url))
+        ExoPlayer.Builder(context)
+            .build()
+            .apply {
+                setMediaSource(mediaSource)
+                repeatMode = Player.REPEAT_MODE_ALL
+                playWhenReady = true
+                volume = 0f
+                addListener(object : Player.Listener {
+                    override fun onPlaybackStateChanged(playbackState: Int) {
+                        if (playbackState == Player.STATE_READY) {
+                            ready = true
+                        }
+                    }
+
+                    override fun onPlayerError(error: PlaybackException) {
+                        Log.e("Background video error", error)
+                        ready = false
+                    }
+                })
+                prepare()
+            }
+    }
+    LaunchedEffect(ready) { onReadyChanged(ready) }
+    DisposableEffect(Unit) {
+        onDispose {
+            player.release()
+            onReadyChanged(false)
+        }
+    }
+    if (ready) {
+        AndroidView(
+            factory = {
+                // Inflated from xml because surface_type can only be set through attrs.
+                val playerView = LayoutInflater.from(it)
+                    .inflate(R.layout.view_background_video, null) as PlayerView
+                playerView.player = player
+                playerView
+            },
             modifier = Modifier.fillMaxSize()
         )
     }

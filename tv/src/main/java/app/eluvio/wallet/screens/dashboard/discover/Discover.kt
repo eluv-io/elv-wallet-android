@@ -36,11 +36,9 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -48,8 +46,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
@@ -64,7 +65,6 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -72,25 +72,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.media3.common.MediaItem
-import androidx.media3.common.PlaybackException
-import androidx.media3.common.Player
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
-import androidx.media3.ui.PlayerView
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
+import androidx.tv.material3.NavigationDrawerItemDefaults
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import app.eluvio.wallet.R
-import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.ShimmerImage
 import app.eluvio.wallet.screens.common.TvButton
+import app.eluvio.wallet.screens.dashboard.DashboardBackground
 import app.eluvio.wallet.screens.dashboard.discover.DiscoverViewModel.State
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.label_40
@@ -98,22 +91,20 @@ import app.eluvio.wallet.util.compose.FractionBringIntoViewSpec
 import app.eluvio.wallet.util.compose.RealisticDevices
 import app.eluvio.wallet.util.compose.requestInitialFocus
 import app.eluvio.wallet.util.compose.thenIf
-import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.subscribeToState
 import coil3.compose.AsyncImage
-import kotlinx.coroutines.delay
 
 @Composable
-fun Discover(onBackgroundImageSet: (FabricUrl?) -> Unit) {
+fun Discover(onBackgroundSet: (DashboardBackground?) -> Unit) {
     hiltViewModel<DiscoverViewModel>().subscribeToState { vm, state ->
-        Discover(state, onBackgroundImageSet, vm::onPropertyClicked, vm::retry)
+        Discover(state, onBackgroundSet, vm::onPropertyClicked, vm::retry)
     }
 }
 
 @Composable
 private fun Discover(
     state: State,
-    onBackgroundImageSet: (FabricUrl?) -> Unit,
+    onBackgroundSet: (DashboardBackground?) -> Unit,
     onPropertyClicked: (State.Property) -> Unit,
     onRetryClicked: () -> Unit,
 ) {
@@ -124,15 +115,14 @@ private fun Discover(
         if (state.singlePropertyMode) {
             SinglePropertyPage(
                 state,
-                onBackgroundImageSet = onBackgroundImageSet,
+                onBackgroundSet = onBackgroundSet,
                 onPropertyClicked = onPropertyClicked,
                 onRetryClicked = onRetryClicked
             )
         } else {
-            // The redesigned Discover page draws its own hero background.
-            LaunchedEffect(Unit) { onBackgroundImageSet(null) }
             DiscoverPage(
                 state,
+                onBackgroundSet = onBackgroundSet,
                 onPropertyClicked = onPropertyClicked,
                 onRetryClicked = onRetryClicked
             )
@@ -147,6 +137,7 @@ private fun Discover(
 @Composable
 private fun DiscoverPage(
     state: State,
+    onBackgroundSet: (DashboardBackground?) -> Unit,
     onPropertyClicked: (State.Property) -> Unit,
     onRetryClicked: () -> Unit,
 ) {
@@ -168,6 +159,14 @@ private fun DiscoverPage(
     val displayedProperty = focusedProperty
         ?: state.rows.firstOrNull()?.properties?.firstOrNull()
 
+    // The hero itself is drawn by the Dashboard, where it can be truly full-bleed
+    // (extend under the nav drawer).
+    LaunchedEffect(displayedProperty) {
+        onBackgroundSet(displayedProperty?.let {
+            DashboardBackground(imageUrl = it.focusBackgroundUrl, videoUrl = it.heroVideoUrl)
+        })
+    }
+
     /**
      * The card ("rowIndex:propertyId") that was clicked to navigate away. When coming back to
      * this screen, that card grabs focus again — otherwise nothing here is focused and the nav
@@ -176,7 +175,7 @@ private fun DiscoverPage(
     val lastClickedCard = rememberSaveable { mutableStateOf<String?>(null) }
 
     Box(Modifier.fillMaxSize()) {
-        DiscoverHero(displayedProperty)
+        HeroScrims()
         Column(
             verticalArrangement = Arrangement.Bottom,
             modifier = Modifier
@@ -203,116 +202,48 @@ private fun DiscoverPage(
     }
 }
 
+/**
+ * Scrims over the hero background, so the logo/buttons/rows stay readable.
+ *
+ * The hero is drawn full-bleed by the Dashboard, but this screen is inset by the nav drawer's
+ * width — so the scrims draw past their left edge to cover the full screen, otherwise a bright
+ * unscrimmed strip of hero would show at the drawer's edge.
+ */
 @Composable
-private fun DiscoverHero(property: State.Property?, modifier: Modifier = Modifier) {
-    Box(modifier.fillMaxSize()) {
-        Crossfade(
-            targetState = property?.focusBackgroundUrl,
-            label = "Hero background"
-        ) { url ->
-            if (url != null) {
-                AsyncImage(
-                    model = url,
-                    contentDescription = "Background",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
-        HeroVideo(property?.heroVideoUrl)
-        // Left scrim, so logo/buttons stay readable over the hero.
-        Box(
-            Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.horizontalGradient(
+private fun HeroScrims(modifier: Modifier = Modifier) {
+    val drawerWidth = NavigationDrawerItemDefaults.CollapsedDrawerItemWidth
+    Spacer(
+        modifier
+            .fillMaxSize()
+            .drawBehind {
+                val left = -drawerWidth.toPx()
+                val topLeft = Offset(left, 0f)
+                val fullSize = Size(size.width - left, size.height)
+                // Left scrim, so logo/buttons stay readable over the hero.
+                drawRect(
+                    brush = Brush.horizontalGradient(
                         0f to HeroBaseColor.copy(alpha = 0.96f),
                         0.26f to HeroBaseColor.copy(alpha = 0.72f),
                         0.52f to HeroBaseColor.copy(alpha = 0.15f),
                         0.72f to Color.Transparent,
-                    )
+                        startX = left,
+                        endX = left + fullSize.width,
+                    ),
+                    topLeft = topLeft,
+                    size = fullSize,
                 )
-        )
-        // Bottom scrim, so the rows stay readable over the hero.
-        Box(
-            Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
+                // Bottom scrim, so the rows stay readable over the hero.
+                drawRect(
+                    brush = Brush.verticalGradient(
                         0.45f to Color.Transparent,
                         0.74f to HeroBaseColor.copy(alpha = 0.55f),
                         0.98f to HeroBaseColor.copy(alpha = 0.98f),
-                    )
+                    ),
+                    topLeft = topLeft,
+                    size = fullSize,
                 )
-        )
-    }
-}
-
-@androidx.annotation.OptIn(UnstableApi::class)
-@Composable
-private fun HeroVideo(videoUrl: String?) {
-    // Only start video playback once focus has settled on a property for a bit,
-    // otherwise quickly browsing through cards would spawn a player per property.
-    var activeUrl by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(videoUrl) {
-        if (activeUrl != videoUrl) {
-            activeUrl = null
-            if (videoUrl != null) {
-                delay(1200)
-                activeUrl = videoUrl
             }
-        }
-    }
-    val url = activeUrl ?: return
-    val context = LocalContext.current
-    key(url) {
-        // PlayerView's SurfaceView "punches a hole" through the window, hiding the hero image
-        // even before the video has anything to show. Only attach the PlayerView once the
-        // player is READY, so the hero image stays visible until then (or forever, if
-        // playback fails).
-        var ready by remember { mutableStateOf(false) }
-        val player = remember {
-            // TODO: Fake data returns plain video urls. Once the server model is ready, hero
-            //  videos will presumably be fabric links going through VideoOptionsFetcher.
-            val mediaSource =
-                DefaultMediaSourceFactory(context).createMediaSource(MediaItem.fromUri(url))
-            ExoPlayer.Builder(context)
-                .build()
-                .apply {
-                    setMediaSource(mediaSource)
-                    repeatMode = Player.REPEAT_MODE_ALL
-                    playWhenReady = true
-                    volume = 0f
-                    addListener(object : Player.Listener {
-                        override fun onPlaybackStateChanged(playbackState: Int) {
-                            if (playbackState == Player.STATE_READY) {
-                                ready = true
-                            }
-                        }
-
-                        override fun onPlayerError(error: PlaybackException) {
-                            Log.e("Hero video error", error)
-                            ready = false
-                        }
-                    })
-                    prepare()
-                }
-        }
-        DisposableEffect(Unit) {
-            onDispose { player.release() }
-        }
-        if (ready) {
-            AndroidView(
-                factory = {
-                    PlayerView(it).apply {
-                        useController = false
-                        this.player = player
-                    }
-                },
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-    }
+    )
 }
 
 @Composable
@@ -689,7 +620,7 @@ private fun previewState() = State(
 private fun DiscoverPreview() = EluvioThemePreview {
     Discover(
         previewState(),
-        onBackgroundImageSet = {},
+        onBackgroundSet = {},
         onPropertyClicked = {},
         onRetryClicked = {},
     )
@@ -700,7 +631,7 @@ private fun DiscoverPreview() = EluvioThemePreview {
 private fun DiscoverLoadingPreview() = EluvioThemePreview {
     Discover(
         State(loading = true, isLoggedIn = false),
-        onBackgroundImageSet = {},
+        onBackgroundSet = {},
         onPropertyClicked = {},
         onRetryClicked = {},
     )
@@ -711,7 +642,7 @@ private fun DiscoverLoadingPreview() = EluvioThemePreview {
 private fun DiscoverEmptyPreview() = EluvioThemePreview {
     Discover(
         State(loading = false, isLoggedIn = false),
-        onBackgroundImageSet = {},
+        onBackgroundSet = {},
         onPropertyClicked = {},
         onRetryClicked = {},
     )
@@ -722,7 +653,7 @@ private fun DiscoverEmptyPreview() = EluvioThemePreview {
 private fun DiscoverRetryPreview() = EluvioThemePreview {
     Discover(
         State(loading = false, isLoggedIn = false, showRetryButton = true),
-        onBackgroundImageSet = {},
+        onBackgroundSet = {},
         onPropertyClicked = {},
         onRetryClicked = {},
     )

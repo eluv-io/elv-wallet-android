@@ -36,7 +36,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
@@ -416,7 +420,7 @@ private fun DiscoverRows(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun DiscoverRow(
     row: State.Row,
@@ -432,22 +436,32 @@ private fun DiscoverRow(
             modifier = Modifier.padding(start = 5.dp, bottom = 4.dp)
         )
         val horizontalSpec = remember { FractionBringIntoViewSpec(parentFraction = 0.02f) }
+        val firstItemFocusRequester = remember { FocusRequester() }
         CompositionLocalProvider(LocalBringIntoViewSpec provides horizontalSpec) {
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 // Vertical padding leaves room for the focused-card scale to draw without
                 // clipping, horizontal padding does the same for the first/last cards.
                 contentPadding = PaddingValues(start = 5.dp, end = 75.dp, top = 12.dp, bottom = 12.dp),
+                // When the row (re)gains focus, land on its last-focused card instead of
+                // whatever card happens to sit under the previous row's focus position.
+                // Rows that never held focus start at their first card.
+                modifier = Modifier.focusRestorer { firstItemFocusRequester }
             ) {
-                items(
+                itemsIndexed(
                     row.properties,
-                    contentType = { "property_card" },
-                    key = { property -> property.id }
-                ) { property ->
+                    contentType = { _, _ -> "property_card" },
+                    key = { _, property -> property.id }
+                ) { index, property ->
                     PropertyCard(
                         property = property,
                         onPropertyFocused = onPropertyFocused,
-                        onPropertyClicked = onPropertyClicked
+                        onPropertyClicked = onPropertyClicked,
+                        modifier = if (index == 0) {
+                            Modifier.focusRequester(firstItemFocusRequester)
+                        } else {
+                            Modifier
+                        }
                     )
                 }
             }
@@ -460,6 +474,7 @@ private fun PropertyCard(
     property: State.Property,
     onPropertyFocused: (State.Property) -> Unit,
     onPropertyClicked: (State.Property) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var focused by remember { mutableStateOf(false) }
     Surface(
@@ -470,7 +485,7 @@ private fun PropertyCard(
             containerColor = CardBackground,
             focusedContainerColor = CardBackground,
         ),
-        modifier = Modifier
+        modifier = modifier
             .size(width = 116.dp, height = 174.dp)
             .onFocusChanged {
                 focused = it.isFocused

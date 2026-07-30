@@ -38,10 +38,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,6 +63,7 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -94,6 +97,7 @@ import app.eluvio.wallet.theme.label_40
 import app.eluvio.wallet.util.compose.FractionBringIntoViewSpec
 import app.eluvio.wallet.util.compose.RealisticDevices
 import app.eluvio.wallet.util.compose.requestInitialFocus
+import app.eluvio.wallet.util.compose.thenIf
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.subscribeToState
 import coil3.compose.AsyncImage
@@ -164,6 +168,13 @@ private fun DiscoverPage(
     val displayedProperty = focusedProperty
         ?: state.rows.firstOrNull()?.properties?.firstOrNull()
 
+    /**
+     * The card ("rowIndex:propertyId") that was clicked to navigate away. When coming back to
+     * this screen, that card grabs focus again — otherwise nothing here is focused and the nav
+     * drawer steals focus (and opens). Cleared as soon as any card gains focus.
+     */
+    val lastClickedCard = rememberSaveable { mutableStateOf<String?>(null) }
+
     Box(Modifier.fillMaxSize()) {
         DiscoverHero(displayedProperty)
         Column(
@@ -183,6 +194,7 @@ private fun DiscoverPage(
             )
             DiscoverRows(
                 rows = state.rows,
+                lastClickedCard = lastClickedCard,
                 onPropertyFocused = { focusedProperty = it },
                 onPropertyClicked = onPropertyClicked,
                 modifier = Modifier.onFocusChanged { browsingRows = it.hasFocus }
@@ -405,6 +417,7 @@ private fun HeroButton(
 @Composable
 private fun DiscoverRows(
     rows: List<State.Row>,
+    lastClickedCard: MutableState<String?>,
     onPropertyFocused: (State.Property) -> Unit,
     onPropertyClicked: (State.Property) -> Unit,
     modifier: Modifier = Modifier,
@@ -426,8 +439,8 @@ private fun DiscoverRows(
                 rows,
                 contentType = { _, _ -> "discover_row" },
                 key = { index, row -> "$index:${row.title}" }
-            ) { _, row ->
-                DiscoverRow(row, onPropertyFocused, onPropertyClicked)
+            ) { rowIndex, row ->
+                DiscoverRow(rowIndex, row, lastClickedCard, onPropertyFocused, onPropertyClicked)
             }
         }
     }
@@ -436,7 +449,9 @@ private fun DiscoverRows(
 @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun DiscoverRow(
+    rowIndex: Int,
     row: State.Row,
+    lastClickedCard: MutableState<String?>,
     onPropertyFocused: (State.Property) -> Unit,
     onPropertyClicked: (State.Property) -> Unit,
 ) {
@@ -468,6 +483,9 @@ private fun DiscoverRow(
                 ) { index, property ->
                     PropertyCard(
                         property = property,
+                        // Fake data repeats properties across rows, so scope the key per row.
+                        focusKey = "$rowIndex:${property.id}",
+                        lastClickedCard = lastClickedCard,
                         onPropertyFocused = onPropertyFocused,
                         onPropertyClicked = onPropertyClicked,
                         modifier = if (index == 0) {
@@ -485,13 +503,19 @@ private fun DiscoverRow(
 @Composable
 private fun PropertyCard(
     property: State.Property,
+    focusKey: String,
+    lastClickedCard: MutableState<String?>,
     onPropertyFocused: (State.Property) -> Unit,
     onPropertyClicked: (State.Property) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var focused by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
     Surface(
-        onClick = { onPropertyClicked(property) },
+        onClick = {
+            lastClickedCard.value = focusKey
+            onPropertyClicked(property)
+        },
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.08f),
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(CardCornerRadius)),
         colors = ClickableSurfaceDefaults.colors(
@@ -500,9 +524,19 @@ private fun PropertyCard(
         ),
         modifier = modifier
             .size(width = 116.dp, height = 174.dp)
+            .focusRequester(focusRequester)
+            .thenIf(focusKey == lastClickedCard.value) {
+                // Restore focus when coming back from a screen this card navigated to.
+                // Requesting focus on the already-focused card right after the click is a
+                // no-op, so [lastClickedCard] survives until we actually leave and return.
+                onGloballyPositioned { focusRequester.requestFocus() }
+            }
             .onFocusChanged {
                 focused = it.isFocused
                 if (it.isFocused) {
+                    // Focus moved somewhere on this screen: restoration is either done or
+                    // no longer relevant.
+                    lastClickedCard.value = null
                     onPropertyFocused(property)
                 }
             }

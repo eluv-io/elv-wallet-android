@@ -83,7 +83,7 @@ import app.eluvio.wallet.util.compose.icons.Search
 import app.eluvio.wallet.util.compose.icons.Switcher
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.toHtmlAnnotated
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 

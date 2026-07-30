@@ -36,7 +36,8 @@ rxandroid = "3.0.2"
 rxjava = "3.1.12"
 rxkotlin = "3.0.1"
 moshi = "1.15.2"
-coil = "2.7.0"
+# 3.5.0 is built with Kotlin 2.4, whose metadata our Kotlin (2.2.x) can't read.
+coil = "3.4.0"
 media3 = "1.9.0"
 okhttp = "5.2.0"
 okhttp-mockwebserver = "5.2.0"
@@ -92,9 +93,10 @@ kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 kotlinpoet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlinpoet" }
 androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "androidx-recyclerview" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
-coil-base = { module = "io.coil-kt:coil", version.ref = "coil" }
-coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
-coil-svg = { module = "io.coil-kt:coil-svg", version.ref = "coil" }
+coil-base = { module = "io.coil-kt.coil3:coil", version.ref = "coil" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coil" }
+coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt-android" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt-android" }
 hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hilt-navigation-compose" }

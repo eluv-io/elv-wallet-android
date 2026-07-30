@@ -12,7 +12,7 @@ import app.eluvio.wallet.R
 import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.data.entities.v2.display.DisplaySettings
 import app.eluvio.wallet.data.entities.v2.display.thumbnailUrlAndRatio
-import coil.load
+import coil3.load
 
 class VideoInfoPane @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null

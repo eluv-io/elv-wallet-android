@@ -36,7 +36,7 @@ import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.body_32
 import app.eluvio.wallet.util.compose.fromHex
 import app.eluvio.wallet.util.subscribeToState
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 
 @Composable
 fun MediaGrid(vm: MediaGridViewModel) {

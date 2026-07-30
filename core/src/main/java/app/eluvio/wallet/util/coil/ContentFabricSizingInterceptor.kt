@@ -1,8 +1,8 @@
 package app.eluvio.wallet.util.coil
 
-import coil.intercept.Interceptor
-import coil.request.ImageResult
-import coil.size.pxOrElse
+import coil3.intercept.Interceptor
+import coil3.request.ImageResult
+import coil3.size.pxOrElse
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
 /**
@@ -28,9 +28,10 @@ class ContentFabricSizingInterceptor : Interceptor {
                 .addQueryParameter("height", heightPx.toString())
                 //.addQueryParameter("width", widthPx.toString())
                 .build()
-            val request = chain.request.newBuilder().data(url).build()
-            return chain.proceed(request)
+            // toString: Coil 3 no longer knows how to map okhttp's HttpUrl type.
+            val request = chain.request.newBuilder().data(url.toString()).build()
+            return chain.withRequest(request).proceed()
         }
-        return chain.proceed(chain.request)
+        return chain.proceed()
     }
 }

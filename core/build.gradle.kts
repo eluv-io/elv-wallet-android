@@ -102,11 +102,13 @@ dependencies {
 
     implementation(libs.timber)
 
-    // api so :tv and :mobile can reference Coil interfaces (ImageLoaderFactory) that
-    // WalletApplication implements, without pulling in coil-compose (and thus compose-runtime)
-    // for non-Compose consumers like :mobile.
+    // api so :tv and :mobile can reference Coil interfaces (SingletonImageLoader.Factory)
+    // that WalletApplication implements, without pulling in coil-compose (and thus
+    // compose-runtime) for non-Compose consumers like :mobile.
     api(libs.coil.base)
     implementation(libs.coil.svg)
+    // Coil 3 ships without network support; this wires OkHttp in (via ServiceLoader).
+    implementation(libs.coil.network.okhttp)
 
     // api so consumers can call FirebaseApp.getApps() and FirebaseAnalytics directly without
     // re-declaring the deps. Each app conditionally applies the google-services plugin if a

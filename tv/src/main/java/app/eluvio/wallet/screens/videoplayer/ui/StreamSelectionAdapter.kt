@@ -9,7 +9,8 @@ import android.widget.ImageView
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.RecyclerView
 import app.eluvio.wallet.R
-import coil.load
+import coil3.load
+import coil3.request.crossfade
 
 class StreamSelectionAdapter : RecyclerView.Adapter<StreamSelectionAdapter.ViewHolder>() {
 

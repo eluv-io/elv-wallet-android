@@ -80,7 +80,7 @@ import app.eluvio.wallet.util.compose.focusTrap
 import app.eluvio.wallet.util.compose.fromHex
 import app.eluvio.wallet.util.compose.thenIf
 import app.eluvio.wallet.util.compose.thenIfNotNull
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 

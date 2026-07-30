@@ -38,7 +38,7 @@ import app.eluvio.wallet.theme.title_62
 import app.eluvio.wallet.util.compose.RealisticDevices
 import app.eluvio.wallet.util.compose.requestOnce
 import app.eluvio.wallet.util.subscribeToState
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 
 
 @Composable

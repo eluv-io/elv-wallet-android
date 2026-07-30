@@ -69,8 +69,8 @@ private fun RedeemDialog(state: RedeemDialogViewModel.State, onRedeemClicked: ()
                 model = state.image,
                 contentDescription = state.title,
                 onSuccess = {
-                    val drawable = it.result.drawable
-                    aspectRatio = drawable.intrinsicWidth.toFloat() / drawable.intrinsicHeight
+                    val image = it.result.image
+                    aspectRatio = image.width.toFloat() / image.height
                 },
                 modifier = Modifier
                     .fillMaxHeight(0.6f)

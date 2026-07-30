@@ -1,8 +1,8 @@
 package app.eluvio.wallet.util.coil
 
-import android.net.Uri
-import coil.key.Keyer
-import coil.request.Options
+import coil3.Uri
+import coil3.key.Keyer
+import coil3.request.Options
 
 /**
  * Coil [Keyer] that normalizes contentfabric.io URLs by stripping the rotating `host-x-x-x-x.`
@@ -17,7 +17,7 @@ import coil.request.Options
  */
 class FabricUrlKeyer : Keyer<Uri> {
     override fun key(data: Uri, options: Options): String? {
-        val host = data.host ?: return null
+        val host = data.authority ?: return null
         if (!host.endsWith(".contentfabric.io") || !host.startsWith("host-")) return null
         return data.toString().replace(host, "contentfabric.io")
     }

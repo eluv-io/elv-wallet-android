@@ -55,9 +55,10 @@ import app.eluvio.wallet.util.compose.thenIf
 import app.eluvio.wallet.util.isKeyUpOf
 import app.eluvio.wallet.util.rememberToaster
 import app.eluvio.wallet.util.subscribeToState
-import coil.compose.AsyncImage
-import coil.drawable.CrossfadeDrawable
-import coil.request.ImageRequest
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.transition.CrossfadeDrawable
 import io.reactivex.rxjava3.processors.PublishProcessor
 import kotlinx.collections.immutable.ImmutableList
 import java.util.concurrent.TimeUnit

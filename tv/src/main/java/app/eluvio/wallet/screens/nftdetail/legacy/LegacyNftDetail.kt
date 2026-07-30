@@ -71,7 +71,7 @@ import app.eluvio.wallet.util.findActivity
 import app.eluvio.wallet.util.subscribeToState
 import app.eluvio.wallet.util.toAnnotatedString
 import app.eluvio.wallet.util.toHtmlSpan
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import io.realm.kotlin.ext.realmListOf
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList

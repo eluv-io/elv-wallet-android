@@ -53,7 +53,7 @@ import app.eluvio.wallet.util.compose.BooleanParameterProvider
 import app.eluvio.wallet.util.compose.RealisticDevices
 import app.eluvio.wallet.util.compose.requestInitialFocus
 import app.eluvio.wallet.util.subscribeToState
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 
 @Composable
 fun PurchasePrompt(vm: PurchasePromptViewModel) {

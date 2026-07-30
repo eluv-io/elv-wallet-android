@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import app.eluvio.wallet.screens.dashboard.discover.DiscoverViewModel
 import app.eluvio.wallet.util.subscribeToState
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 
 /**
  * Entry body for [app.eluvio.mobile.navigation.DiscoverRoute]: binds [DiscoverViewModel] state

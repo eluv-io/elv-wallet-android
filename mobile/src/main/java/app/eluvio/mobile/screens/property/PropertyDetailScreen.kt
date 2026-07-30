@@ -51,7 +51,7 @@ import app.eluvio.wallet.screens.property.DynamicPageLayoutState.Section
 import app.eluvio.wallet.screens.property.PropertyDetailViewModel
 import app.eluvio.wallet.screens.videoplayer.VideoPlayerArgs
 import app.eluvio.wallet.util.subscribeToState
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 
 /**
  * Entry body for [app.eluvio.mobile.navigation.PropertyDetailNavArgs]: binds

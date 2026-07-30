@@ -18,7 +18,7 @@ import androidx.tv.material3.Surface
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState
 import app.eluvio.wallet.theme.borders
 import app.eluvio.wallet.theme.focusedBorder
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 
 @Composable
 fun BannerItem(

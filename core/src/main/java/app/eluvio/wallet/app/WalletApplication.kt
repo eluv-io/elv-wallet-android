@@ -7,9 +7,11 @@ import app.eluvio.wallet.di.TokenAwareHttpClient
 import app.eluvio.wallet.util.coil.ContentFabricSizingInterceptor
 import app.eluvio.wallet.util.coil.FabricImageInterceptor
 import app.eluvio.wallet.util.coil.FabricUrlKeyer
-import coil.ImageLoader
-import coil.ImageLoaderFactory
-import coil.decode.SvgDecoder
+import coil3.ImageLoader
+import coil3.PlatformContext
+import coil3.SingletonImageLoader
+import coil3.network.okhttp.OkHttpNetworkFetcherFactory
+import coil3.svg.SvgDecoder
 import com.google.firebase.FirebaseApp
 import io.reactivex.rxjava3.plugins.RxJavaPlugins
 import kotlinx.coroutines.launch
@@ -24,7 +26,7 @@ import javax.inject.Inject
  *
  * Subclasses must add @HiltAndroidApp.
  */
-abstract class WalletApplication : Application(), ImageLoaderFactory {
+abstract class WalletApplication : Application(), SingletonImageLoader.Factory {
     @Inject
     lateinit var fabricConfigRefresher: FabricConfigRefresher
 
@@ -60,11 +62,13 @@ abstract class WalletApplication : Application(), ImageLoaderFactory {
         }
     }
 
-    override fun newImageLoader(): ImageLoader {
-        // Coil checks if Application implements ImageLoaderFactory and calls this automatically.
-        // We provide our own OkHttpClient so image requests include fabric token headers.
-        return ImageLoader.Builder(this).okHttpClient(httpClient)
+    override fun newImageLoader(context: PlatformContext): ImageLoader {
+        // Coil checks if Application implements SingletonImageLoader.Factory and calls this
+        // automatically. We provide our own OkHttpClient so image requests include fabric
+        // token headers.
+        return ImageLoader.Builder(context)
             .components {
+                add(OkHttpNetworkFetcherFactory(callFactory = { httpClient }))
                 add(FabricUrlKeyer())
                 add(SvgDecoder.Factory())
                 add(FabricImageInterceptor())

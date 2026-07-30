@@ -58,7 +58,7 @@ import app.eluvio.wallet.screens.property.sections
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.carousel_36
 import app.eluvio.wallet.util.subscribeToState
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable

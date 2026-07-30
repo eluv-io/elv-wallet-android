@@ -9,7 +9,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 
 @Composable
 fun BannerSection(

@@ -3,14 +3,18 @@ package app.eluvio.wallet.app
 import android.app.Application
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.coroutineScope
+import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.di.TokenAwareHttpClient
+import app.eluvio.wallet.util.ThumbHash
 import app.eluvio.wallet.util.coil.ContentFabricSizingInterceptor
 import app.eluvio.wallet.util.coil.FabricImageInterceptor
 import app.eluvio.wallet.util.coil.FabricUrlKeyer
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
+import coil3.asImage
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
+import coil3.request.ImageRequest
 import coil3.svg.SvgDecoder
 import com.google.firebase.FirebaseApp
 import io.reactivex.rxjava3.plugins.RxJavaPlugins
@@ -74,6 +78,15 @@ abstract class WalletApplication : Application(), SingletonImageLoader.Factory {
                 add(FabricImageInterceptor())
                 add(ContentFabricSizingInterceptor())
             }
+            // App-wide ThumbHash support: any request whose data is a FabricUrl with an
+            // imageHash gets the decoded blur while loading (and if loading fails).
+            // These are default factories — a placeholder set on the request itself wins.
+            .placeholder(::thumbHashImage)
+            .error(::thumbHashImage)
             .build()
     }
+
+    private fun thumbHashImage(request: ImageRequest) =
+        (request.data as? FabricUrl)?.imageHash
+            ?.let { ThumbHash.decode(it)?.asImage() }
 }

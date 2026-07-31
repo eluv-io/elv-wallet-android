@@ -33,7 +33,9 @@ fun ShimmerImage(
     var showPlaceholder by remember { mutableStateOf(true) }
     AsyncImage(
         model = model,
-        onLoading = { showPlaceholder = true },
+        // No shimmer when the request provides its own loading state (e.g. the app-wide
+        // ThumbHash placeholder for FabricUrls) — it would draw over it.
+        onLoading = { showPlaceholder = it.painter == null },
         onError = {
             onError?.invoke(it)
             showPlaceholder = false

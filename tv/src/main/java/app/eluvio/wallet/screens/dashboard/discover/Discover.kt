@@ -53,6 +53,7 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import app.eluvio.wallet.R
 import app.eluvio.wallet.data.AspectRatio
+import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.common.ShimmerImage
@@ -71,7 +72,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
-fun Discover(onBackgroundImageSet: (String?) -> Unit) {
+fun Discover(onBackgroundImageSet: (FabricUrl?) -> Unit) {
     hiltViewModel<DiscoverViewModel>().subscribeToState { vm, state ->
         Discover(state, onBackgroundImageSet, vm::onPropertyClicked, vm::retry)
     }
@@ -80,7 +81,7 @@ fun Discover(onBackgroundImageSet: (String?) -> Unit) {
 @Composable
 private fun Discover(
     state: State,
-    onBackgroundImageSet: (String?) -> Unit,
+    onBackgroundImageSet: (FabricUrl?) -> Unit,
     onPropertyClicked: (State.Property) -> Unit,
     onRetryClicked: () -> Unit,
 ) {

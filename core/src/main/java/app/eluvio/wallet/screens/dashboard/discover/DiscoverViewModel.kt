@@ -51,11 +51,11 @@ class DiscoverViewModel @Inject constructor(
 
             // For displaying Property-specific branding in the Discover screen.
             val cardImage: FabricUrl?,
-            val focusBackgroundUrl: String?,
+            val focusBackgroundUrl: FabricUrl?,
 
             // For custom, Property-specific builds only.
             val startScreenLogo: FabricUrl?,
-            val startScreenBackground: String?,
+            val startScreenBackground: FabricUrl?,
         )
     }
 
@@ -171,9 +171,9 @@ private fun MediaPropertyEntity.toStateProperty(): DiscoverViewModel.State.Prope
         skipLogin = loginInfo?.skipLogin == true,
 
         cardImage = image,
-        focusBackgroundUrl = bgImageWithFallback?.url,
+        focusBackgroundUrl = bgImageWithFallback,
 
         startScreenLogo = startScreenLogo,
-        startScreenBackground = startScreenBackground?.url
+        startScreenBackground = startScreenBackground
     )
 }

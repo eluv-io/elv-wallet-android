@@ -47,6 +47,7 @@ import androidx.tv.material3.NavigationDrawerItemDefaults
 import androidx.tv.material3.NavigationDrawerScope
 import androidx.tv.material3.Text
 import app.eluvio.wallet.BuildConfig
+import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.screens.dashboard.discover.Discover
 import app.eluvio.wallet.screens.dashboard.myitems.MyItems
 import app.eluvio.wallet.screens.dashboard.profile.Profile
@@ -77,7 +78,9 @@ fun Dashboard(tabs: ImmutableList<Tabs>) {
         // This is a vestige of the never-used no-auth flow.
         selectedTab = tabs.first()
     }
-    var backgroundImage by rememberSaveable { mutableStateOf<String?>(null) }
+    // Not rememberSaveable (FabricUrl isn't Bundle-able): Discover re-sets the background on
+    // focus restoration, so it survives recreation anyway.
+    var backgroundImage by remember { mutableStateOf<FabricUrl?>(null) }
 
     AnimatedBackground(url = backgroundImage)
 
@@ -188,7 +191,7 @@ private fun NavigationDrawerScope.DrawerContent(
 @Composable
 private fun TabContent(
     selectedTab: Tabs,
-    onBackgroundImageSet: (String?) -> Unit,
+    onBackgroundImageSet: (FabricUrl?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (selectedTab != Tabs.Discover) {
@@ -215,7 +218,7 @@ private fun TabContent(
 }
 
 @Composable
-private fun AnimatedBackground(url: String?, modifier: Modifier = Modifier) {
+private fun AnimatedBackground(url: FabricUrl?, modifier: Modifier = Modifier) {
     val animationDuration = CrossfadeDrawable.DEFAULT_DURATION
     AnimatedContent(
         targetState = url,

@@ -15,15 +15,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import app.eluvio.wallet.R
+import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.TvButton
 import app.eluvio.wallet.util.compose.requestOnce
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 
 @Composable
 fun SinglePropertyPage(
     state: DiscoverViewModel.State,
-    @Suppress("UNUSED_PARAMETER") onBackgroundImageSet: (String?) -> Unit,
+    @Suppress("UNUSED_PARAMETER") onBackgroundImageSet: (FabricUrl?) -> Unit,
     onPropertyClicked: (DiscoverViewModel.State.Property) -> Unit,
     onRetryClicked: () -> Unit
 ) {

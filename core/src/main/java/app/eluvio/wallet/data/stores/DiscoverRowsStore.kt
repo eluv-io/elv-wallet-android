@@ -42,7 +42,12 @@ class DiscoverRowsStore @Inject constructor(
                     Item(
                         property = property,
                         // Leave some items without a video to exercise the image fallback.
-                        heroVideoUrl = FAKE_HERO_VIDEOS.getOrNull(index % (FAKE_HERO_VIDEOS.size + 1)),
+                        // The tiny pool repeats urls across properties, which the player
+                        // pipeline (correctly) treats as "same video, keep playing" when
+                        // focus moves between them. A no-op query param makes each
+                        // property's video url unique, like real data will be.
+                        heroVideoUrl = FAKE_HERO_VIDEOS.getOrNull(index % (FAKE_HERO_VIDEOS.size + 1))
+                            ?.let { "$it?fakeProp=${property.id}" },
                         hasWatchProgress = Math.floorMod(property.id.hashCode() + rowIndex, 3) != 0,
                     )
                 }

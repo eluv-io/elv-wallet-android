@@ -40,6 +40,7 @@ fun DisplaySettingsCard(
         ImageCard(
             imageUrl = imageUrl,
             contentDescription = title,
+            aspectRatio = imageAspectRatio,
             focusedOverlay = {
                 MetadataTexts(displaySettings)
             },

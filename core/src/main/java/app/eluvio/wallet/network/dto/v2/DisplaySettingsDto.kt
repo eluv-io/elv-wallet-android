@@ -36,4 +36,7 @@ interface DisplaySettingsDto {
 
     /** Applies to "banner" items that should be displayed edge-to-edge on the screen. */
     val full_bleed: Boolean?
+
+    /** Points to a theme defined in [StylingDto.card_themes]. Only Sections define this. */
+    val card_theme_id: String?
 }

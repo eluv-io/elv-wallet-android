@@ -44,6 +44,9 @@ data class MediaPropertyDto(
 
     val tenant: TenantDto?,
 
+    val card_theme_id: String?,
+    val styling: StylingDto?,
+
     // For single-property custom builds
     val start_screen_background: AssetLinkDto?,
     val start_screen_logo: AssetLinkDto?,

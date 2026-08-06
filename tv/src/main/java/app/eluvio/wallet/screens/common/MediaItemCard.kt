@@ -64,6 +64,9 @@ import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.button_24
 import app.eluvio.wallet.theme.disabledItemAlpha
 import app.eluvio.wallet.util.compose.Black
+import app.eluvio.wallet.util.compose.LocalCardTheme
+import app.eluvio.wallet.util.compose.cardShape
+import app.eluvio.wallet.util.compose.isCircular
 import app.eluvio.wallet.util.compose.requestInitialFocus
 import io.realm.kotlin.ext.realmListOf
 import io.realm.kotlin.types.RealmInstant
@@ -87,70 +90,77 @@ fun MediaItemCard(
     val liveVideoState by rememberLiveVideoState(media.liveVideoInfo)
     val displaySettings = media.requireDisplaySettings().withOverrides(displayOverrides)
     val (imageUrl, aspectRatio) = displaySettings.thumbnailUrlAndRatio ?: ("" to AspectRatio.SQUARE)
+    // Circular cards don't react to focus at all: no dim, and the same overlay either way.
+    val circular = LocalCardTheme.current.isCircular(aspectRatio)
     if (forceDisabled || media.isDisabled) {
         DisabledCard(imageUrl, media, liveVideoState, shape, cardHeight, aspectRatio, modifier)
     } else {
         val showPurchaseOptions =
             enablePurchaseOptionsOverlay && (media.showPurchaseOptions || media.showAlternatePage)
+        val restingOverlay: @Composable BoxScope.() -> Unit = {
+            if (playbackProgress != null && playbackProgress > 0) {
+                ProgressBar(
+                    progress = playbackProgress,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(8.dp)
+                )
+            }
+            if (media.mediaType == MediaEntity.MEDIA_TYPE_VIDEO) {
+                val liveState = liveVideoState
+                if (liveState != null) {
+                    LiveVideoUnFocusedOverlay(liveState, circular)
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .align(Alignment.Center)
+                            .alpha(0.75f)
+                    )
+                }
+            }
+            if (showPurchaseOptions) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black(alpha = 0.8f))
+                )
+            }
+        }
         ImageCard(
             imageUrl = imageUrl,
             contentDescription = media.nameOrLockedName(),
             shape = shape,
-            focusedOverlay = {
-                val padding = if (aspectRatio == AspectRatio.WIDE) 18.dp else 12.dp
-                Column(Modifier.padding(padding)) {
-                    if (showPurchaseOptions) {
-                        val text = if (BuildConfig.DISABLE_PURCHASE_PROMPTS) {
-                            "You don't have access to this media"
-                        } else {
-                            "View purchase options"
+            aspectRatio = aspectRatio,
+            dimOnFocus = !circular,
+            focusedOverlay = if (circular) restingOverlay else {
+                {
+                    val padding = if (aspectRatio == AspectRatio.WIDE) 18.dp else 12.dp
+                    Column(Modifier.padding(padding)) {
+                        if (showPurchaseOptions) {
+                            val text = if (BuildConfig.DISABLE_PURCHASE_PROMPTS) {
+                                "You don't have access to this media"
+                            } else {
+                                "View purchase options"
+                            }
+                            Text(
+                                text = text.uppercase(),
+                                style = MaterialTheme.typography.button_24,
+                                fontWeight = FontWeight.Bold,
+                            )
                         }
-                        Text(
-                            text = text.uppercase(),
-                            style = MaterialTheme.typography.button_24,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                    Spacer(modifier = Modifier.weight(1f))
-                    MetadataTexts(displaySettings)
-                    if (playbackProgress != null && playbackProgress > 0) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        ProgressBar(playbackProgress)
+                        Spacer(modifier = Modifier.weight(1f))
+                        MetadataTexts(displaySettings)
+                        if (playbackProgress != null && playbackProgress > 0) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            ProgressBar(playbackProgress)
+                        }
                     }
                 }
             },
-            unFocusedOverlay = {
-                if (playbackProgress != null && playbackProgress > 0) {
-                    ProgressBar(
-                        progress = playbackProgress,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(8.dp)
-                    )
-                }
-                if (media.mediaType == MediaEntity.MEDIA_TYPE_VIDEO) {
-                    val liveState = liveVideoState
-                    if (liveState != null) {
-                        LiveVideoUnFocusedOverlay(liveState)
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(40.dp)
-                                .align(Alignment.Center)
-                                .alpha(0.75f)
-                        )
-                    }
-                }
-                if (showPurchaseOptions) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black(alpha = 0.8f))
-                    )
-                }
-            },
+            unFocusedOverlay = restingOverlay,
             onClick = { onMediaItemClick(media, permissionContext) },
             modifier = modifier
                 .height(cardHeight)
@@ -193,44 +203,52 @@ private fun DisabledCard(
     aspectRatio: Float,
     modifier: Modifier = Modifier,
 ) {
+    val cardTheme = LocalCardTheme.current
+    // Resolved here (and not just inside ImageCard) because we also clip to it below.
+    val cardShape = cardTheme.cardShape(aspectRatio, shape)
+    val circular = cardTheme.isCircular(aspectRatio)
+    val restingOverlay: @Composable BoxScope.() -> Unit = {
+        if (media.mediaType == MediaEntity.MEDIA_TYPE_VIDEO) {
+            val liveState = liveState
+            if (liveState != null) {
+                LiveVideoUnFocusedOverlay(liveState, circular)
+            } else {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .align(Alignment.Center)
+                        .alpha(0.75f)
+                )
+            }
+        }
+    }
     ImageCard(
         imageUrl = imageUrl,
         contentDescription = media.nameOrLockedName(),
-        shape = shape,
+        shape = cardShape,
         scale = ClickableSurfaceScale.None,
-        focusedOverlay = {
-            val padding = if (aspectRatio == AspectRatio.WIDE) 18.dp else 12.dp
-            Text(
-                "Could not access media.",
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .padding(padding)
-                    .align(Alignment.Center)
-            )
-        },
-        unFocusedOverlay = {
-            if (media.mediaType == MediaEntity.MEDIA_TYPE_VIDEO) {
-                val liveState = liveState
-                if (liveState != null) {
-                    LiveVideoUnFocusedOverlay(liveState)
-                } else {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .align(Alignment.Center)
-                            .alpha(0.75f)
-                    )
-                }
+        dimOnFocus = !circular,
+        focusedOverlay = if (circular) restingOverlay else {
+            {
+                val padding = if (aspectRatio == AspectRatio.WIDE) 18.dp else 12.dp
+                Text(
+                    "Could not access media.",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .padding(padding)
+                        .align(Alignment.Center)
+                )
             }
         },
+        unFocusedOverlay = restingOverlay,
         onClick = { },
         modifier = modifier
             .height(cardHeight)
             .aspectRatio(aspectRatio, matchHeightConstraintsFirst = true)
             .alpha(MaterialTheme.colorScheme.disabledItemAlpha)
-            .clip(shape)
+            .clip(cardShape)
     )
 }
 
@@ -255,7 +273,13 @@ private fun ProgressBar(progress: Float, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun BoxScope.LiveVideoUnFocusedOverlay(liveVideoState: LiveVideoState) {
+private fun BoxScope.LiveVideoUnFocusedOverlay(
+    liveVideoState: LiveVideoState,
+    circular: Boolean = false,
+) {
+    // A circle has no bottom-end corner to pin the tag to, so center it horizontally instead.
+    // Still bottom-aligned vertically, same as every other card.
+    val alignment = if (circular) Alignment.BottomCenter else Alignment.BottomEnd
     when {
         liveVideoState.ended -> {
             // Maybe never even displayed in the UI in the first place?
@@ -273,7 +297,7 @@ private fun BoxScope.LiveVideoUnFocusedOverlay(liveVideoState: LiveVideoState) {
                 modifier = Modifier
                     .padding(15.dp)
                     .background(Color.Red, shape = RoundedCornerShape(2.dp))
-                    .align(Alignment.BottomEnd)
+                    .align(alignment)
                     .padding(horizontal = 5.dp, vertical = 3.dp)
             )
         }
@@ -291,7 +315,7 @@ private fun BoxScope.LiveVideoUnFocusedOverlay(liveVideoState: LiveVideoState) {
                 modifier = Modifier
                     .padding(15.dp)
                     .background(Color(0xFF272727), shape = RoundedCornerShape(2.dp))
-                    .align(Alignment.BottomEnd)
+                    .align(alignment)
                     .padding(horizontal = 6.dp, vertical = 1.dp)
             )
         }

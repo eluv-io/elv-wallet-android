@@ -12,6 +12,7 @@ data class MediaPageDto(
     val id: String,
     val label: String,
     val layout: PageLayoutDto,
+    val card_theme_id: String?,
     override val permissions: PermissionsDto?,
 ) : DtoWithPermissions
 

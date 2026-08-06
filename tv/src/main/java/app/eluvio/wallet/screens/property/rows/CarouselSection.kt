@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -74,6 +75,7 @@ import app.eluvio.wallet.theme.body_32
 import app.eluvio.wallet.theme.button_24
 import app.eluvio.wallet.theme.label_24
 import app.eluvio.wallet.util.cast
+import app.eluvio.wallet.util.compose.LocalCardTheme
 import app.eluvio.wallet.util.compose.focusCapturingGroup
 import app.eluvio.wallet.util.compose.focusCapturingLazyList
 import app.eluvio.wallet.util.compose.focusTrap
@@ -96,6 +98,18 @@ fun CarouselSection(
     if (display == null || item.items.isEmpty()) {
         return
     }
+    CompositionLocalProvider(LocalCardTheme provides item.cardTheme) {
+        CarouselSectionContent(item, display, preferredTopPadding)
+    }
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+private fun CarouselSectionContent(
+    item: DynamicPageLayoutState.Section.Carousel,
+    display: DisplaySettings,
+    preferredTopPadding: Dp,
+) {
     // Individual cards resolve their own height, but we need an approximation for the parts of the
     // section that are laid out next to the cards, rather than as part of the card row.
     val approximateCardHeight = display.cardSize.cardHeight(display.forcedAspectRatio)

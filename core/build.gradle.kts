@@ -51,6 +51,8 @@ dependencies {
     api(platform(libs.androidx.compose.bom))
     api(libs.androidx.compose.runtime)
     api(libs.androidx.compose.ui)
+    // Shape/BorderStroke, for the shared card theme helpers.
+    api(libs.androidx.compose.foundation)
     api(libs.androidx.compose.rxjava3)
     api(libs.androidx.lifecycle.runtime.compose)
 

@@ -2,6 +2,7 @@ package app.eluvio.wallet.data.entities.v2
 
 import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.entities.FabricUrlEntity
+import app.eluvio.wallet.data.entities.v2.display.CardThemeEntity
 import app.eluvio.wallet.data.entities.v2.permissions.EntityWithPermissions
 import app.eluvio.wallet.data.entities.v2.permissions.PermissionSettingsEntity
 import app.eluvio.wallet.data.entities.v2.permissions.PermissionStatesEntity
@@ -58,6 +59,12 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
     // Background for the countdown screen of upcoming live events.
     var countdownBackground: FabricUrlEntity? = null
 
+    // Card themes defined by this Property, keyed by theme ID.
+    var cardThemes = realmDictionaryOf<CardThemeEntity?>()
+
+    // The theme used by cards in this Property, unless a Page or Section overrides it.
+    var cardThemeId: String? = null
+
     @Ignore
     val loginProvider: String
         get() = loginInfo?.loginProvider ?: "ory"
@@ -99,6 +106,8 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         if (startScreenBackground != other.startScreenBackground) return false
         if (startScreenLogo != other.startScreenLogo) return false
         if (countdownBackground != other.countdownBackground) return false
+        if (cardThemes != other.cardThemes) return false
+        if (cardThemeId != other.cardThemeId) return false
         if (permissionStates != other.permissionStates) return false
         if (resolvedPermissions != other.resolvedPermissions) return false
         if (rawPermissions != other.rawPermissions) return false
@@ -124,6 +133,8 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         result = 31 * result + (startScreenBackground?.hashCode() ?: 0)
         result = 31 * result + (startScreenLogo?.hashCode() ?: 0)
         result = 31 * result + (countdownBackground?.hashCode() ?: 0)
+        result = 31 * result + cardThemes.hashCode()
+        result = 31 * result + (cardThemeId?.hashCode() ?: 0)
         result = 31 * result + permissionStates.hashCode()
         result = 31 * result + (resolvedPermissions?.hashCode() ?: 0)
         result = 31 * result + (rawPermissions?.hashCode() ?: 0)
@@ -133,7 +144,7 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
     }
 
     override fun toString(): String {
-        return "MediaPropertyEntity(id='$id', name='$name', headerLogoUrl=$headerLogoUrl, image=$image, bgImageUrl=$bgImageUrl, bgImageWithFallback=$bgImageWithFallback, mainPageTitle=$mainPageTitle, mainPageDescription=$mainPageDescription, mainPage=$mainPage, subpropertySelection=$subpropertySelection, loginInfo=$loginInfo, tenantId=$tenantId, startScreenBackground=$startScreenBackground, startScreenLogo=$startScreenLogo, countdownBackground=$countdownBackground, loginProvider='$loginProvider', permissionStates=$permissionStates, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, permissionChildren=$permissionChildren, propertyPermissions=$propertyPermissions, searchPermissions=$searchPermissions)"
+        return "MediaPropertyEntity(id='$id', name='$name', headerLogoUrl=$headerLogoUrl, image=$image, bgImageUrl=$bgImageUrl, bgImageWithFallback=$bgImageWithFallback, mainPageTitle=$mainPageTitle, mainPageDescription=$mainPageDescription, mainPage=$mainPage, subpropertySelection=$subpropertySelection, loginInfo=$loginInfo, tenantId=$tenantId, startScreenBackground=$startScreenBackground, startScreenLogo=$startScreenLogo, countdownBackground=$countdownBackground, cardThemes=$cardThemes, cardThemeId=$cardThemeId, loginProvider='$loginProvider', permissionStates=$permissionStates, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, permissionChildren=$permissionChildren, propertyPermissions=$propertyPermissions, searchPermissions=$searchPermissions)"
     }
 
     class SubpropertySelectionEntity : EmbeddedRealmObject {

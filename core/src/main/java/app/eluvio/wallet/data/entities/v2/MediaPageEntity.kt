@@ -55,6 +55,9 @@ class MediaPageEntity : RealmObject, EntityWithPermissions {
      */
     var sectionIds = realmListOf<String>()
 
+    // The theme used by cards on this Page, unless a Section overrides it.
+    var cardThemeId: String? = null
+
     @field:Ignore
     override var resolvedPermissions: VolatilePermissionSettings? = null
     override var rawPermissions: PermissionSettingsEntity? = null
@@ -80,6 +83,7 @@ class MediaPageEntity : RealmObject, EntityWithPermissions {
         if (description != other.description) return false
         if (descriptionRichText != other.descriptionRichText) return false
         if (sectionIds != other.sectionIds) return false
+        if (cardThemeId != other.cardThemeId) return false
         if (rawPermissions != other.rawPermissions) return false
         if (resolvedPermissions != other.resolvedPermissions) return false
         if (pagePermissions != other.pagePermissions) return false
@@ -96,6 +100,7 @@ class MediaPageEntity : RealmObject, EntityWithPermissions {
         result = 31 * result + (description?.hashCode() ?: 0)
         result = 31 * result + (descriptionRichText?.hashCode() ?: 0)
         result = 31 * result + sectionIds.hashCode()
+        result = 31 * result + (cardThemeId?.hashCode() ?: 0)
         result = 31 * result + (rawPermissions?.hashCode() ?: 0)
         result = 31 * result + (resolvedPermissions?.hashCode() ?: 0)
         result = 31 * result + (pagePermissions?.hashCode() ?: 0)
@@ -103,7 +108,7 @@ class MediaPageEntity : RealmObject, EntityWithPermissions {
     }
 
     override fun toString(): String {
-        return "MediaPageEntity(id='$uid', realId='$id', backgroundImage=$backgroundImageUrl, logoUrl=$logoUrl, title=$title, description=$description, descriptionRichText=$descriptionRichText, sectionIds=$sectionIds, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, pagePermissions=$pagePermissions)"
+        return "MediaPageEntity(id='$uid', realId='$id', backgroundImage=$backgroundImageUrl, logoUrl=$logoUrl, title=$title, description=$description, descriptionRichText=$descriptionRichText, sectionIds=$sectionIds, cardThemeId=$cardThemeId, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, pagePermissions=$pagePermissions)"
     }
 
     @Module

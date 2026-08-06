@@ -34,5 +34,6 @@ fun DisplaySettingsDto.toEntity(baseUrl: String): DisplaySettingsEntity {
         heroBackgroundVideoHash = dto.background_video?.hash
         hiddenOnTv = dto.hide_on_tv
         fullBleed = dto.full_bleed
+        cardThemeId = dto.card_theme_id?.ifEmpty { null }
     }
 }

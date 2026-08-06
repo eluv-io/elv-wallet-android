@@ -42,6 +42,9 @@ interface DisplaySettings {
 
     /** Applies to "banner" items that should be displayed edge-to-edge on the screen. */
     val fullBleed: Boolean?
+
+    /** Points to a theme defined by the Property. Only Sections define this. */
+    val cardThemeId: String?
 }
 
 /**
@@ -88,6 +91,7 @@ data class SimpleDisplaySettings(
     override val heroBackgroundVideoHash: String? = null,
     override val hiddenOnTv: Boolean? = null,
     override val fullBleed: Boolean? = null,
+    override val cardThemeId: String? = null,
 ) : DisplaySettings {
     companion object {
         fun from(other: DisplaySettings?, forcedAspectRatio: Float? = null): SimpleDisplaySettings {
@@ -112,6 +116,7 @@ data class SimpleDisplaySettings(
                 heroBackgroundVideoHash = other?.heroBackgroundVideoHash,
                 hiddenOnTv = other?.hiddenOnTv,
                 fullBleed = other?.fullBleed,
+                cardThemeId = other?.cardThemeId,
             )
         }
     }
@@ -145,5 +150,6 @@ fun DisplaySettings.withOverrides(overrides: DisplaySettings?): DisplaySettings 
         heroBackgroundVideoHash = overrides.heroBackgroundVideoHash ?: default.heroBackgroundVideoHash,
         hiddenOnTv = overrides.hiddenOnTv ?: default.hiddenOnTv,
         fullBleed = overrides.fullBleed ?: default.fullBleed,
+        cardThemeId = overrides.cardThemeId?.ifEmpty { null } ?: default.cardThemeId,
     )
 }

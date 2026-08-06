@@ -20,14 +20,21 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.tv.material3.Border
+import androidx.tv.material3.ClickableSurfaceBorder
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.ClickableSurfaceScale
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
+import app.eluvio.wallet.data.entities.v2.display.CardThemeEntity
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.LocalSurfaceScale
 import app.eluvio.wallet.theme.borders
 import app.eluvio.wallet.theme.focusedBorder
+import app.eluvio.wallet.util.compose.LocalCardTheme
+import app.eluvio.wallet.util.compose.cardBorder
+import app.eluvio.wallet.util.compose.cardShape
+import app.eluvio.wallet.util.compose.hasBorder
 import app.eluvio.wallet.util.compose.requestInitialFocus
 
 /**
@@ -44,16 +51,19 @@ fun ImageCard(
     unFocusedOverlay: @Composable (BoxScope.() -> Unit)? = null,
     dimOnFocus: Boolean = true,
     shape: Shape = MaterialTheme.shapes.medium,
+    /** Lets the card theme decide whether this card should be circularized. */
+    aspectRatio: Float? = null,
     onClick: () -> Unit,
     scale: ClickableSurfaceScale = LocalSurfaceScale.current,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
+    val cardTheme = LocalCardTheme.current
     Surface(
         onClick = onClick,
-        border = MaterialTheme.borders.focusedBorder,
+        border = cardTheme.clickableSurfaceBorder(),
         scale = scale,
-        shape = ClickableSurfaceDefaults.shape(shape),
+        shape = ClickableSurfaceDefaults.shape(cardTheme.cardShape(aspectRatio, shape)),
         interactionSource = interactionSource,
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color.Transparent,
@@ -77,6 +87,19 @@ fun ImageCard(
             unFocusedOverlay?.invoke(parentScope)
         }
     }
+}
+
+/**
+ * A theme that defines a border replaces the default focus ring with its own active/inactive
+ * borders. Themes without a border keep the focus ring, so focus stays visible on TV.
+ */
+@Composable
+private fun CardThemeEntity?.clickableSurfaceBorder(): ClickableSurfaceBorder {
+    val theme = this?.takeIf { it.hasBorder } ?: return MaterialTheme.borders.focusedBorder
+    return ClickableSurfaceDefaults.border(
+        border = Border(theme.cardBorder(focused = false)),
+        focusedBorder = Border(theme.cardBorder(focused = true)),
+    )
 }
 
 @Preview(widthDp = 300, heightDp = 150)

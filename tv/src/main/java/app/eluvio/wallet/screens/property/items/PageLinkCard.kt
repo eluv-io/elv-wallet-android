@@ -31,6 +31,8 @@ import app.eluvio.wallet.screens.property.DynamicPageLayoutState
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.disabledItemAlpha
 import app.eluvio.wallet.theme.label_24
+import app.eluvio.wallet.util.compose.LocalCardTheme
+import app.eluvio.wallet.util.compose.cardShape
 import app.eluvio.wallet.util.compose.thenIf
 
 @Composable
@@ -57,15 +59,17 @@ fun PageLinkCard(
                 matchHeightConstraintsFirst = true
             )
         if (item.forceDisabled) {
+            val shape = LocalCardTheme.current
+                .cardShape(imageAspectRatio, MaterialTheme.shapes.medium)
             ShimmerImage(
                 imageUrl, contentDescription = title,
-                modifier = cardModifier
-                    .clip(MaterialTheme.shapes.medium)
+                modifier = cardModifier.clip(shape)
             )
         } else {
             ImageCard(
                 imageUrl = imageUrl,
                 contentDescription = title,
+                aspectRatio = imageAspectRatio,
                 focusedOverlay = {
                     MetadataTexts(item.displaySettings)
                 },

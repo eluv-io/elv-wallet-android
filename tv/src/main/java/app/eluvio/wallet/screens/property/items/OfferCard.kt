@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.data.entities.RedeemableOfferEntity
 import app.eluvio.wallet.screens.common.ImageCard
 import app.eluvio.wallet.screens.common.WrapContentText
@@ -90,6 +91,8 @@ fun OfferCard(
     ImageCard(
         imageUrl = item.imageUrl,
         contentDescription = item.name,
+        // Offer cards are always square.
+        aspectRatio = AspectRatio.SQUARE,
         onClick = onClick,
         modifier = Modifier.size(cardHeight),
         focusedOverlay = {

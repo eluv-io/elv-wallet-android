@@ -9,6 +9,7 @@ import app.eluvio.wallet.data.entities.v2.HeroActionEntity
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
 import app.eluvio.wallet.data.entities.v2.PropertySearchFiltersEntity
 import app.eluvio.wallet.data.entities.v2.SectionItemEntity
+import app.eluvio.wallet.data.entities.v2.display.CardThemeEntity
 import app.eluvio.wallet.data.entities.v2.display.DisplaySettings
 import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
 import app.eluvio.wallet.data.permissions.PermissionContext
@@ -49,12 +50,22 @@ fun MediaPageSectionEntity.toDynamicSections(
     // Hero actions only reference their target media by id, so the media items they point to have
     // to be fetched separately and handed to us here (keyed by media id).
     heroActionMedia: Map<String, MediaEntity> = emptyMap(),
+    /**
+     * Resolves the card theme for a given Section. Takes a Section rather than a theme, because
+     * sub-sections of a "container" can each override the theme.
+     */
+    cardThemeResolver: (MediaPageSectionEntity) -> CardThemeEntity? = { null },
 ): List<DynamicPageLayoutState.Section> {
     return when (type) {
         MediaPageSectionEntity.TYPE_AUTOMATIC,
         MediaPageSectionEntity.TYPE_MANUAL,
         MediaPageSectionEntity.TYPE_SEARCH -> listOf(
-            this.toCarouselSection(parentPermissionContext, filters, playbackStore)
+            this.toCarouselSection(
+                parentPermissionContext,
+                filters,
+                playbackStore,
+                cardThemeResolver(this)
+            )
         )
 
         MediaPageSectionEntity.TYPE_HERO -> this.toHeroSections(
@@ -76,7 +87,8 @@ fun MediaPageSectionEntity.toDynamicSections(
                     parentPermissionContext,
                     playbackStore,
                     filters,
-                    heroActionMedia
+                    heroActionMedia,
+                    cardThemeResolver
                 )
             }
         }
@@ -89,6 +101,7 @@ private fun MediaPageSectionEntity.toCarouselSection(
     parentPermissionContext: PermissionContext,
     filters: PropertySearchFiltersEntity? = null,
     playbackStore: PlaybackStore,
+    cardTheme: CardThemeEntity?,
 ): DynamicPageLayoutState.Section.Carousel {
     val permissionContext = parentPermissionContext.copy(sectionId = id)
     val items = items.toCarouselItems(permissionContext, displaySettings, playbackStore)
@@ -118,7 +131,8 @@ private fun MediaPageSectionEntity.toCarouselSection(
         filterAttribute = filterAttribute,
         viewAllNavigationEvent = MediaGridNavArgs(permissionContext, gridContentOverride)
             .takeIf { showViewAll }
-            ?.asPush()
+            ?.asPush(),
+        cardTheme = cardTheme,
     )
 }
 

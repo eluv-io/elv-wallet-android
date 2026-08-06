@@ -9,6 +9,7 @@ import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.PropertyLink
 import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.entities.RedeemableOfferEntity
+import app.eluvio.wallet.data.entities.v2.display.CardThemeEntity
 import app.eluvio.wallet.data.entities.v2.display.DisplaySettings
 import app.eluvio.wallet.data.entities.v2.search.FilterAttributeEntity
 import app.eluvio.wallet.data.permissions.PermissionContext
@@ -85,6 +86,7 @@ data class DynamicPageLayoutState(
             val viewAllNavigationEvent: NavigationEvent? = null,
             val items: ImmutableList<CarouselItem>,
             val filterAttribute: FilterAttributeEntity? = null,
+            val cardTheme: CardThemeEntity? = null,
         ) : Section {
             override val sectionId: String =
                 requireNotNull(permissionContext.sectionId) { "PermissionContext.sectionId is null" }

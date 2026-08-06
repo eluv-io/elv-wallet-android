@@ -69,7 +69,9 @@ data class MediaItemV2Dto(
     override val background_image: AssetLinkDto?,
     override val background_video: PlayableHashDto?,
     override val hide_on_tv: Boolean?,
-    override val full_bleed: Boolean?
+    override val full_bleed: Boolean?,
+    // Media items never define a card theme, they inherit it from the Section they appear in.
+    override val card_theme_id: String? = null
 ) : DisplaySettingsDto
 
 @JsonClass(generateAdapter = true)

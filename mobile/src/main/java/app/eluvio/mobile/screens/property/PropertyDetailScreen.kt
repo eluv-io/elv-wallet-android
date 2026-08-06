@@ -3,9 +3,11 @@ package app.eluvio.mobile.screens.property
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,7 +23,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,9 +31,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -41,6 +44,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.eluvio.mobile.R
+import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.navigation.onClickTarget
@@ -50,6 +54,10 @@ import app.eluvio.wallet.screens.property.DynamicPageLayoutState.HeroAction
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState.Section
 import app.eluvio.wallet.screens.property.PropertyDetailViewModel
 import app.eluvio.wallet.screens.videoplayer.VideoPlayerArgs
+import app.eluvio.wallet.util.compose.LocalCardTheme
+import app.eluvio.wallet.util.compose.cardBorder
+import app.eluvio.wallet.util.compose.cardShape
+import app.eluvio.wallet.util.compose.hasBorder
 import app.eluvio.wallet.util.subscribeToState
 import coil3.compose.AsyncImage
 
@@ -156,7 +164,7 @@ fun PropertyDetailScreen(
                     )
 
                     is Section.Banner -> BannerSection(section.imageUrl)
-                    is Section.Carousel -> CarouselRow(section.items, onItemClick)
+                    is Section.Carousel -> CarouselRow(section, onItemClick)
                     is Section.HeroActions -> HeroActionsRow(section.actions, onHeroActionClick)
                 }
             }
@@ -217,18 +225,20 @@ private fun HeroActionsRow(
 
 @Composable
 private fun CarouselRow(
-    items: List<CarouselItem>,
+    section: Section.Carousel,
     onClick: (CarouselItem) -> Unit,
 ) {
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        items(
-            items = items,
-            key = { it.permissionContext.sectionItemId ?: it.permissionContext.toString() },
-        ) { item ->
-            CarouselCard(item, onClick)
+    CompositionLocalProvider(LocalCardTheme provides section.cardTheme) {
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            items(
+                items = section.items,
+                key = { it.permissionContext.sectionItemId ?: it.permissionContext.toString() },
+            ) { item ->
+                CarouselCard(item, onClick)
+            }
         }
     }
 }
@@ -239,16 +249,22 @@ private fun CarouselCard(
     onClick: (CarouselItem) -> Unit,
 ) {
     val card = item.toCard()
-    Card(
+    // Mobile cards are always square. The theme's "mobile_state" isn't implemented yet, so cards
+    // always render in the "inactive" state.
+    val theme = LocalCardTheme.current
+    val shape = theme.cardShape(AspectRatio.SQUARE, RoundedCornerShape(8.dp))
+    val border = theme?.takeIf { it.hasBorder }?.cardBorder(focused = false)
+    Column(
         modifier = Modifier
             .width(140.dp)
             .clickable { onClick(item) },
-        shape = RoundedCornerShape(8.dp),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(1f),
+                .aspectRatio(AspectRatio.SQUARE)
+                .clip(shape)
+                .then(if (border != null) Modifier.border(border, shape) else Modifier),
         ) {
             AsyncImage(
                 model = card.image,

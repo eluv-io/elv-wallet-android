@@ -56,4 +56,4 @@ fun EluvioThemePreview(content: @Composable BoxScope.() -> Unit) {
 }
 
 val LocalSurfaceScale =
-    staticCompositionLocalOf { ClickableSurfaceDefaults.scale(focusedScale = 1.05f) }
+    staticCompositionLocalOf { ClickableSurfaceDefaults.scale(focusedScale = 1.08f) }

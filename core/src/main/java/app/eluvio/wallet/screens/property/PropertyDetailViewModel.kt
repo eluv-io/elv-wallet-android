@@ -8,8 +8,10 @@ import app.eluvio.wallet.data.VideoOptionsFetcher
 import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.entities.v2.MediaPageEntity
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
+import app.eluvio.wallet.data.entities.v2.MediaPropertyEntity
 import app.eluvio.wallet.data.entities.v2.PropertySearchFiltersEntity
 import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
+import app.eluvio.wallet.data.entities.v2.display.resolveCardTheme
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.core.BuildConfig
 import app.eluvio.wallet.data.stores.ContentStore
@@ -97,7 +99,7 @@ open class PropertyDetailViewModel(
                         }
                 }
                 .map { sections -> sections.associateBy { section -> section.id } }
-                .map { sections -> page to sections }
+                .map { sections -> Triple(property, page, sections) }
         }
         .asSharedState()
 
@@ -150,13 +152,15 @@ open class PropertyDetailViewModel(
     }
 
     private fun updateSections() {
-        pageLayout.combineLatest(
+        Flowables.combineLatest(
+            pageLayout,
             propertySearchStore.getFilters(propertyId)
                 .onErrorReturnItem(PropertySearchFiltersEntity())
         )
-            .switchMap { (page, sections, filters) ->
+            .switchMap { (layout, filters) ->
+                val (property, page, sections) = layout
                 heroActionMedia(sections.values)
-                    .map { heroMedia -> sections(page, sections, filters, heroMedia) }
+                    .map { heroMedia -> sections(property, page, sections, filters, heroMedia) }
             }
             .subscribeBy(
                 onNext = { newSections ->
@@ -244,7 +248,7 @@ open class PropertyDetailViewModel(
      */
     private fun updateBackground() {
         pageLayout
-            .mapNotNull { (page, sections) ->
+            .mapNotNull { (_, page, sections) ->
                 // Find the first hero section and use its background as the page background.
                 val heroSectionSettings = sections.values
                     .firstOrNull { it.type == MediaPageSectionEntity.TYPE_HERO }
@@ -307,6 +311,7 @@ open class PropertyDetailViewModel(
     }
 
     private fun sections(
+        property: MediaPropertyEntity,
         page: MediaPageEntity,
         sections: Map<String, MediaPageSectionEntity>,
         filters: PropertySearchFiltersEntity,
@@ -330,7 +335,7 @@ open class PropertyDetailViewModel(
                     playbackStore,
                     filters,
                     heroActionMedia
-                )
+                ) { property.resolveCardTheme(page, it) }
             }
     }
 }

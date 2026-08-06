@@ -49,8 +49,10 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
 
     override var fullBleed: Boolean? = null
 
+    override var cardThemeId: String? = null
+
     override fun toString(): String {
-        return "DisplaySettingsEntity(title=$title, subtitle=$subtitle, headers=$headers, description=$description, forcedAspectRatio=$forcedAspectRatio, thumbnailLandscapeUrl=$thumbnailLandscapeUrl, thumbnailPortraitUrl=$thumbnailPortraitUrl, thumbnailSquareUrl=$thumbnailSquareUrl, displayLimit=$displayLimit, displayLimitType=$displayLimitType, _displayFormat='$_displayFormat', _cardSize='$_cardSize', logoUrl=$logoUrl, logoText=$logoText, inlineBackgroundColor=$inlineBackgroundColor, inlineBackgroundImageUrl=$inlineBackgroundImageUrl, heroBackgroundImageUrl=$heroBackgroundImageUrl, heroBackgroundVideoHash=$heroBackgroundVideoHash, hiddenOnTv=$hiddenOnTv, fullBleed=$fullBleed)"
+        return "DisplaySettingsEntity(title=$title, subtitle=$subtitle, headers=$headers, description=$description, forcedAspectRatio=$forcedAspectRatio, thumbnailLandscapeUrl=$thumbnailLandscapeUrl, thumbnailPortraitUrl=$thumbnailPortraitUrl, thumbnailSquareUrl=$thumbnailSquareUrl, displayLimit=$displayLimit, displayLimitType=$displayLimitType, _displayFormat='$_displayFormat', _cardSize='$_cardSize', logoUrl=$logoUrl, logoText=$logoText, inlineBackgroundColor=$inlineBackgroundColor, inlineBackgroundImageUrl=$inlineBackgroundImageUrl, heroBackgroundImageUrl=$heroBackgroundImageUrl, heroBackgroundVideoHash=$heroBackgroundVideoHash, hiddenOnTv=$hiddenOnTv, fullBleed=$fullBleed, cardThemeId=$cardThemeId)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -79,6 +81,7 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
         if (heroBackgroundVideoHash != other.heroBackgroundVideoHash) return false
         if (hiddenOnTv != other.hiddenOnTv) return false
         if (fullBleed != other.fullBleed) return false
+        if (cardThemeId != other.cardThemeId) return false
 
         return true
     }
@@ -104,6 +107,7 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
         result = 31 * result + (heroBackgroundVideoHash?.hashCode() ?: 0)
         result = 31 * result + (hiddenOnTv?.hashCode() ?: 0)
         result = 31 * result + (fullBleed?.hashCode() ?: 0)
+        result = 31 * result + (cardThemeId?.hashCode() ?: 0)
         return result
     }
 

@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,10 +29,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -62,7 +57,6 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.stringResource
@@ -74,7 +68,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.ClickableSurfaceDefaults
-import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.NavigationDrawerItemDefaults
 import androidx.tv.material3.Surface
@@ -82,7 +75,6 @@ import androidx.tv.material3.Text
 import app.eluvio.wallet.R
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.ShimmerImage
-import app.eluvio.wallet.screens.common.TvButton
 import app.eluvio.wallet.screens.dashboard.DashboardBackground
 import app.eluvio.wallet.screens.dashboard.discover.DiscoverViewModel.State
 import app.eluvio.wallet.theme.EluvioThemePreview
@@ -132,7 +124,7 @@ private fun Discover(
 
 /**
  * The redesigned Discover page: full-bleed hero (video/image) driven by the focused property,
- * property logo + action buttons, and categorized rows of property cards.
+ * property logo, and categorized rows of property cards.
  */
 @Composable
 private fun DiscoverPage(
@@ -155,7 +147,6 @@ private fun DiscoverPage(
     }
 
     var focusedProperty by remember { mutableStateOf<State.Property?>(null) }
-    var browsingRows by remember { mutableStateOf(false) }
     val displayedProperty = focusedProperty
         ?: state.rows.firstOrNull()?.properties?.firstOrNull()
 
@@ -182,21 +173,12 @@ private fun DiscoverPage(
                 .fillMaxSize()
                 .padding(start = 70.dp)
         ) {
-            PropertyLogo(displayedProperty, Modifier.padding(start = 5.dp))
-            HeroButtons(
-                property = displayedProperty,
-                // While browsing rows, the primary action is shown pre-selected, hinting at
-                // what pressing "up" will focus.
-                highlightPrimary = browsingRows,
-                onPropertyClicked = onPropertyClicked,
-                modifier = Modifier.padding(start = 5.dp, top = 22.dp, bottom = 10.dp)
-            )
+            PropertyLogo(displayedProperty, Modifier.padding(start = 5.dp, bottom = 22.dp))
             DiscoverRows(
                 rows = state.rows,
                 lastClickedCard = lastClickedCard,
                 onPropertyFocused = { focusedProperty = it },
                 onPropertyClicked = onPropertyClicked,
-                modifier = Modifier.onFocusChanged { browsingRows = it.hasFocus }
             )
         }
     }
@@ -270,76 +252,6 @@ private fun PropertyLogo(property: State.Property?, modifier: Modifier = Modifie
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun HeroButtons(
-    property: State.Property?,
-    highlightPrimary: Boolean,
-    onPropertyClicked: (State.Property) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val hasProgress = property?.hasWatchProgress == true
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier
-    ) {
-        HeroButton(
-            text = if (hasProgress) "Resume" else "Explore",
-            icon = if (hasProgress) Icons.Default.PlayArrow else Icons.Default.Search,
-            highlight = highlightPrimary,
-            onClick = { property?.let(onPropertyClicked) },
-            modifier = Modifier.requestInitialFocus()
-        )
-        if (hasProgress) {
-            HeroButton(
-                text = "More Info",
-                icon = Icons.Outlined.Info,
-                highlight = false,
-                onClick = { property?.let(onPropertyClicked) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun HeroButton(
-    text: String,
-    icon: ImageVector,
-    highlight: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val container = if (highlight) ButtonFocusedContainer else ButtonContainer
-    val content = if (highlight) ButtonFocusedContent else ButtonContent
-    TvButton(
-        onClick = onClick,
-        colors = ClickableSurfaceDefaults.colors(
-            containerColor = container,
-            contentColor = content,
-            focusedContainerColor = ButtonFocusedContainer,
-            focusedContentColor = ButtonFocusedContent,
-        ),
-        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(4.dp)),
-        modifier = modifier
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            modifier = Modifier.padding(horizontal = 15.dp, vertical = 8.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(14.dp)
-            )
-            Text(
-                text = text,
-                style = MaterialTheme.typography.label_40.copy(fontSize = 11.sp),
-                fontWeight = FontWeight.SemiBold,
-            )
         }
     }
 }
@@ -419,10 +331,13 @@ private fun DiscoverRow(
                         lastClickedCard = lastClickedCard,
                         onPropertyFocused = onPropertyFocused,
                         onPropertyClicked = onPropertyClicked,
-                        modifier = if (index == 0) {
-                            Modifier.focusRequester(firstItemFocusRequester)
-                        } else {
-                            Modifier
+                        modifier = when {
+                            // The very first card takes initial focus, so the nav drawer doesn't.
+                            rowIndex == 0 && index == 0 ->
+                                Modifier.requestInitialFocus(firstItemFocusRequester)
+
+                            index == 0 -> Modifier.focusRequester(firstItemFocusRequester)
+                            else -> Modifier
                         }
                     )
                 }
@@ -585,10 +500,6 @@ private val CardCornerRadius = 6.dp
 // Framework colors for the focus ring's SweepGradient shader.
 private val RingBaseColor = android.graphics.Color.argb(41, 255, 255, 255) // white @ 16%
 private val RingPeakColor = android.graphics.Color.WHITE
-private val ButtonContainer = Color(0x6B787882)
-private val ButtonContent = Color(0xFFF4F4F5)
-private val ButtonFocusedContainer = Color(0xFFF4F4F5)
-private val ButtonFocusedContent = Color(0xFF0A0A0B)
 
 private fun previewState() = State(
     loading = false,

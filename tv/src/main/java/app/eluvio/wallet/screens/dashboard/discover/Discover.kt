@@ -43,6 +43,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -320,6 +321,7 @@ private fun PropertyCard(
             ShimmerImage(
                 model = property.cardImage,
                 contentDescription = property.name,
+                contentScale = ContentScale.Crop,
                 onError = { showImage = false },
                 modifier = Modifier.fillMaxSize()
             )

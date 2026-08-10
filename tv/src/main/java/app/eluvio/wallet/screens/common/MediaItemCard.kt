@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -63,7 +62,6 @@ import app.eluvio.wallet.navigation.onClickTarget
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.button_24
 import app.eluvio.wallet.theme.disabledItemAlpha
-import app.eluvio.wallet.util.compose.Black
 import app.eluvio.wallet.util.compose.LocalCardTheme
 import app.eluvio.wallet.util.compose.cardShape
 import app.eluvio.wallet.util.compose.isCircular
@@ -121,13 +119,6 @@ fun MediaItemCard(
                     )
                 }
             }
-            if (showPurchaseOptions) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black(alpha = 0.8f))
-                )
-            }
         }
         ImageCard(
             imageUrl = imageUrl,
@@ -135,6 +126,7 @@ fun MediaItemCard(
             shape = shape,
             aspectRatio = aspectRatio,
             dimOnFocus = !circular,
+            alwaysDim = showPurchaseOptions,
             focusedOverlay = if (circular) restingOverlay else {
                 {
                     val padding = if (aspectRatio == AspectRatio.WIDE) 18.dp else 12.dp

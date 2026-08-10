@@ -1,5 +1,7 @@
 package app.eluvio.wallet.screens.common
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -31,14 +33,22 @@ import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.LocalSurfaceScale
 import app.eluvio.wallet.theme.borders
 import app.eluvio.wallet.theme.focusedBorder
+import app.eluvio.wallet.util.compose.Black
 import app.eluvio.wallet.util.compose.LocalCardTheme
 import app.eluvio.wallet.util.compose.cardBorder
 import app.eluvio.wallet.util.compose.cardShape
 import app.eluvio.wallet.util.compose.hasBorder
 import app.eluvio.wallet.util.compose.requestInitialFocus
 
+private val UnfocusedDim = Color.Black(alpha = 0.2f)
+private val FocusedDim = Color.Black(alpha = 0.8f)
+
+/** The web uses 0.5s, which drags when moving focus quickly along a row. */
+private const val DIM_ANIMATION_MILLIS = 300
+
 /**
- * An image card with a focus border. Image is darkened when focused.
+ * An image card with a focus border. Image is slightly dimmed while unfocused, and heavily
+ * darkened when focused (so [focusedOverlay] stays legible) unless [dimOnFocus] is false.
  */
 @Composable
 fun ImageCard(
@@ -50,6 +60,12 @@ fun ImageCard(
     focusedOverlay: @Composable (BoxScope.() -> Unit)? = null,
     unFocusedOverlay: @Composable (BoxScope.() -> Unit)? = null,
     dimOnFocus: Boolean = true,
+    /**
+     * Keeps the card fully dimmed regardless of focus, for content the user can't access.
+     * Has to be part of the dim itself rather than an overlay, otherwise it would pop in and out
+     * on focus changes while the dim is still animating.
+     */
+    alwaysDim: Boolean = false,
     shape: Shape = MaterialTheme.shapes.medium,
     /** Lets the card theme decide whether this card should be circularized. */
     aspectRatio: Float? = null,
@@ -72,6 +88,19 @@ fun ImageCard(
         modifier = modifier
     ) {
         val parentScope = this
+        // Unfocused cards sit slightly dimmed so focus reads as "lit up", matching the web's 85%
+        // inactive brightness. The much heavier focus dim is there to keep the overlay legible.
+        val targetDim = when {
+            alwaysDim -> FocusedDim
+            !isFocused -> UnfocusedDim
+            dimOnFocus -> FocusedDim
+            else -> Color.Transparent
+        }
+        val dim by animateColorAsState(
+            targetValue = targetDim,
+            animationSpec = tween(durationMillis = DIM_ANIMATION_MILLIS),
+            label = "cardDim"
+        )
         ShimmerImage(
             model = imageUrl,
             contentScale = ContentScale.Crop,
@@ -79,7 +108,7 @@ fun ImageCard(
             modifier = Modifier
                 .matchParentSize()
                 .align(Alignment.Center)
-                .dimContent(dim = dimOnFocus && isFocused)
+                .dimContent(color = dim)
         )
         if (isFocused) {
             focusedOverlay?.invoke(parentScope)

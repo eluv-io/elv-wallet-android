@@ -10,9 +10,13 @@ import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
 import app.eluvio.wallet.data.entities.v2.PropertySearchFiltersEntity
 import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
 import app.eluvio.wallet.data.permissions.PermissionContext
+import app.eluvio.wallet.core.BuildConfig
+import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.PlaybackStore
 import app.eluvio.wallet.data.stores.PropertySearchStore
+import app.eluvio.wallet.screens.dashboard.myitems.MyItemsNavArgs
+import app.eluvio.wallet.screens.dashboard.profile.ProfileNavArgs
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.navigation.asReplace
@@ -48,6 +52,7 @@ open class PropertyDetailViewModel(
     private val propertySearchStore: PropertySearchStore,
     private val videoOptionsFetcher: VideoOptionsFetcher,
     private val playbackStore: PlaybackStore,
+    private val contentStore: ContentStore,
 ) : BaseViewModel<DynamicPageLayoutState>(DynamicPageLayoutState()) {
 
     private val propertyId = navArgs.propertyId
@@ -101,6 +106,8 @@ open class PropertyDetailViewModel(
         // Always display Search button.
         updateState { copy(searchNavigationEvent = PropertySearchNavArgs(propertyId).asPush()) }
 
+        showDashboardTabsInSinglePropertyMode()
+
         updateSections()
 
         updateBackground()
@@ -109,6 +116,35 @@ open class PropertyDetailViewModel(
 
         property
             .subscribeBy { updateState { copy(headerLogo = it.headerLogoUrl) } }
+            .addTo(disposables)
+    }
+
+    /**
+     * Single-property builds skip the Dashboard entirely, so its drawer isn't around to reach
+     * Profile/My Items from — the Property page's action row hosts them instead.
+     *
+     * My Items only appears once we know the user actually owns something here, mirroring the
+     * fetch the My Items screen itself performs.
+     */
+    private fun showDashboardTabsInSinglePropertyMode() {
+        if (BuildConfig.DEFAULT_PROPERTY_ID == null) return
+
+        updateState { copy(profileNavigationEvent = ProfileNavArgs.asPush()) }
+
+        contentStore.search(propertyId, displayName = null)
+            .map { it.isNotEmpty() }
+            .distinctUntilChanged()
+            .subscribeBy(
+                onNext = { ownsItems ->
+                    updateState {
+                        copy(myItemsNavigationEvent = MyItemsNavArgs.asPush().takeIf { ownsItems })
+                    }
+                },
+                onError = {
+                    // Not fatal - just means we can't offer My Items from here.
+                    Log.w("Failed to check for owned items: ${it.message}")
+                }
+            )
             .addTo(disposables)
     }
 

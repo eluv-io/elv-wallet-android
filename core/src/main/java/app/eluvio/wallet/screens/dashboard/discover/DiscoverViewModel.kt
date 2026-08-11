@@ -9,6 +9,7 @@ import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.entities.v2.MediaPropertyEntity
 import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.TokenStore
+import app.eluvio.wallet.navigation.asNewRoot
 import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.util.logging.Log
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -60,6 +61,9 @@ class DiscoverViewModel @Inject constructor(
 
     private val retryTrigger = PublishProcessor.create<Unit>()
 
+    /** The property flow can emit twice (db, then network); only redirect once. */
+    private var alreadySkippedStartScreen = false
+
     override fun onResume() {
         super.onResume()
 
@@ -99,14 +103,16 @@ class DiscoverViewModel @Inject constructor(
             }
             .subscribeBy(
                 onNext = { properties ->
+                    val stateProperties = properties.map { it.toStateProperty() }
                     // Assume that Properties will never be empty once fetched from Server
                     updateState {
                         copy(
-                            properties = properties.map { it.toStateProperty() },
+                            properties = stateProperties,
                             loading = properties.isEmpty(),
                             showRetryButton = false
                         )
                     }
+                    stateProperties.firstOrNull()?.let { skipStartScreenIfSignedIn(it) }
                 },
                 onError = {
                     Log.e("Reached on onError that should never happen")
@@ -118,6 +124,24 @@ class DiscoverViewModel @Inject constructor(
 
     fun retry() {
         retryTrigger.onNext(Unit)
+    }
+
+    /**
+     * Single-property builds have no start screen for users who are already signed in — the
+     * Property page is the home screen, so there's no "Welcome Back" step to sit through.
+     *
+     * Set as the new root rather than pushed: the user never chose to be on the start screen, so
+     * Back should exit the app instead of returning to it (which would just bounce them here
+     * again).
+     */
+    private fun skipStartScreenIfSignedIn(property: State.Property) {
+        if (BuildConfig.DEFAULT_PROPERTY_ID == null || alreadySkippedStartScreen) return
+        val loggedInWithSameProvider =
+            tokenStore.isLoggedIn && tokenStore.loginProvider.get() == property.loginProvider
+        if (loggedInWithSameProvider) {
+            alreadySkippedStartScreen = true
+            navigateTo(PropertyDetailNavArgs(property.id).asNewRoot())
+        }
     }
 
     fun onPropertyClicked(property: State.Property) {

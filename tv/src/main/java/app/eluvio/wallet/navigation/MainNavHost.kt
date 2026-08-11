@@ -15,6 +15,10 @@ import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.ui.NavDisplay
 import app.eluvio.wallet.screens.dashboard.Dashboard
 import app.eluvio.wallet.screens.dashboard.DashboardNavArgs
+import app.eluvio.wallet.screens.dashboard.myitems.MyItems
+import app.eluvio.wallet.screens.dashboard.myitems.MyItemsNavArgs
+import app.eluvio.wallet.screens.dashboard.profile.Profile
+import app.eluvio.wallet.screens.dashboard.profile.ProfileNavArgs
 import app.eluvio.wallet.screens.deeplink.NftClaim
 import app.eluvio.wallet.screens.deeplink.nftClaimEntry
 import app.eluvio.wallet.screens.gallery.ImageGallery
@@ -86,6 +90,11 @@ fun MainNavHost(
         entryProvider = entryProvider {
             homeEntry { vm -> Home(vm) }
             entry<DashboardNavArgs> { Dashboard() }
+
+            // Normally Dashboard tabs. Single-property builds skip the Dashboard, so these are
+            // also reachable as standalone destinations from the Property page's action row.
+            entry<MyItemsNavArgs> { MyItems() }
+            entry<ProfileNavArgs> { Profile() }
 
             propertyDetailEntry { vm -> PropertyDetail(vm) }
             mediaGridEntry { vm -> MediaGrid(vm) }

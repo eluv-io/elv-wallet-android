@@ -4,12 +4,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.BoxWithConstraintsScope
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -23,8 +20,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -53,7 +48,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.ClickableSurfaceDefaults
-import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
@@ -62,7 +56,6 @@ import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.common.ShimmerImage
-import app.eluvio.wallet.screens.common.TvButton
 import app.eluvio.wallet.screens.dashboard.discover.DiscoverViewModel.State
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.borders
@@ -70,12 +63,10 @@ import app.eluvio.wallet.theme.focusedBorder
 import app.eluvio.wallet.theme.label_40
 import app.eluvio.wallet.util.compose.FractionBringIntoViewSpec
 import app.eluvio.wallet.util.compose.RealisticDevices
-import app.eluvio.wallet.util.compose.requestInitialFocus
 import app.eluvio.wallet.util.compose.thenIf
 import app.eluvio.wallet.util.isKeyUpOf
 import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.subscribeToState
-import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -114,40 +105,6 @@ private fun Discover(
                 onRetryClicked = onRetryClicked
             )
         }
-    }
-}
-
-@Composable
-fun SinglePropertyPage(
-    state: State,
-    onBackgroundImageSet: (String?) -> Unit,
-    onPropertyClicked: (State.Property) -> Unit,
-    onRetryClicked: () -> Unit
-) {
-    val property = state.properties.firstOrNull()
-    LaunchedEffect(property?.startScreenBackground) {
-        onBackgroundImageSet(property?.startScreenBackground)
-    }
-    if (state.loading) {
-        EluvioLoadingSpinner(Modifier.padding(top = 100.dp))
-    } else if (property != null) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(40.dp)
-        ) {
-            AsyncImage(
-                property.startScreenLogo,
-                contentDescription = "${property.name} Logo",
-                modifier = Modifier.height(160.dp)
-            )
-            TvButton(
-                if (state.isLoggedIn) "Welcome Back" else "Sign In",
-                onClick = { onPropertyClicked(property) },
-                Modifier.requestInitialFocus()
-            )
-        }
-    } else if (state.showRetryButton) {
-        RetryButton(onRetryClicked, Modifier.padding(top = 100.dp))
     }
 }
 
@@ -346,35 +303,6 @@ private fun PropertyCard(
             focusRequester.requestFocus()
             // +1 because header is at index 0
             scrollState.animateScrollToItem(index + 1)
-        }
-    }
-}
-
-@Composable
-private fun RetryButton(onRetryClicked: () -> Unit, modifier: Modifier = Modifier) {
-    Box(contentAlignment = Alignment.Center) {
-        TvButton(
-            onClick = onRetryClicked,
-            modifier = modifier
-        ) {
-            Row(
-                Modifier.padding(
-                    top = 5.dp,
-                    bottom = 5.dp,
-                    start = 20.dp,
-                    end = 14.dp
-                )
-            ) {
-                Text(
-                    text = "Retry",
-                    style = MaterialTheme.typography.label_40,
-                )
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "Clear",
-                    Modifier.padding(start = 3.dp)
-                )
-            }
         }
     }
 }

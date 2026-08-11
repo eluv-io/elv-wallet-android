@@ -32,6 +32,13 @@ data class DynamicPageLayoutState(
     val headerLogo: FabricUrl? = null,
 
     val searchNavigationEvent: NavigationEvent? = null,
+
+    // Single-property builds have no Dashboard drawer to reach these from, so the Property page
+    // hosts them in its action row instead. Null in normal builds (and My Items is also null
+    // when the user owns nothing here).
+    val profileNavigationEvent: NavigationEvent? = null,
+    val myItemsNavigationEvent: NavigationEvent? = null,
+
     val propertyLinks: List<PropertyLink> = emptyList(),
 
     // For cross-app deeplinks

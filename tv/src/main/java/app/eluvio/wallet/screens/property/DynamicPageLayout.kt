@@ -76,6 +76,8 @@ import app.eluvio.wallet.screens.property.rows.SectionHeader
 import app.eluvio.wallet.screens.property.rows.TitleSection
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.util.compose.icons.Eluvio
+import app.eluvio.wallet.util.compose.icons.MyItemsStack
+import app.eluvio.wallet.util.compose.icons.Profile
 import app.eluvio.wallet.util.compose.icons.Search
 import app.eluvio.wallet.util.compose.icons.Switcher
 import app.eluvio.wallet.util.logging.Log
@@ -173,6 +175,12 @@ private fun TopActionRow(
             add @Composable { PropertySwitcher(state) }
         }
 
+        state.profileNavigationEvent
+            ?.let { add @Composable { ProfileButton(it) } }
+
+        state.myItemsNavigationEvent
+            ?.let { add @Composable { MyItemsButton(it) } }
+
         state.searchNavigationEvent
             ?.let { add @Composable { SearchButton(it) } }
     }
@@ -220,6 +228,26 @@ private fun TopActionRow(
             actionButtons.forEach { it() }
         }
     }
+}
+
+@Composable
+private fun ProfileButton(profileNavigationEvent: NavigationEvent) {
+    val navigator = LocalNavigator.current
+    ActionButton(
+        icon = Icons.Eluvio.Profile,
+        onClick = { navigator(profileNavigationEvent) },
+        contentDescription = "Profile"
+    )
+}
+
+@Composable
+private fun MyItemsButton(myItemsNavigationEvent: NavigationEvent) {
+    val navigator = LocalNavigator.current
+    ActionButton(
+        icon = Icons.Eluvio.MyItemsStack,
+        onClick = { navigator(myItemsNavigationEvent) },
+        contentDescription = "My Items"
+    )
 }
 
 @Composable
@@ -327,22 +355,26 @@ private fun ActionButton(
 ) {
     Surface(
         onClick = onClick,
+        // Matches tvOS's IconButtonStyle: unfocused buttons sit translucent over the page art
+        // (black at 0.5, whole button at 0.7 opacity - folded together here), and focus swaps to
+        // a solid white pill that scales up.
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = Color(0xFF2d2d2d),
-            contentColor = Color(0xFFC7C7C8),
+            containerColor = Color.Black.copy(alpha = 0.35f),
+            contentColor = Color.White.copy(alpha = 0.7f),
             focusedContainerColor = Color.White,
             focusedContentColor = Color(0xFF2d2d2d),
         ),
         shape = ClickableSurfaceDefaults.shape(CircleShape),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.2f),
         glow = ClickableSurfaceDefaults.glow(focusedGlow = Glow(Color.White, 10.dp)),
-        modifier = Modifier.size(30.dp),
+        modifier = Modifier.size(34.dp),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(7.dp)
+                .padding(8.dp)
         )
         content()
     }

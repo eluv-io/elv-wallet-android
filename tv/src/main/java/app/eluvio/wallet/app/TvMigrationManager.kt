@@ -13,17 +13,20 @@ import javax.inject.Inject
 
 class TvMigrationManager @Inject constructor(
     @ApplicationContext context: Context,
-    appInfo: AppInfo,
     private val tokenStore: TokenStore,
     private val signOutHandler: SignOutHandler,
-) : MigrationManager(context, appInfo) {
+) : MigrationManager(context) {
 
-    override suspend fun runMigrations(lastVersionCode: Int) {
-        if (lastVersionCode in 1..33 && tokenStore.isLoggedIn) {
-            // User was on a build that had no refresh tokens; force re-auth so their session
-            // picks up the new token shape. One-shot — once they sign back in lastVersionCode
-            // moves above 33 and this never fires again.
-            signOutHandler.signOut(completeMessage = null, restartAppOnComplete = true).await()
+    override suspend fun applyMigration() {
+        runOnce("force_reauth_for_sessions_without_refresh_token") {
+            // Sessions minted by builds that predate refresh tokens can't recover from an
+            // expired token - AccessTokenInterceptor gives up and signs them out on the next 401
+            // regardless. Do it up front instead of stranding the user mid-session.
+            // Checking for the token itself rather than the app version means only the sessions
+            // that are actually broken get signed out.
+            if (tokenStore.isLoggedIn && tokenStore.refreshToken.get() == null) {
+                signOutHandler.signOut(completeMessage = null, restartAppOnComplete = true).await()
+            }
         }
     }
 }

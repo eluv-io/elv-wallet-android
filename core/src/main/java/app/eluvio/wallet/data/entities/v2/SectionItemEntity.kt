@@ -11,6 +11,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.ElementsIntoSet
+import io.realm.kotlin.ext.realmListOf
 import io.realm.kotlin.types.EmbeddedRealmObject
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.TypedRealmObject
@@ -35,6 +36,9 @@ class SectionItemEntity : RealmObject, EntityWithPermissions {
     // This field is defined only if the SectionItem is inside a Banner section.
     var bannerImageUrl: FabricUrlEntity? = null
 
+    // CTA buttons. Only defined for items that came from a Hero section.
+    var actions = realmListOf<HeroActionEntity>()
+
     var useMediaDisplaySettings: Boolean = true
     var displaySettings: DisplaySettingsEntity? = null
 
@@ -51,7 +55,7 @@ class SectionItemEntity : RealmObject, EntityWithPermissions {
         get() = super.isHidden || media?.isHidden == true
 
     override fun toString(): String {
-        return "SectionItemEntity(id='$id', disabled='$disabled', mediaType=$mediaType, media=$media, linkData=$linkData, isPurchaseItem=$isPurchaseItem, bannerImageUrl=$bannerImageUrl, useMediaDisplaySettings=$useMediaDisplaySettings, displaySettings=$displaySettings, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions)"
+        return "SectionItemEntity(id='$id', disabled='$disabled', mediaType=$mediaType, media=$media, linkData=$linkData, isPurchaseItem=$isPurchaseItem, bannerImageUrl=$bannerImageUrl, actions=$actions, useMediaDisplaySettings=$useMediaDisplaySettings, displaySettings=$displaySettings, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -66,6 +70,7 @@ class SectionItemEntity : RealmObject, EntityWithPermissions {
         if (linkData != other.linkData) return false
         if (isPurchaseItem != other.isPurchaseItem) return false
         if (bannerImageUrl != other.bannerImageUrl) return false
+        if (actions != other.actions) return false
         if (useMediaDisplaySettings != other.useMediaDisplaySettings) return false
         if (displaySettings != other.displaySettings) return false
         if (rawPermissions != other.rawPermissions) return false
@@ -83,6 +88,7 @@ class SectionItemEntity : RealmObject, EntityWithPermissions {
         result = 31 * result + (linkData?.hashCode() ?: 0)
         result = 31 * result + isPurchaseItem.hashCode()
         result = 31 * result + (bannerImageUrl?.hashCode() ?: 0)
+        result = 31 * result + actions.hashCode()
         result = 31 * result + useMediaDisplaySettings.hashCode()
         result = 31 * result + (displaySettings?.hashCode() ?: 0)
         result = 31 * result + (rawPermissions?.hashCode() ?: 0)

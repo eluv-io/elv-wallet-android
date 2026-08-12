@@ -72,6 +72,7 @@ import app.eluvio.wallet.screens.common.VideoPlayer
 import app.eluvio.wallet.screens.property.rows.BannerSection
 import app.eluvio.wallet.screens.property.rows.CarouselSection
 import app.eluvio.wallet.screens.property.rows.DescriptionSection
+import app.eluvio.wallet.screens.property.rows.HeroActionsSection
 import app.eluvio.wallet.screens.property.rows.SectionHeader
 import app.eluvio.wallet.screens.property.rows.TitleSection
 import app.eluvio.wallet.theme.EluvioThemePreview
@@ -157,6 +158,11 @@ fun LazyListScope.sections(
                 )
 
                 is DynamicPageLayoutState.Section.Title -> TitleSection(item = section, modifier)
+
+                is DynamicPageLayoutState.Section.HeroActions -> HeroActionsSection(
+                    item = section,
+                    modifier
+                )
 
                 is DynamicPageLayoutState.Section.SectionHeader -> SectionHeader(item = section, modifier)
             }

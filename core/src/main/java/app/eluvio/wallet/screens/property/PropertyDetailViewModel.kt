@@ -5,6 +5,7 @@ import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.app.Events
 import app.eluvio.wallet.data.PropertyLink
 import app.eluvio.wallet.data.VideoOptionsFetcher
+import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.entities.v2.MediaPageEntity
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
 import app.eluvio.wallet.data.entities.v2.PropertySearchFiltersEntity
@@ -153,10 +154,14 @@ open class PropertyDetailViewModel(
             propertySearchStore.getFilters(propertyId)
                 .onErrorReturnItem(PropertySearchFiltersEntity())
         )
+            .switchMap { (page, sections, filters) ->
+                heroActionMedia(sections.values)
+                    .map { heroMedia -> sections(page, sections, filters, heroMedia) }
+            }
             .subscribeBy(
-                onNext = { (page, sections, filters) ->
+                onNext = { newSections ->
                     updateState {
-                        copy(sections = sections(page, sections, filters))
+                        copy(sections = newSections)
                     }
                 },
                 onError = { exception ->
@@ -276,10 +281,36 @@ open class PropertyDetailViewModel(
             .addTo(disposables)
     }
 
+    /**
+     * Hero actions only tell us the id of the media they link to, so we have to fetch those media
+     * items ourselves before we can figure out where a hero button should navigate to.
+     * Starts off empty, so the rest of the page doesn't have to wait for this to complete.
+     */
+    private fun heroActionMedia(
+        sections: Collection<MediaPageSectionEntity>
+    ): Flowable<Map<String, MediaEntity>> {
+        val mediaIds = sections
+            .flatMap { it.items + it.subSections.flatMap { subSection -> subSection.items } }
+            .flatMap { it.actions }
+            .mapNotNull { it.mediaId }
+            .distinct()
+        if (mediaIds.isEmpty()) {
+            return Flowable.just(emptyMap())
+        }
+        return contentStore.observeMediaItems(propertyId, mediaIds, forceRefresh = false)
+            .map { mediaItems -> mediaItems.associateBy { it.id } }
+            .onErrorReturn {
+                Log.e("Error fetching media for hero actions", it)
+                emptyMap()
+            }
+            .startWithItem(emptyMap())
+    }
+
     private fun sections(
         page: MediaPageEntity,
         sections: Map<String, MediaPageSectionEntity>,
-        filters: PropertySearchFiltersEntity
+        filters: PropertySearchFiltersEntity,
+        heroActionMedia: Map<String, MediaEntity>,
     ): List<DynamicPageLayoutState.Section> {
         val pagePermissionContext = PermissionContext(
             propertyId = propertyId,
@@ -294,7 +325,12 @@ open class PropertyDetailViewModel(
                     .also { if (it) Log.v("Hiding unauthorized section ${section.id}") }
             }
             .flatMap { section ->
-                section.toDynamicSections(pagePermissionContext, playbackStore, filters)
+                section.toDynamicSections(
+                    pagePermissionContext,
+                    playbackStore,
+                    filters,
+                    heroActionMedia
+                )
             }
     }
 }

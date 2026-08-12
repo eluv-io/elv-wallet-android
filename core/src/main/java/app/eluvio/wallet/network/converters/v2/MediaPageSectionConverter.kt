@@ -1,9 +1,11 @@
 package app.eluvio.wallet.network.converters.v2
 
+import app.eluvio.wallet.data.entities.v2.HeroActionEntity
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
 import app.eluvio.wallet.data.entities.v2.SectionItemEntity
 import app.eluvio.wallet.data.entities.v2.display.DisplaySettingsEntity
 import app.eluvio.wallet.network.converters.v2.permissions.toContentPermissionsEntity
+import app.eluvio.wallet.network.dto.v2.HeroActionDto
 import app.eluvio.wallet.network.dto.v2.HeroItemDto
 import app.eluvio.wallet.network.dto.v2.MediaPageSectionDto
 import app.eluvio.wallet.network.dto.v2.SectionItemDto
@@ -91,6 +93,28 @@ private fun HeroItemDto.toEntity(baseUrl: String): SectionItemEntity {
     return SectionItemEntity().apply {
         id = dto.id
         displaySettings = dto.display?.toEntity(baseUrl)
+        actions = dto.actions?.mapNotNull { it.toEntity() }.toRealmListOrEmpty()
+    }
+}
+
+private fun HeroActionDto.toEntity(): HeroActionEntity? {
+    val dto = this
+    if (dto.behavior !in HeroActionEntity.supportedBehaviors) return null
+    return HeroActionEntity().apply {
+        id = dto.id
+        behavior = dto.behavior
+        // Like SectionItems, the server doesn't clear the link fields that don't apply to the
+        // current behavior, so only read the one that does.
+        when (dto.behavior) {
+            HeroActionEntity.BEHAVIOR_MEDIA_LINK -> mediaId = dto.mediaId?.ifEmpty { null }
+            HeroActionEntity.BEHAVIOR_PAGE_LINK -> pageId = dto.pageId?.ifEmpty { null }
+            HeroActionEntity.BEHAVIOR_EXTERNAL_LINK -> url = dto.url?.ifEmpty { null }
+        }
+        text = dto.button?.text?.ifEmpty { null }
+        backgroundColor = dto.button?.backgroundColor?.ifEmpty { null }
+        textColor = dto.button?.textColor?.ifEmpty { null }
+        borderColor = dto.button?.borderColor?.ifEmpty { null }
+        borderRadius = dto.button?.borderRadius
     }
 }
 

@@ -1,7 +1,9 @@
 package app.eluvio.wallet.screens.property
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.Dp
 import androidx.media3.exoplayer.source.MediaSource
 import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.PropertyLink
@@ -69,6 +71,13 @@ data class DynamicPageLayoutState(
         @Immutable
         data class Banner(override val sectionId: String, val imageUrl: FabricUrl) : Section
 
+        /** CTA buttons defined on a hero item. */
+        @Immutable
+        data class HeroActions(
+            override val sectionId: String,
+            val actions: ImmutableList<HeroAction>,
+        ) : Section
+
         @Immutable
         data class Carousel(
             val permissionContext: PermissionContext,
@@ -81,6 +90,21 @@ data class DynamicPageLayoutState(
                 requireNotNull(permissionContext.sectionId) { "PermissionContext.sectionId is null" }
         }
     }
+
+    /**
+     * A single CTA button inside a [Section.HeroActions].
+     * Colors/radius are already resolved (server value, or a default) so the UI can use them as-is.
+     */
+    @Immutable
+    data class HeroAction(
+        val id: String,
+        val text: String,
+        val backgroundColor: Color,
+        val textColor: Color,
+        val borderColor: Color?,
+        val cornerRadius: Dp,
+        val navigationEvent: NavigationEvent,
+    )
 
     @Immutable
     sealed interface CarouselItem {

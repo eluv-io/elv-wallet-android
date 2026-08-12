@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.tv.material3.ClickableSurfaceBorder
 import androidx.tv.material3.ClickableSurfaceColors
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.ClickableSurfaceScale
@@ -41,10 +42,11 @@ fun TvButton(
     colors: ClickableSurfaceColors = ClickableSurfaceDefaults.colors(),
     shape: ClickableSurfaceShape = ClickableSurfaceDefaults.shape(RoundedCornerShape(5.dp)),
     scale: ClickableSurfaceScale = LocalSurfaceScale.current,
+    border: ClickableSurfaceBorder = ClickableSurfaceDefaults.border(),
     enabled: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(horizontal = 20.dp, vertical = 5.dp)
 ) {
-    TvButton(onClick, modifier, colors, shape, scale, enabled) {
+    TvButton(onClick, modifier, colors, shape, scale, border, enabled) {
         Text(
             text,
             style = textStyle,
@@ -62,6 +64,7 @@ fun TvButton(
     colors: ClickableSurfaceColors = ClickableSurfaceDefaults.colors(),
     shape: ClickableSurfaceShape = ClickableSurfaceDefaults.shape(RoundedCornerShape(5.dp)),
     scale: ClickableSurfaceScale = LocalSurfaceScale.current,
+    border: ClickableSurfaceBorder = ClickableSurfaceDefaults.border(),
     enabled: Boolean = true,
     content: @Composable BoxScope.() -> Unit
 ) {
@@ -70,6 +73,7 @@ fun TvButton(
         colors = colors,
         shape = shape,
         scale = scale,
+        border = border,
         enabled = enabled,
         modifier = modifier,
         content = content

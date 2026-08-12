@@ -72,4 +72,44 @@ data class SectionItemDto(
 data class HeroItemDto(
     val id: String,
     val display: DisplaySettingsDto?,
+    /** CTA buttons to display under the hero's text. */
+    val actions: List<HeroActionDto>?,
+)
+
+@JsonClass(generateAdapter = true)
+data class HeroActionDto(
+    val id: String,
+    /**
+     * What happens when the button is clicked. The server also defines "sign_in", "show_purchase"
+     * and "video" behaviors, which we don't support (and therefore don't parse) yet.
+     */
+    val behavior: String?,
+    /** Defined for "media_link" actions. */
+    @field:Json(name = "media_id")
+    val mediaId: String?,
+    /** Defined for "page_link" actions. Always a page within the current property. */
+    @field:Json(name = "page_id")
+    val pageId: String?,
+    /** Defined for "link" actions. */
+    val url: String?,
+
+    /**
+     * The button's text and styling. Actions also carry legacy "text"/"label"/"colors"/
+     * "border_radius" fields, but the server only ever populates them with stale defaults - this
+     * is the only definition anything reads. "button_style" is intentionally ignored.
+     */
+    val button: HeroActionButtonDto?,
+)
+
+@JsonClass(generateAdapter = true)
+data class HeroActionButtonDto(
+    val text: String?,
+    @field:Json(name = "background_color")
+    val backgroundColor: String?,
+    @field:Json(name = "text_color")
+    val textColor: String?,
+    @field:Json(name = "border_color")
+    val borderColor: String?,
+    @field:Json(name = "border_radius")
+    val borderRadius: Int?,
 )

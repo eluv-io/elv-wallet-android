@@ -1,6 +1,7 @@
 package app.eluvio.mobile.screens.property
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -17,6 +19,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -42,6 +46,7 @@ import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.navigation.onClickTarget
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState.CarouselItem
+import app.eluvio.wallet.screens.property.DynamicPageLayoutState.HeroAction
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState.Section
 import app.eluvio.wallet.screens.property.PropertyDetailViewModel
 import app.eluvio.wallet.screens.videoplayer.VideoPlayerArgs
@@ -78,6 +83,7 @@ internal fun PropertyDetailScreen(vm: PropertyDetailViewModel) {
                         .show()
                 }
             },
+            onHeroActionClick = { vm.navigateTo(it.navigationEvent) },
             onNavigateUp = { vm.navigateTo(NavigationEvent.GoBack) },
         )
     }
@@ -92,6 +98,7 @@ internal fun PropertyDetailScreen(vm: PropertyDetailViewModel) {
 fun PropertyDetailScreen(
     state: DynamicPageLayoutState,
     onItemClick: (CarouselItem) -> Unit,
+    onHeroActionClick: (HeroAction) -> Unit,
     onNavigateUp: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -150,6 +157,7 @@ fun PropertyDetailScreen(
 
                     is Section.Banner -> BannerSection(section.imageUrl)
                     is Section.Carousel -> CarouselRow(section.items, onItemClick)
+                    is Section.HeroActions -> HeroActionsRow(section.actions, onHeroActionClick)
                 }
             }
         }
@@ -180,6 +188,31 @@ private fun BannerSection(imageUrl: Any?) {
             .padding(horizontal = 16.dp, vertical = 8.dp),
         contentScale = ContentScale.Fit,
     )
+}
+
+@Composable
+private fun HeroActionsRow(
+    actions: List<HeroAction>,
+    onClick: (HeroAction) -> Unit,
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+    ) {
+        actions.forEach { action ->
+            Button(
+                onClick = { onClick(action) },
+                shape = RoundedCornerShape(action.cornerRadius),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = action.backgroundColor,
+                    contentColor = action.textColor,
+                ),
+                border = action.borderColor?.let { BorderStroke(1.dp, it) },
+            ) {
+                Text(action.text)
+            }
+        }
+    }
 }
 
 @Composable

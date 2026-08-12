@@ -1,2 +1,7 @@
 build_output
 
+# Signing material - never commit. Your keystore and its passwords are yours alone; losing
+# control of them means someone else can ship updates to your app.
+*.keystore
+*.jks
+config/signing.properties

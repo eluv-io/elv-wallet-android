@@ -1,0 +1,31 @@
+# Signing configuration.
+#
+# Entirely optional for local testing: with no signing.properties at all, the build falls back
+# to the Android debug key, asks you to confirm, and produces an APK you can sideload but never
+# publish. Set this up when you need a build you can actually ship.
+#
+# Copy this file to `signing.properties` and fill it in:
+#
+#     cp signing.properties.template signing.properties
+#
+# `signing.properties` is git-ignored, along with any *.keystore / *.jks in this folder, so your
+# signing key and passwords never end up in a commit. Do not rename these keys or move them into
+# custom.properties - that file IS committed.
+
+# Path to your keystore. Recommended: keep the key outside the repo entirely, so it can't be
+# committed even by accident. `~` is expanded, and relative paths resolve from this folder.
+#
+#     KEYSTORE_FILE=~/keys/acme-release.jks
+#
+# Leave blank to fall back to the first *.keystore / *.jks file found in this folder.
+KEYSTORE_FILE=
+
+# The keystore alias used to sign the app.
+# See: https://developer.android.com/studio/publish/app-signing
+KEYSTORE_ALIAS=
+
+# Passwords. Leave either blank and the build will prompt for it instead, so you can keep
+# passwords off disk entirely. Values here are case-sensitive.
+KEYSTORE_PASSWORD=
+# Only needed if your alias has a password different from the keystore password.
+KEYSTORE_ALIAS_PASSWORD=

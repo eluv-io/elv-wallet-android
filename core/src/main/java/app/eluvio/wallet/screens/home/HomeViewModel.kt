@@ -2,6 +2,7 @@ package app.eluvio.wallet.screens.home
 
 import androidx.navigation3.runtime.NavKey
 import app.eluvio.wallet.app.BaseViewModel
+import app.eluvio.wallet.core.BuildConfig
 import app.eluvio.wallet.data.AuthenticationService
 import app.eluvio.wallet.data.entities.deeplink.DeeplinkRequestEntity
 import app.eluvio.wallet.data.stores.DeeplinkStore
@@ -16,6 +17,7 @@ import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
 import app.eluvio.wallet.screens.dashboard.DashboardNavArgs
 import app.eluvio.wallet.screens.deeplink.NftClaimNavArgs
+import app.eluvio.wallet.screens.property.PropertyDetailNavArgs
 import app.eluvio.wallet.screens.videoplayer.VideoPlayerArgs
 
 @HiltNavArgViewModel
@@ -46,11 +48,33 @@ open class HomeViewModel(
                 },
                 onComplete = {
                     // No Deeplink, proceed with normal flow
-                    navigateTo(DashboardNavArgs.asNewRoot())
+                    navigateTo(startDestination().asNewRoot())
                 },
                 onError = { }
             )
             .addTo(disposables)
+    }
+
+    /**
+     * Where to go when there's no deeplink to handle.
+     *
+     * For a signed-in user of a single-property build, that's the Property itself. The Dashboard
+     * has nothing to offer them - Discover would only load the one Property and immediately
+     * redirect here anyway - and going through it means the Dashboard chrome and a half-loaded
+     * start screen flash by on every launch while that redirect resolves.
+     *
+     * Note this skips Discover's login-provider check, which re-authenticates when a Property
+     * changes the provider out from under an existing session. That check needs the Property
+     * fetched first, which is exactly the wait we're avoiding here. A stale session survives
+     * until its token expires, at which point the usual 401 handling takes over.
+     */
+    private fun startDestination(): NavKey {
+        val defaultPropertyId = BuildConfig.DEFAULT_PROPERTY_ID
+        return if (defaultPropertyId != null && tokenStore.isLoggedIn) {
+            PropertyDetailNavArgs(defaultPropertyId)
+        } else {
+            DashboardNavArgs
+        }
     }
 
     private fun handleDeeplink(deepLink: DeeplinkRequestEntity) {

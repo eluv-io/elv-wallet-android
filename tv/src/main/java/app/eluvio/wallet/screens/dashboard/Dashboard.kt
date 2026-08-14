@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -27,9 +28,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -37,7 +40,9 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -152,6 +157,24 @@ private fun NavigationDrawerScope.DrawerContent(
     onDrawerClosed: () -> Unit,
 ) {
     val firstTabFocusRequester = remember { FocusRequester() }
+    val railPadding = 12.dp
+    val collapsedRailWidth =
+        railPadding * 2 + NavigationDrawerItemDefaults.CollapsedDrawerItemWidth
+    // Hiding and showing key off different signals. drawerValue flips the moment the animation
+    // starts, which is what we want on open — the divider leaves at once, ahead of the items
+    // expanding over it. On close that's too early: the items are still sliding back in and the
+    // divider would land on top of them. They animate their own width (see NavigationDrawerItem),
+    // so the rail measuring back down to its collapsed width is what marks the collapse as done.
+    val collapsedRailWidthPx = with(LocalDensity.current) { collapsedRailWidth.roundToPx() }
+    var railCollapsed by remember { mutableStateOf(true) }
+    val showDivider = railCollapsed && drawerValue == DrawerValue.Closed
+    // Not `by`: read inside drawBehind so each animation frame only invalidates draw.
+    val dividerAlpha = animateFloatAsState(
+        targetValue = if (showDivider) 1f else 0f,
+        // Fades in, but cuts out — see above.
+        animationSpec = if (showDivider) tween(durationMillis = 300) else snap(),
+        label = "navDividerAlpha"
+    )
     // Columns don't handle Focus well. Use LazyColumn instead.
     LazyColumn(
         Modifier
@@ -165,8 +188,31 @@ private fun NavigationDrawerScope.DrawerContent(
                     )
                 )
             }
+            .onSizeChanged { railCollapsed = it.width <= collapsedRailWidthPx }
+            // Hairline at the rail's outer edge: padding + item + padding, so it clears the
+            // selected item's highlight by the same 12dp that insets it from the screen edge.
+            // Not the drawer width the tab content is inset by — that one lands 12dp short and
+            // cuts straight through the highlight.
+            // Per the design it doesn't run edge to edge: it fades up from nothing, peaks just
+            // past center, and is gone before the bottom.
+            .drawBehind {
+                val alpha = dividerAlpha.value
+                if (alpha == 0f) return@drawBehind
+                val x = collapsedRailWidth.toPx()
+                drawLine(
+                    brush = Brush.verticalGradient(
+                        0.10f to Color.Transparent,
+                        0.55f to Color.White.copy(alpha = 0.45f),
+                        0.93f to Color.Transparent,
+                    ),
+                    start = Offset(x, 0f),
+                    end = Offset(x, size.height),
+                    strokeWidth = 1.dp.toPx(),
+                    alpha = alpha,
+                )
+            }
             .fillMaxHeight()
-            .padding(12.dp)
+            .padding(railPadding)
             .onKeyEvent {
                 if (it.isKeyUpOf(Key.Back)) {
                     if (drawerValue == DrawerValue.Open) {

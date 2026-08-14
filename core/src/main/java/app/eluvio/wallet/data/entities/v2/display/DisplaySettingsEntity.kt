@@ -1,6 +1,7 @@
 package app.eluvio.wallet.data.entities.v2.display
 
 import app.eluvio.wallet.data.entities.FabricUrlEntity
+import app.eluvio.wallet.data.entities.v2.CardSize
 import app.eluvio.wallet.data.entities.v2.DisplayFormat
 import app.eluvio.wallet.util.realm.realmEnum
 import dagger.Module
@@ -32,6 +33,10 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
     override var displayFormat: DisplayFormat by realmEnum(::_displayFormat)
     private var _displayFormat: String = DisplayFormat.UNKNOWN.value
 
+    @Ignore
+    override var cardSize: CardSize by realmEnum(::_cardSize)
+    private var _cardSize: String = CardSize.MEDIUM.value
+
     override var logoUrl: FabricUrlEntity? = null
     override var logoText: String? = null
     override var inlineBackgroundColor: String? = null
@@ -45,7 +50,7 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
     override var fullBleed: Boolean? = null
 
     override fun toString(): String {
-        return "DisplaySettingsEntity(title=$title, subtitle=$subtitle, headers=$headers, description=$description, forcedAspectRatio=$forcedAspectRatio, thumbnailLandscapeUrl=$thumbnailLandscapeUrl, thumbnailPortraitUrl=$thumbnailPortraitUrl, thumbnailSquareUrl=$thumbnailSquareUrl, displayLimit=$displayLimit, displayLimitType=$displayLimitType, _displayFormat='$_displayFormat', logoUrl=$logoUrl, logoText=$logoText, inlineBackgroundColor=$inlineBackgroundColor, inlineBackgroundImageUrl=$inlineBackgroundImageUrl, heroBackgroundImageUrl=$heroBackgroundImageUrl, heroBackgroundVideoHash=$heroBackgroundVideoHash, hiddenOnTv=$hiddenOnTv, fullBleed=$fullBleed)"
+        return "DisplaySettingsEntity(title=$title, subtitle=$subtitle, headers=$headers, description=$description, forcedAspectRatio=$forcedAspectRatio, thumbnailLandscapeUrl=$thumbnailLandscapeUrl, thumbnailPortraitUrl=$thumbnailPortraitUrl, thumbnailSquareUrl=$thumbnailSquareUrl, displayLimit=$displayLimit, displayLimitType=$displayLimitType, _displayFormat='$_displayFormat', _cardSize='$_cardSize', logoUrl=$logoUrl, logoText=$logoText, inlineBackgroundColor=$inlineBackgroundColor, inlineBackgroundImageUrl=$inlineBackgroundImageUrl, heroBackgroundImageUrl=$heroBackgroundImageUrl, heroBackgroundVideoHash=$heroBackgroundVideoHash, hiddenOnTv=$hiddenOnTv, fullBleed=$fullBleed)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -65,6 +70,7 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
         if (displayLimit != other.displayLimit) return false
         if (displayLimitType != other.displayLimitType) return false
         if (_displayFormat != other._displayFormat) return false
+        if (_cardSize != other._cardSize) return false
         if (logoUrl != other.logoUrl) return false
         if (logoText != other.logoText) return false
         if (inlineBackgroundColor != other.inlineBackgroundColor) return false
@@ -89,6 +95,7 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
         result = 31 * result + (displayLimit ?: 0)
         result = 31 * result + (displayLimitType?.hashCode() ?: 0)
         result = 31 * result + _displayFormat.hashCode()
+        result = 31 * result + _cardSize.hashCode()
         result = 31 * result + (logoUrl?.hashCode() ?: 0)
         result = 31 * result + (logoText?.hashCode() ?: 0)
         result = 31 * result + (inlineBackgroundColor?.hashCode() ?: 0)

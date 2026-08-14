@@ -37,6 +37,7 @@ data class DisplaySettingsDtoImpl(
     override val display_limit: Int?,
     override val display_limit_type: String?,
     override val display_format: String?,
+    override val card_size: String?,
 
     override val logo: AssetLinkDto?,
     override val logo_text: String?,

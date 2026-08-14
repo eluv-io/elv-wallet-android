@@ -58,6 +58,7 @@ import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
+import app.eluvio.wallet.data.entities.v2.CardSize
 import app.eluvio.wallet.data.entities.v2.DisplayFormat
 import app.eluvio.wallet.data.entities.v2.display.DisplaySettings
 import app.eluvio.wallet.navigation.LocalNavigator
@@ -67,6 +68,8 @@ import app.eluvio.wallet.screens.common.spacer
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState.CarouselItem
 import app.eluvio.wallet.screens.property.items.CarouselItemCard
+import app.eluvio.wallet.screens.property.items.aspectRatio
+import app.eluvio.wallet.screens.property.items.cardHeight
 import app.eluvio.wallet.theme.body_32
 import app.eluvio.wallet.theme.button_24
 import app.eluvio.wallet.theme.label_24
@@ -81,8 +84,6 @@ import coil.compose.AsyncImage
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
-val CAROUSEL_CARD_HEIGHT = 110.dp
-
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun CarouselSection(
@@ -95,6 +96,9 @@ fun CarouselSection(
     if (display == null || item.items.isEmpty()) {
         return
     }
+    // Individual cards resolve their own height, but we need an approximation for the parts of the
+    // section that are laid out next to the cards, rather than as part of the card row.
+    val approximateCardHeight = display.cardSize.cardHeight(display.forcedAspectRatio)
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -120,7 +124,7 @@ fun CarouselSection(
             var logoTopPaddingPx by remember { mutableFloatStateOf(0.0f) }
             val showLogo = display.logoUrl != null
             if (showLogo) {
-                Logo(display, logoTopPaddingPx)
+                Logo(display, logoTopPaddingPx, approximateCardHeight)
             }
             Column(
                 Modifier
@@ -198,7 +202,7 @@ fun CarouselSection(
                         text = "Nothing here... yet?",
                         modifier = Modifier
                             .padding(horizontal = Overscan.horizontalPadding)
-                            .height(CAROUSEL_CARD_HEIGHT)
+                            .height(approximateCardHeight)
                             .wrapContentHeight(Alignment.CenterVertically)
                     )
                 } else {
@@ -206,6 +210,7 @@ fun CarouselSection(
                         display.displayFormat,
                         filteredItems,
                         startPadding,
+                        display.cardSize,
                         modifier = exitFocusModifier
                             .onGloballyPositioned { logoTopPaddingPx = it.boundsInParent().top }
                     )
@@ -221,12 +226,14 @@ private fun SectionItems(
     displayFormat: DisplayFormat,
     filteredItems: ImmutableList<CarouselItem>,
     startPadding: Dp,
+    cardSize: CardSize,
     modifier: Modifier = Modifier
 ) {
     when (displayFormat) {
         DisplayFormat.GRID -> ItemGrid(
             filteredItems,
             startPadding,
+            cardSize,
             modifier = modifier
         )
 
@@ -235,6 +242,7 @@ private fun SectionItems(
         DisplayFormat.BANNER -> ItemGrid(
             filteredItems,
             startPadding,
+            cardSize,
             maxItemsInEachRow = 1,
             modifier = modifier
         )
@@ -244,13 +252,14 @@ private fun SectionItems(
         DisplayFormat.CAROUSEL -> ItemRow(
             filteredItems,
             startPadding,
+            cardSize,
             modifier = modifier
         )
     }
 }
 
 @Composable
-private fun Logo(displaySettings: DisplaySettings, topPaddingPx: Float) {
+private fun Logo(displaySettings: DisplaySettings, topPaddingPx: Float, cardHeight: Dp) {
     displaySettings.logoUrl ?: return
 
     val focusManager = LocalFocusManager.current
@@ -269,7 +278,7 @@ private fun Logo(displaySettings: DisplaySettings, topPaddingPx: Float) {
         onClick = {/* no click action, just here to capture focus */ },
         modifier = Modifier
             // Doesn't have to be accurate, but Surface should start below the top of card row
-            .padding(top = CAROUSEL_CARD_HEIGHT)
+            .padding(top = cardHeight)
             // Doubles as the padding for the Logo/text. (size of 0.dp is never focusable)
             .size(width = Overscan.horizontalPadding, height = 1.dp)
             // Invisible, but still focusable
@@ -385,6 +394,7 @@ private fun ViewAllButton(
 private fun ItemGrid(
     items: ImmutableList<CarouselItem>,
     startPadding: Dp,
+    cardSize: CardSize,
     modifier: Modifier = Modifier,
     maxItemsInEachRow: Int = Int.MAX_VALUE
 ) {
@@ -410,7 +420,7 @@ private fun ItemGrid(
             key(item) {
                 CarouselItemCard(
                     carouselItem = item,
-                    cardHeight = CAROUSEL_CARD_HEIGHT,
+                    cardHeight = cardSize.cardHeight(item.aspectRatio),
                     modifier = Modifier.thenIf(index == 0) {
                         onGloballyPositioned {
                             firstChildPositioned = true
@@ -427,6 +437,7 @@ private fun ItemGrid(
 private fun ItemRow(
     items: ImmutableList<CarouselItem>,
     startPadding: Dp,
+    cardSize: CardSize,
     modifier: Modifier = Modifier
 ) {
     // The 'key' function prevents from focusRestorer() from breaking when crashing when
@@ -448,7 +459,7 @@ private fun ItemRow(
         itemsIndexed(items) { index, item ->
             CarouselItemCard(
                 carouselItem = item,
-                cardHeight = CAROUSEL_CARD_HEIGHT,
+                cardHeight = cardSize.cardHeight(item.aspectRatio),
                 modifier = Modifier.focusRequester(childFocusRequesters[index])
             )
         }

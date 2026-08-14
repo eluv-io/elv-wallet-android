@@ -1,6 +1,7 @@
 package app.eluvio.wallet.network.converters.v2
 
 import app.eluvio.wallet.data.AspectRatio
+import app.eluvio.wallet.data.entities.v2.CardSize
 import app.eluvio.wallet.data.entities.v2.DisplayFormat
 import app.eluvio.wallet.data.entities.v2.display.DisplaySettingsEntity
 import app.eluvio.wallet.network.dto.v2.DisplaySettingsDto
@@ -24,6 +25,7 @@ fun DisplaySettingsDto.toEntity(baseUrl: String): DisplaySettingsEntity {
         }
         displayLimitType = dto.display_limit_type?.ifEmpty { null }
         displayFormat = DisplayFormat.from(dto.display_format)
+        cardSize = CardSize.from(dto.card_size)
         logoUrl = dto.logo?.toUrl(baseUrl)
         logoText = dto.logo_text?.ifEmpty { null }
         inlineBackgroundColor = dto.inline_background_color?.ifEmpty { null }

@@ -18,6 +18,12 @@ interface DisplaySettingsDto {
     val display_limit_type: String?
     val display_format: String?
 
+    /**
+     * "extra_small"/"small"/"large"/"extra_large", or empty for the default size.
+     * Applies to all cards in a section.
+     */
+    val card_size: String?
+
     val logo: AssetLinkDto?
     val logo_text: String?
     val inline_background_color: String?

@@ -3,6 +3,7 @@ package app.eluvio.wallet.data.entities.v2.display
 import androidx.compose.runtime.Immutable
 import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.data.FabricUrl
+import app.eluvio.wallet.data.entities.v2.CardSize
 import app.eluvio.wallet.data.entities.v2.DisplayFormat
 
 // Realm classes are mutable by nature, but we make sure to only use them immutably, so adding this
@@ -22,6 +23,9 @@ interface DisplaySettings {
     val displayLimit: Int?
     val displayLimitType: String?
     val displayFormat: DisplayFormat
+
+    /** Applies to all cards in a section. */
+    val cardSize: CardSize
 
     // For Sections: Shows to the left of first item
     val logoUrl: FabricUrl?
@@ -75,6 +79,7 @@ data class SimpleDisplaySettings(
     override val displayLimit: Int? = null,
     override val displayLimitType: String? = null,
     override val displayFormat: DisplayFormat = DisplayFormat.UNKNOWN,
+    override val cardSize: CardSize = CardSize.MEDIUM,
     override val logoUrl: FabricUrl? = null,
     override val logoText: String? = null,
     override val inlineBackgroundColor: String? = null,
@@ -98,6 +103,7 @@ data class SimpleDisplaySettings(
                 displayLimit = other?.displayLimit,
                 displayLimitType = other?.displayLimitType,
                 displayFormat = other?.displayFormat ?: DisplayFormat.UNKNOWN,
+                cardSize = other?.cardSize ?: CardSize.MEDIUM,
                 logoUrl = other?.logoUrl,
                 logoText = other?.logoText,
                 inlineBackgroundColor = other?.inlineBackgroundColor,
@@ -128,6 +134,7 @@ fun DisplaySettings.withOverrides(overrides: DisplaySettings?): DisplaySettings 
         displayLimitType = overrides.displayLimitType?.ifEmpty { null } ?: default.displayLimitType,
         displayFormat = overrides.displayFormat.takeIf { it != DisplayFormat.UNKNOWN }
             ?: default.displayFormat,
+        cardSize = overrides.cardSize.takeIf { it != CardSize.MEDIUM } ?: default.cardSize,
         logoUrl = overrides.logoUrl ?: default.logoUrl,
         logoText = overrides.logoText?.ifEmpty { null } ?: default.logoText,
         inlineBackgroundColor = overrides.inlineBackgroundColor?.ifEmpty { null }

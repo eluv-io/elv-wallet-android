@@ -16,7 +16,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.data.entities.MediaEntity
+import app.eluvio.wallet.data.entities.v2.CardSize
+import app.eluvio.wallet.data.entities.v2.display.thumbnailUrlAndRatio
+import app.eluvio.wallet.data.entities.v2.display.withOverrides
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.navigation.LocalNavigator
 import app.eluvio.wallet.navigation.asPush
@@ -27,6 +31,43 @@ import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.disabledItemAlpha
 import app.eluvio.wallet.theme.label_24
 import app.eluvio.wallet.util.compose.thenIf
+
+/**
+ * Card heights per [CardSize], as defined by design (in 1080p pixels, which are 2x dp).
+ * Portrait cards are taller than the rest, which all share the same height.
+ */
+fun CardSize.cardHeight(aspectRatio: Float?): Dp = when {
+    aspectRatio == AspectRatio.POSTER -> when (this) {
+        CardSize.EXTRA_SMALL -> 148.dp
+        CardSize.SMALL -> 174.dp
+        CardSize.MEDIUM -> 200.dp
+        CardSize.LARGE -> 243.dp
+        CardSize.EXTRA_LARGE -> 289.dp
+    }
+
+    else -> when (this) {
+        CardSize.EXTRA_SMALL -> 85.dp
+        CardSize.SMALL -> 100.dp
+        CardSize.MEDIUM -> 118.dp
+        CardSize.LARGE -> 140.dp
+        CardSize.EXTRA_LARGE -> 167.dp
+    }
+}
+
+/**
+ * The aspect ratio this item's card will be rendered at, when it has one.
+ * Only used to pick the card's height - the cards themselves resolve their own aspect ratio.
+ */
+val CarouselItem.aspectRatio: Float?
+    get() = when (this) {
+        is CarouselItem.Media -> entity.requireDisplaySettings().withOverrides(displayOverrides)
+        is CarouselItem.ExternalLink -> displaySettings
+        is CarouselItem.ItemPurchase -> displaySettings
+        is CarouselItem.PageLink -> displaySettings
+        is CarouselItem.RedeemableOffer,
+        is CarouselItem.VisualOnly,
+        is CarouselItem.BannerWrapper -> null
+    }?.thumbnailUrlAndRatio?.second
 
 @Composable
 fun CarouselItemCard(carouselItem: CarouselItem, cardHeight: Dp, modifier: Modifier = Modifier) {
@@ -110,6 +151,6 @@ private fun CarouselItemCardPreview() = EluvioThemePreview {
                 name = "this is a very very very very long title"
             },
             playbackProgress = null,
-        ), 120.dp
+        ), CardSize.MEDIUM.cardHeight(AspectRatio.SQUARE)
     )
 }

@@ -32,9 +32,15 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
@@ -48,6 +54,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -237,6 +245,7 @@ private fun NavigationDrawerScope.DrawerContent(
                     focusRequester(firstTabFocusRequester)
                 },
                 onClick = { onTabSelected(tab) },
+                shape = NavigationDrawerItemDefaults.shape(NavDrawerItemShape),
                 leadingContent = {
                     Icon(
                         tab.icon,
@@ -247,6 +256,36 @@ private fun NavigationDrawerScope.DrawerContent(
                 content = { Text(text = stringResource(tab.title)) }
             )
         }
+    }
+}
+
+/**
+ * The collapsed drawer item is wider than it is tall (56x48), so the default 50%-rounded shape
+ * leaves a straight section between the end caps — a stumpy pill rather than a circle. Insetting
+ * each side by half that difference squares the collapsed item off into a true circle.
+ *
+ * Derived from the container size rather than the drawer's open/closed state on purpose: the
+ * state flips when the open/close animation starts, so keying off it would snap the highlight to
+ * a circle while the item is still full width. As a function of size it just morphs along with
+ * the item — at the cost of the expanded pill also being inset, by the same 4dp.
+ */
+private val NavDrawerItemShape = object : Shape {
+    private val horizontalInset =
+        (NavigationDrawerItemDefaults.CollapsedDrawerItemWidth -
+            NavigationDrawerItemDefaults.ContainerHeightOneLine) / 2
+
+    override fun createOutline(
+        size: Size,
+        layoutDirection: LayoutDirection,
+        density: Density
+    ): Outline {
+        val inset = with(density) { horizontalInset.toPx() }
+        return Outline.Rounded(
+            RoundRect(
+                Rect(inset, 0f, size.width - inset, size.height),
+                CornerRadius(size.height / 2f)
+            )
+        )
     }
 }
 

@@ -51,8 +51,8 @@ val DisplaySettings.thumbnailUrlAndRatio: Pair<String, Float>?
     get() {
         // First available, if no forced aspect ratio
         val default = thumbnailSquareUrl?.url?.let { it to AspectRatio.SQUARE }
-            ?: thumbnailPortraitUrl?.url?.let { it to AspectRatio.POSTER }
             ?: thumbnailLandscapeUrl?.url?.let { it to AspectRatio.WIDE }
+            ?: thumbnailPortraitUrl?.url?.let { it to AspectRatio.POSTER }
         return forcedAspectRatio?.let { ratio ->
             // If aspect ratio is defined, prefer the corresponding thumbnail, but force aspect
             // ratio regardless of whether a matching thumbnail exists or not.

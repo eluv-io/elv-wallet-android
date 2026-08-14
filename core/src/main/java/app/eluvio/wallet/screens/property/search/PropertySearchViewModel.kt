@@ -4,7 +4,6 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.app.Events.ToastMessage
-import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
 import app.eluvio.wallet.data.entities.v2.search.FilterValueEntity
 import app.eluvio.wallet.data.entities.v2.search.SearchFilter
@@ -44,7 +43,6 @@ open class PropertySearchViewModel(
     data class State(
         val loading: Boolean = true,
         val loadingResults: Boolean = false,
-        val headerLogo: FabricUrl? = null,
         val propertyName: String? = null,
 
         val searchResults: List<DynamicPageLayoutState.Section> = emptyList(),
@@ -94,12 +92,7 @@ open class PropertySearchViewModel(
 
         property
             .subscribeBy {
-                updateState {
-                    copy(
-                        headerLogo = it.headerLogoUrl,
-                        propertyName = it.name
-                    )
-                }
+                updateState { copy(propertyName = it.name) }
             }
             .addTo(disposables)
 

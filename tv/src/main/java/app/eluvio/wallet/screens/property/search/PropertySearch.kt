@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.HorizontalDivider
@@ -229,26 +228,15 @@ private fun Header(
     onQueryChanged: (String) -> Unit,
     onSearchClicked: () -> Unit
 ) {
-    Row(Modifier.padding(Overscan.defaultPadding(excludeBottom = true))) {
-        AsyncImage(
-            model = state.headerLogo,
-            contentDescription = "Logo",
-            placeholder = previewPlaceholder(),
-            modifier = Modifier
-                .height(48.dp)
-                .widthIn(max = 80.dp)
+    Column(Modifier.padding(Overscan.defaultPadding(excludeBottom = true))) {
+        SearchBox(
+            query,
+            hint = "Search ${state.propertyName}",
+            onQueryChanged,
+            onSearchClicked,
         )
-        Spacer(Modifier.width(24.dp))
-        Column {
-            SearchBox(
-                query,
-                hint = "Search ${state.propertyName}",
-                onQueryChanged,
-                onSearchClicked,
-            )
-            Spacer(Modifier.height(2.dp))
-            HorizontalDivider()
-        }
+        Spacer(Modifier.height(2.dp))
+        HorizontalDivider()
     }
 }
 

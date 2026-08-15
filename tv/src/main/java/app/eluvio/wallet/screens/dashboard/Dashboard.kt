@@ -2,7 +2,9 @@ package app.eluvio.wallet.screens.dashboard
 
 import android.view.LayoutInflater
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
@@ -11,6 +13,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -46,6 +49,7 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -68,9 +72,12 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.ui.PlayerView
 import androidx.tv.material3.DrawerValue
 import androidx.tv.material3.Icon
+import androidx.tv.material3.ListItem
+import androidx.tv.material3.ListItemDefaults
 import androidx.tv.material3.ModalNavigationDrawer
 import androidx.tv.material3.NavigationDrawerItem
 import androidx.tv.material3.NavigationDrawerItemDefaults
+import androidx.tv.material3.NavigationDrawerItemShape
 import androidx.tv.material3.NavigationDrawerScope
 import androidx.tv.material3.Text
 import app.eluvio.wallet.BuildConfig
@@ -239,7 +246,7 @@ private fun NavigationDrawerScope.DrawerContent(
     ) {
         itemsIndexed(tabs) { index, tab ->
             val selected = selectedTab == tab
-            NavigationDrawerItem(
+            NavRailItem(
                 selected = selected,
                 modifier = Modifier.thenIf(index == 0) {
                     focusRequester(firstTabFocusRequester)
@@ -247,16 +254,121 @@ private fun NavigationDrawerScope.DrawerContent(
                 onClick = { onTabSelected(tab) },
                 shape = NavigationDrawerItemDefaults.shape(NavDrawerItemShape),
                 leadingContent = {
+                    // Sized to the width NavigationDrawerItem gives its leading slot: the tab
+                    // icons aren't all 24dp squares (MyItems is a 39x49 vector), and an Icon
+                    // left to its painter's intrinsic size renders narrow and top-start aligned
+                    // in that slot. Any value >= the slot works, since the slot's constraints
+                    // clamp it — but naming it beats a magic number that only happens to.
                     Icon(
                         tab.icon,
                         contentDescription = null,
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(NavigationDrawerItemDefaults.IconSize)
                     )
                 },
                 content = { Text(text = stringResource(tab.title)) }
             )
         }
     }
+}
+
+/**
+ * How wide a rail item gets once the drawer has focus. [NavigationDrawerItem]'s own 256dp leaves
+ * a lot of empty pill trailing the label.
+ */
+private val ExpandedNavRailItemWidth = 180.dp
+
+/**
+ * Stands in for [NavigationDrawerItem], which hardcodes its expanded width to
+ * [NavigationDrawerItemDefaults.ExpandedDrawerItemWidth] with no way to override it — it forces
+ * the width from inside a layout modifier, so constraining it from the outside doesn't take.
+ *
+ * This is the same composition it builds — a toggleable [ListItem] whose label animates in with
+ * the drawer — differing only in the width it animates to. Shape and colors are mapped across
+ * exactly as [NavigationDrawerItem] maps them, so the rail still picks up the theme (including
+ * the dimmed content color for when the drawer is unfocused) rather than hardcoding its own.
+ *
+ * Signature-compatible with [NavigationDrawerItem] for the parameters we use, so it stays a
+ * drop-in either way — swapping back is a one-word change if the width ever becomes settable.
+ */
+@Composable
+private fun NavigationDrawerScope.NavRailItem(
+    selected: Boolean,
+    onClick: () -> Unit,
+    shape: NavigationDrawerItemShape,
+    leadingContent: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val width by animateDpAsState(
+        targetValue = if (hasFocus) {
+            ExpandedNavRailItemWidth
+        } else {
+            NavigationDrawerItemDefaults.CollapsedDrawerItemWidth
+        },
+        label = "navRailItemWidth"
+    )
+    val colors = NavigationDrawerItemDefaults.colors()
+    ListItem(
+        selected = selected,
+        onClick = onClick,
+        headlineContent = {
+            AnimatedVisibility(
+                visible = hasFocus,
+                enter = NavigationDrawerItemDefaults.ContentAnimationEnter,
+                exit = NavigationDrawerItemDefaults.ContentAnimationExit,
+            ) {
+                content()
+            }
+        },
+        leadingContent = {
+            Box(Modifier.size(NavigationDrawerItemDefaults.IconSize)) { leadingContent() }
+        },
+        modifier = modifier.layout { measurable, constraints ->
+            val itemWidth = width.roundToPx()
+            val itemHeight = NavigationDrawerItemDefaults.ContainerHeightOneLine.roundToPx()
+            val placeable = measurable.measure(
+                constraints.copy(
+                    minWidth = itemWidth,
+                    maxWidth = itemWidth,
+                    minHeight = itemHeight,
+                    maxHeight = itemHeight,
+                )
+            )
+            layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+        },
+        shape = ListItemDefaults.shape(
+            shape = shape.shape,
+            focusedShape = shape.focusedShape,
+            pressedShape = shape.pressedShape,
+            selectedShape = shape.selectedShape,
+            disabledShape = shape.disabledShape,
+            focusedSelectedShape = shape.focusedSelectedShape,
+            focusedDisabledShape = shape.focusedDisabledShape,
+            pressedSelectedShape = shape.pressedSelectedShape,
+        ),
+        colors = ListItemDefaults.colors(
+            containerColor = colors.containerColor,
+            contentColor = if (hasFocus) colors.contentColor else colors.inactiveContentColor,
+            focusedContainerColor = colors.focusedContainerColor,
+            focusedContentColor = colors.focusedContentColor,
+            pressedContainerColor = colors.pressedContainerColor,
+            pressedContentColor = colors.pressedContentColor,
+            selectedContainerColor = colors.selectedContainerColor,
+            selectedContentColor = colors.selectedContentColor,
+            disabledContainerColor = colors.disabledContainerColor,
+            disabledContentColor = if (hasFocus) {
+                colors.disabledContentColor
+            } else {
+                colors.disabledInactiveContentColor
+            },
+            focusedSelectedContainerColor = colors.focusedSelectedContainerColor,
+            focusedSelectedContentColor = colors.focusedSelectedContentColor,
+            pressedSelectedContainerColor = colors.pressedSelectedContainerColor,
+            pressedSelectedContentColor = colors.pressedSelectedContentColor,
+        ),
+        // NavigationDrawerItem passes Scale.None; ListItem's own default grows on focus.
+        scale = ListItemDefaults.scale(focusedScale = 1f),
+    )
 }
 
 /**

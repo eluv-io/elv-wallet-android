@@ -4,6 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +12,8 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -19,6 +22,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
@@ -33,8 +38,6 @@ import androidx.tv.material3.Surface
 import app.eluvio.wallet.data.entities.v2.display.CardThemeEntity
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.LocalSurfaceScale
-import app.eluvio.wallet.theme.borders
-import app.eluvio.wallet.theme.focusedBorder
 import app.eluvio.wallet.util.compose.Black
 import app.eluvio.wallet.util.compose.LocalCardTheme
 import app.eluvio.wallet.util.compose.cardBackground
@@ -47,14 +50,36 @@ import app.eluvio.wallet.util.compose.requestInitialFocus
 import app.eluvio.wallet.util.compose.toBrush
 
 private val UnfocusedDim = Color.Black(alpha = 0.2f)
-private val FocusedDim = Color.Black(alpha = 0.8f)
+
+/**
+ * Inaccessible content keeps a flat dim (and a stroke) so the "view purchase options" CTA reads
+ * over any image, rather than the focus treatment below.
+ */
+private val UnauthorizedDim = Color.Black(alpha = 0.7f)
+private val UnauthorizedStroke = Color(0xFF777777)
+
+/** Focus lights the card up along its top edge... */
+private val SheenBrush = Brush.verticalGradient(
+    0f to Color.White.copy(alpha = 0.45f),
+    0.16f to Color.White.copy(alpha = 0.16f),
+    0.42f to Color.Transparent,
+)
+
+/** ...and darkens the bottom third, which is where [ImageCard]'s overlays put their text. */
+private val FocusScrimBrush = Brush.verticalGradient(
+    0f to Color.Transparent,
+    0.62f to Color.Black(alpha = 0.6f),
+    1f to Color.Black(alpha = 0.92f),
+)
+private const val FOCUS_SCRIM_HEIGHT = 0.64f
 
 /** The web uses 0.5s, which drags when moving focus quickly along a row. */
 private const val DIM_ANIMATION_MILLIS = 300
 
 /**
- * An image card with a focus border. Image is slightly dimmed while unfocused, and heavily
- * darkened when focused (so [focusedOverlay] stays legible) unless [dimOnFocus] is false.
+ * An image card with a focus ring. The image sits slightly dimmed while unfocused; focusing it
+ * lifts the dim and adds a top sheen plus a bottom scrim that keeps [focusedOverlay] legible,
+ * unless [respondToFocus] is false.
  */
 @Composable
 fun ImageCard(
@@ -65,7 +90,7 @@ fun ImageCard(
     modifier: Modifier = Modifier,
     focusedOverlay: @Composable (BoxScope.() -> Unit)? = null,
     unFocusedOverlay: @Composable (BoxScope.() -> Unit)? = null,
-    dimOnFocus: Boolean = true,
+    respondToFocus: Boolean = true,
     /**
      * Keeps the card fully dimmed regardless of focus, for content the user can't access.
      * Has to be part of the dim itself rather than an overlay, otherwise it would pop in and out
@@ -81,11 +106,12 @@ fun ImageCard(
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
     val cardTheme = LocalCardTheme.current
+    val cardShape = cardTheme.cardShape(aspectRatio, shape)
     Surface(
         onClick = onClick,
         border = cardTheme.clickableSurfaceBorder(),
         scale = scale,
-        shape = ClickableSurfaceDefaults.shape(cardTheme.cardShape(aspectRatio, shape)),
+        shape = ClickableSurfaceDefaults.shape(cardShape),
         interactionSource = interactionSource,
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color.Transparent,
@@ -95,11 +121,10 @@ fun ImageCard(
     ) {
         val parentScope = this
         // Unfocused cards sit slightly dimmed so focus reads as "lit up", matching the web's 85%
-        // inactive brightness. The much heavier focus dim is there to keep the overlay legible.
+        // inactive brightness.
         val targetDim = when {
-            alwaysDim -> FocusedDim
+            alwaysDim -> UnauthorizedDim
             !isFocused -> UnfocusedDim
-            dimOnFocus -> FocusedDim
             else -> Color.Transparent
         }
         val dim by animateColorAsState(
@@ -146,21 +171,51 @@ fun ImageCard(
                 .align(Alignment.Center)
                 .dimContent(color = dim)
         )
+        // Drawn under the overlays, so their text sits on top of the scrim.
+        val focusTreatment = respondToFocus && !alwaysDim
+        val treatment by animateFloatAsState(
+            targetValue = if (isFocused && focusTreatment) 1f else 0f,
+            animationSpec = tween(durationMillis = DIM_ANIMATION_MILLIS),
+            label = "cardFocusTreatment"
+        )
+        if (treatment > 0f) {
+            Spacer(
+                Modifier
+                    .matchParentSize()
+                    .alpha(treatment)
+                    .background(SheenBrush)
+            )
+            Spacer(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .fillMaxHeight(FOCUS_SCRIM_HEIGHT)
+                    .alpha(treatment)
+                    .background(FocusScrimBrush)
+            )
+        }
         if (isFocused) {
             focusedOverlay?.invoke(parentScope)
         } else {
             unFocusedOverlay?.invoke(parentScope)
         }
+        if (alwaysDim) {
+            Spacer(Modifier.matchParentSize().border(2.dp, UnauthorizedStroke, cardShape))
+        }
+        if (isFocused && !cardTheme.hasBorder) {
+            AnimatedFocusRing(cardShape)
+        }
     }
 }
 
 /**
- * A theme that defines a border replaces the default focus ring with its own active/inactive
- * borders. Themes without a border keep the focus ring, so focus stays visible on TV.
+ * A theme that defines a border replaces the focus treatment with its own active/inactive
+ * borders. Without one the Surface draws no border at all, and focus is shown with the same
+ * [AnimatedFocusRing] the Discover tiles use.
  */
 @Composable
 private fun CardThemeEntity?.clickableSurfaceBorder(): ClickableSurfaceBorder {
-    val theme = this?.takeIf { it.hasBorder } ?: return MaterialTheme.borders.focusedBorder
+    val theme = this?.takeIf { it.hasBorder } ?: return ClickableSurfaceDefaults.border()
     return ClickableSurfaceDefaults.border(
         border = Border(theme.cardBorder(focused = false)),
         focusedBorder = Border(theme.cardBorder(focused = true)),

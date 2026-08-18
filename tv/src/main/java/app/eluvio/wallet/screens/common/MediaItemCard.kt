@@ -125,25 +125,32 @@ fun MediaItemCard(
             contentDescription = media.nameOrLockedName(),
             shape = shape,
             aspectRatio = aspectRatio,
-            dimOnFocus = !circular,
+            respondToFocus = !circular,
             alwaysDim = showPurchaseOptions,
             focusedOverlay = if (circular) restingOverlay else {
                 {
                     val padding = if (aspectRatio == AspectRatio.WIDE) 18.dp else 12.dp
-                    Column(Modifier.padding(padding)) {
-                        if (showPurchaseOptions) {
-                            val text = if (BuildConfig.DISABLE_PURCHASE_PROMPTS) {
-                                "You don't have access to this media"
-                            } else {
-                                "View purchase options"
-                            }
-                            Text(
-                                text = text.uppercase(),
-                                style = MaterialTheme.typography.button_24,
-                                fontWeight = FontWeight.Bold,
-                            )
+                    if (showPurchaseOptions) {
+                        val text = if (BuildConfig.DISABLE_PURCHASE_PROMPTS) {
+                            "You don't have access to this media"
+                        } else {
+                            "View purchase options"
                         }
-                        Spacer(modifier = Modifier.weight(1f))
+                        Text(
+                            text = text.uppercase(),
+                            style = MaterialTheme.typography.button_24,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .padding(horizontal = padding)
+                        )
+                    }
+                    Column(
+                        Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(padding)
+                    ) {
                         MetadataTexts(displaySettings)
                         if (playbackProgress != null && playbackProgress > 0) {
                             Spacer(modifier = Modifier.height(8.dp))
@@ -221,7 +228,10 @@ private fun DisabledCard(
         contentDescription = media.nameOrLockedName(),
         shape = cardShape,
         scale = ClickableSurfaceScale.None,
-        dimOnFocus = !circular,
+        respondToFocus = !circular,
+        // The error text is centered, where the focus scrim doesn't reach, so this card keeps
+        // the flat dim inaccessible content uses.
+        alwaysDim = true,
         focusedOverlay = if (circular) restingOverlay else {
             {
                 val padding = if (aspectRatio == AspectRatio.WIDE) 18.dp else 12.dp

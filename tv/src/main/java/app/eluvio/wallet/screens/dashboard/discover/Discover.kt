@@ -1,14 +1,7 @@
 package app.eluvio.wallet.screens.dashboard.discover
 
-import android.graphics.Matrix
-import android.graphics.Paint
-import android.graphics.RectF
-import android.graphics.SweepGradient
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -42,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -55,8 +47,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.stringResource
@@ -64,7 +54,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -74,6 +63,7 @@ import androidx.tv.material3.NavigationDrawerItemDefaults
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import app.eluvio.wallet.R
+import app.eluvio.wallet.screens.common.AnimatedFocusRing
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
 import app.eluvio.wallet.screens.common.ShimmerImage
 import app.eluvio.wallet.screens.dashboard.DashboardBackground
@@ -481,57 +471,9 @@ private fun PropertyCard(
                         )
                     )
             )
-            AnimatedFocusRing(cornerRadius = CardCornerRadius)
+            AnimatedFocusRing(RoundedCornerShape(CardCornerRadius))
         }
     }
-}
-
-/**
- * The focused-card ring from the design: a thin white stroke whose bright segment sweeps
- * around the card, one revolution per 3.6s.
- *
- * Compose's [Brush.sweepGradient] can't rotate its start angle, so the ring is drawn with a
- * framework [SweepGradient] whose local matrix is rotated each frame. The angle is only read
- * at draw time, so the animation invalidates the draw phase without recomposing.
- */
-@Composable
-private fun AnimatedFocusRing(cornerRadius: Dp, modifier: Modifier = Modifier) {
-    val angle by rememberInfiniteTransition(label = "focusRing")
-        .animateFloat(
-            initialValue = 0f,
-            targetValue = 360f,
-            animationSpec = infiniteRepeatable(tween(3600, easing = LinearEasing)),
-            label = "ringAngle"
-        )
-    Spacer(
-        modifier
-            .fillMaxSize()
-            .drawWithCache {
-                val strokeWidth = 1.dp.toPx()
-                val inset = strokeWidth / 2
-                val rect = RectF(inset, inset, size.width - inset, size.height - inset)
-                val radius = cornerRadius.toPx() - inset
-                val matrix = Matrix()
-                val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    style = Paint.Style.STROKE
-                    this.strokeWidth = strokeWidth
-                    shader = SweepGradient(
-                        size.width / 2,
-                        size.height / 2,
-                        intArrayOf(RingBaseColor, RingPeakColor, RingBaseColor, RingBaseColor),
-                        // Bright segment peaks at 90° and fades back out by 200°.
-                        floatArrayOf(0f, 90 / 360f, 200 / 360f, 1f)
-                    )
-                }
-                onDrawBehind {
-                    // The design's conic gradient starts at 12 o'clock; SweepGradient starts
-                    // at 3 o'clock, so shift by -90°.
-                    matrix.setRotate(angle - 90f, size.width / 2, size.height / 2)
-                    paint.shader.setLocalMatrix(matrix)
-                    drawIntoCanvas { it.nativeCanvas.drawRoundRect(rect, radius, radius, paint) }
-                }
-            }
-    )
 }
 
 /**
@@ -555,10 +497,6 @@ private fun Modifier.verticalFadingEdges(): Modifier = this
 private val HeroBaseColor = Color(0xFF08090C)
 private val CardBackground = Color(0xFF15161A)
 private val CardCornerRadius = 6.dp
-
-// Framework colors for the focus ring's SweepGradient shader.
-private val RingBaseColor = android.graphics.Color.argb(41, 255, 255, 255) // white @ 16%
-private val RingPeakColor = android.graphics.Color.WHITE
 
 private fun previewState() = State(
     loading = false,

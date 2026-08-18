@@ -80,6 +80,8 @@ class DiscoverViewModel @Inject constructor(
             val cardImage: FabricUrl?,
             val focusBackgroundUrl: FabricUrl?,
             val logo: FabricUrl?,
+            val mainPageTitle: String?,
+            val mainPageDescription: String?,
 
             /** Hash of the promo video to play behind the page when this Property is focused. */
             val heroVideoHash: String?,
@@ -252,6 +254,8 @@ private fun MediaPropertyEntity.toStateProperty(): DiscoverViewModel.State.Prope
         cardImage = image,
         focusBackgroundUrl = bgImageWithFallback,
         logo = headerLogoUrl,
+        mainPageTitle = mainPageTitle,
+        mainPageDescription = mainPageDescription,
 
         heroVideoHash = heroVideoHash,
 

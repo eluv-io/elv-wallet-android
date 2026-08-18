@@ -62,6 +62,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -78,6 +79,7 @@ import app.eluvio.wallet.screens.common.ShimmerImage
 import app.eluvio.wallet.screens.dashboard.DashboardBackground
 import app.eluvio.wallet.screens.dashboard.discover.DiscoverViewModel.State
 import app.eluvio.wallet.theme.EluvioThemePreview
+import app.eluvio.wallet.theme.body_32
 import app.eluvio.wallet.theme.label_40
 import app.eluvio.wallet.util.compose.FractionBringIntoViewSpec
 import app.eluvio.wallet.util.compose.RealisticDevices
@@ -183,6 +185,7 @@ private fun DiscoverPage(
                 .padding(start = 70.dp)
         ) {
             PropertyLogo(displayedProperty, Modifier.padding(start = 5.dp, bottom = 22.dp))
+            PropertyText(displayedProperty, Modifier.padding(start = 5.dp))
             DiscoverRows(
                 rows = state.rows,
                 lastClickedCard = lastClickedCard,
@@ -263,6 +266,47 @@ private fun PropertyLogo(property: State.Property?, modifier: Modifier = Modifie
                         color = Color(0xFFF4F4F5),
                     )
                 }
+            }
+        }
+    }
+}
+
+/**
+ * The property's Discover-page title and description, under its logo.
+ * Most properties don't define either, in which case this takes up no space at all.
+ */
+@Composable
+private fun PropertyText(property: State.Property?, modifier: Modifier = Modifier) {
+    Crossfade(targetState = property, modifier = modifier, label = "Property text") { prop ->
+        val title = prop?.mainPageTitle
+        val description = prop?.mainPageDescription
+        if (title == null && description == null) return@Crossfade
+        Column(
+            Modifier
+                .fillMaxWidth(0.42f)
+                .padding(bottom = 22.dp)
+        ) {
+            if (title != null) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.label_40.copy(fontSize = 16.sp),
+                    color = Color(0xFFF4F4F5),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (description != null) {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.body_32.copy(
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp
+                    ),
+                    color = Color(0xFFB4B6BD),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
             }
         }
     }
@@ -531,6 +575,9 @@ private fun previewState() = State(
                     cardImage = null,
                     focusBackgroundUrl = null,
                     logo = null,
+                    mainPageTitle = "Property $it Title",
+                    mainPageDescription = "Lorem ipsum dolor sit amet, consectetur adipiscing " +
+                            "elit. Sed do eiusmod tempor incididunt ut labore.",
                     heroVideoHash = null,
                     startScreenLogo = null,
                     startScreenBackground = null

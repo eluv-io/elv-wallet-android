@@ -26,6 +26,8 @@ fun MediaPropertyDto.toEntity(baseUrl: String): MediaPropertyEntity? {
         bgImageUrl = dto.discoverPageBgImage?.toUrl(baseUrl, dto.discoverPageBgImageHash)
         // Stand-in field, see [MediaPropertyDto.mainPageCardVideo].
         heroVideoHash = dto.mainPageCardVideo?.hash
+        mainPageTitle = dto.mainPageTitle?.ifBlank { null }
+        mainPageDescription = dto.mainPageDescription?.ifBlank { null }
         mainPage = dto.mainPage.toEntity(id, baseUrl)
         subpropertySelection = dto.property_selection
             .takeIf { dto.show_property_selection == true }

@@ -38,6 +38,10 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
     // Promo video played behind the Discover page when the Property is selected.
     var heroVideoHash: String? = null
 
+    // Title/description shown for this Property on the Discover page
+    var mainPageTitle: String? = null
+    var mainPageDescription: String? = null
+
     // Property can also include a list of pages besides the main page.
     // But the TV apps have no use for it currently.
     var mainPage: MediaPageEntity? = null
@@ -86,6 +90,8 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         if (image != other.image) return false
         if (bgImageUrl != other.bgImageUrl) return false
         if (heroVideoHash != other.heroVideoHash) return false
+        if (mainPageTitle != other.mainPageTitle) return false
+        if (mainPageDescription != other.mainPageDescription) return false
         if (mainPage != other.mainPage) return false
         if (subpropertySelection != other.subpropertySelection) return false
         if (loginInfo != other.loginInfo) return false
@@ -109,6 +115,8 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         result = 31 * result + (image?.hashCode() ?: 0)
         result = 31 * result + (bgImageUrl?.hashCode() ?: 0)
         result = 31 * result + (heroVideoHash?.hashCode() ?: 0)
+        result = 31 * result + (mainPageTitle?.hashCode() ?: 0)
+        result = 31 * result + (mainPageDescription?.hashCode() ?: 0)
         result = 31 * result + (mainPage?.hashCode() ?: 0)
         result = 31 * result + subpropertySelection.hashCode()
         result = 31 * result + (loginInfo?.hashCode() ?: 0)
@@ -125,7 +133,7 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
     }
 
     override fun toString(): String {
-        return "MediaPropertyEntity(id='$id', name='$name', headerLogoUrl=$headerLogoUrl, image=$image, bgImageUrl=$bgImageUrl, bgImageWithFallback=$bgImageWithFallback, mainPage=$mainPage, subpropertySelection=$subpropertySelection, loginInfo=$loginInfo, tenantId=$tenantId, startScreenBackground=$startScreenBackground, startScreenLogo=$startScreenLogo, countdownBackground=$countdownBackground, loginProvider='$loginProvider', permissionStates=$permissionStates, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, permissionChildren=$permissionChildren, propertyPermissions=$propertyPermissions, searchPermissions=$searchPermissions)"
+        return "MediaPropertyEntity(id='$id', name='$name', headerLogoUrl=$headerLogoUrl, image=$image, bgImageUrl=$bgImageUrl, bgImageWithFallback=$bgImageWithFallback, mainPageTitle=$mainPageTitle, mainPageDescription=$mainPageDescription, mainPage=$mainPage, subpropertySelection=$subpropertySelection, loginInfo=$loginInfo, tenantId=$tenantId, startScreenBackground=$startScreenBackground, startScreenLogo=$startScreenLogo, countdownBackground=$countdownBackground, loginProvider='$loginProvider', permissionStates=$permissionStates, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, permissionChildren=$permissionChildren, propertyPermissions=$propertyPermissions, searchPermissions=$searchPermissions)"
     }
 
     class SubpropertySelectionEntity : EmbeddedRealmObject {

@@ -32,6 +32,11 @@ data class MediaPropertyDto(
     val title: String?,
     @field:Json(name = "main_page")
     val mainPage: MediaPageDto,
+    // Title/description for this Property on the Discover ("main") page.
+    @field:Json(name = "main_page_title")
+    val mainPageTitle: String?,
+    @field:Json(name = "main_page_description")
+    val mainPageDescription: String?,
     val show_property_selection: Boolean?,
     val property_selection: List<PropertySelectionDto>?,
 

@@ -6,6 +6,7 @@ import app.eluvio.wallet.core.BuildConfig
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.app.Events
 import app.eluvio.wallet.data.FabricUrl
+import app.eluvio.wallet.data.VideoOptionsFetcher
 import app.eluvio.wallet.data.entities.v2.MediaPropertyEntity
 import app.eluvio.wallet.data.stores.DiscoverRowsStore
 import app.eluvio.wallet.data.stores.MediaPropertyStore
@@ -13,13 +14,17 @@ import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.navigation.asNewRoot
 import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.util.logging.Log
+import app.eluvio.wallet.util.rx.Optional
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.combineLatest
 import io.reactivex.rxjava3.kotlin.subscribeBy
+import io.reactivex.rxjava3.processors.BehaviorProcessor
 import io.reactivex.rxjava3.processors.PublishProcessor
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import app.eluvio.wallet.screens.property.ImmutableMediaSource
 import app.eluvio.wallet.screens.property.PropertyDetailNavArgs
 import app.eluvio.wallet.screens.signin.SignInNavArgs
 
@@ -27,6 +32,7 @@ import app.eluvio.wallet.screens.signin.SignInNavArgs
 class DiscoverViewModel @Inject constructor(
     private val propertyStore: MediaPropertyStore,
     private val discoverRowsStore: DiscoverRowsStore,
+    private val videoOptionsFetcher: VideoOptionsFetcher,
     private val tokenStore: TokenStore,
     savedStateHandle: SavedStateHandle
 ) : BaseViewModel<DiscoverViewModel.State>(
@@ -40,6 +46,12 @@ class DiscoverViewModel @Inject constructor(
         val isLoggedIn: Boolean,
         val rows: List<Row> = emptyList(),
         val showRetryButton: Boolean = false,
+
+        /**
+         * Promo video of the currently focused Property, once it's been resolved to something
+         * playable. Null while it's being fetched, or when the Property has no video.
+         */
+        val heroVideo: ImmutableMediaSource? = null,
 
         // For custom, Property-specific builds only.
         val singlePropertyMode: Boolean = BuildConfig.DEFAULT_PROPERTY_ID != null,
@@ -69,9 +81,8 @@ class DiscoverViewModel @Inject constructor(
             val focusBackgroundUrl: FabricUrl?,
             val logo: FabricUrl?,
 
-            // FAKE (server data model not ready yet, see DiscoverRowsStore).
-            val heroVideoUrl: String?,
-            val hasWatchProgress: Boolean,
+            /** Hash of the promo video to play behind the page when this Property is focused. */
+            val heroVideoHash: String?,
 
             // For custom, Property-specific builds only.
             val startScreenLogo: FabricUrl?,
@@ -81,11 +92,16 @@ class DiscoverViewModel @Inject constructor(
 
     private val retryTrigger = PublishProcessor.create<Unit>()
 
+    /** Replays the last focused Property, so the hero video survives leaving and coming back. */
+    private val focusedProperty = BehaviorProcessor.create<State.Property>()
+
     /** The property flow can emit twice (db, then network); only redirect once. */
     private var alreadySkippedStartScreen = false
 
     override fun onResume() {
         super.onResume()
+
+        observeHeroVideo()
 
         tokenStore.loggedInObservable
             .subscribeBy {
@@ -147,6 +163,38 @@ class DiscoverViewModel @Inject constructor(
         retryTrigger.onNext(Unit)
     }
 
+    fun onPropertyFocused(property: State.Property) {
+        focusedProperty.onNext(property)
+    }
+
+    /**
+     * Resolves the focused Property's promo video to something playable.
+     *
+     * Fetching is delayed, so quickly browsing through Discover cards doesn't fire a playout
+     * request per Property. Until it resolves (or if it fails), there's no video and the UI
+     * falls back to the Property's background image.
+     */
+    private fun observeHeroVideo() {
+        focusedProperty
+            .distinctUntilChanged { property -> property.id }
+            .switchMap { property ->
+                val videoHash = property.heroVideoHash
+                    ?: return@switchMap Flowable.just(Optional.empty<ImmutableMediaSource>())
+                Flowable.timer(HERO_VIDEO_DELAY_MS, TimeUnit.MILLISECONDS)
+                    .flatMapSingle { videoOptionsFetcher.fetchVideoOptionsFromHash(videoHash) }
+                    .map { Optional.of(ImmutableMediaSource(it.mediaSource)) }
+                    .onErrorReturn {
+                        Log.e("Error fetching hero video options for ${property.id}", it)
+                        Optional.empty()
+                    }
+                    // Drop the outgoing Property's video right away, rather than keeping it
+                    // around until the new one is ready.
+                    .startWithItem(Optional.empty())
+            }
+            .subscribeBy { updateState { copy(heroVideo = it.orDefault(null)) } }
+            .addTo(disposables)
+    }
+
     /**
      * Single-property builds have no start screen for users who are already signed in — the
      * Property page is the home screen, so there's no "Welcome Back" step to sit through.
@@ -184,17 +232,17 @@ class DiscoverViewModel @Inject constructor(
     }
 }
 
+/** How long a Property has to stay focused before we start loading its promo video. */
+private const val HERO_VIDEO_DELAY_MS = 1200L
+
 private fun DiscoverRowsStore.Row.toStateRow(): DiscoverViewModel.State.Row {
     return DiscoverViewModel.State.Row(
         title = title,
-        properties = items.map { it.property.toStateProperty(it.heroVideoUrl, it.hasWatchProgress) }
+        properties = properties.map { it.toStateProperty() }
     )
 }
 
-private fun MediaPropertyEntity.toStateProperty(
-    heroVideoUrl: String? = null,
-    hasWatchProgress: Boolean = false,
-): DiscoverViewModel.State.Property {
+private fun MediaPropertyEntity.toStateProperty(): DiscoverViewModel.State.Property {
     return DiscoverViewModel.State.Property(
         id = id,
         name = name,
@@ -205,8 +253,7 @@ private fun MediaPropertyEntity.toStateProperty(
         focusBackgroundUrl = bgImageWithFallback,
         logo = headerLogoUrl,
 
-        heroVideoUrl = heroVideoUrl,
-        hasWatchProgress = hasWatchProgress,
+        heroVideoHash = heroVideoHash,
 
         startScreenLogo = startScreenLogo,
         startScreenBackground = startScreenBackground

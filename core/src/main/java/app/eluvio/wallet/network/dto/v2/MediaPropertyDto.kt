@@ -1,6 +1,7 @@
 package app.eluvio.wallet.network.dto.v2
 
 import app.eluvio.wallet.network.dto.AssetLinkDto
+import app.eluvio.wallet.network.dto.PlayableHashDto
 import app.eluvio.wallet.network.dto.v2.permissions.DtoWithPermissions
 import app.eluvio.wallet.network.dto.v2.permissions.PermissionStateHolder
 import app.eluvio.wallet.network.dto.v2.permissions.PermissionsDto
@@ -22,6 +23,11 @@ data class MediaPropertyDto(
     val discoverPageBgImage: AssetLinkDto?,
     @field:Json(name = "image_tv_hash")
     val discoverPageBgImageHash: String? = null,
+    // The Discover hero video. This isn't really the right field for it - it just happens to be
+    // the only property-level video the server exposes today. Repoint this once there's a field
+    // that actually means "hero video".
+    @field:Json(name = "main_page_card_video")
+    val mainPageCardVideo: PlayableHashDto? = null,
     val name: String,
     val title: String?,
     @field:Json(name = "main_page")

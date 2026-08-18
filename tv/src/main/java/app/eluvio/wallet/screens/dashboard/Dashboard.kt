@@ -63,12 +63,10 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.ui.PlayerView
 import androidx.tv.material3.DrawerValue
 import androidx.tv.material3.Icon
@@ -86,6 +84,7 @@ import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.screens.dashboard.discover.Discover
 import app.eluvio.wallet.screens.dashboard.myitems.MyItems
 import app.eluvio.wallet.screens.dashboard.profile.Profile
+import app.eluvio.wallet.screens.property.ImmutableMediaSource
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.util.compose.thenIf
 import app.eluvio.wallet.util.isKeyUpOf
@@ -97,7 +96,6 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import io.reactivex.rxjava3.processors.PublishProcessor
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.coroutines.delay
 import java.util.concurrent.TimeUnit
 
 @Composable
@@ -405,14 +403,14 @@ private val NavDrawerItemShape = object : Shape {
  * A background the Dashboard draws behind everything, including the nav drawer, so it can be
  * truly full-bleed (tab content is inset by the drawer's width).
  *
- * [imageUrl] is shown until [videoUrl] actually starts playing (or forever, if there's no
+ * [imageUrl] is shown until [video] actually starts playing (or forever, if there's no
  * video or it fails to play).
  */
 data class DashboardBackground(
     // FabricUrl (not a plain url string), so the app-wide ThumbHash placeholder factory can
     // pick up the image's hash.
     val imageUrl: FabricUrl? = null,
-    val videoUrl: String? = null,
+    val video: ImmutableMediaSource? = null,
 )
 
 @Composable
@@ -447,7 +445,7 @@ private fun TabContent(
 @Composable
 private fun AnimatedBackground(background: DashboardBackground?, modifier: Modifier = Modifier) {
     val animationDuration = 300
-    val videoShowing = BackgroundVideo(url = background?.videoUrl)
+    val videoShowing = BackgroundVideo(video = background?.video)
     // The image is drawn on top of the video: it fades out to reveal the video once it's
     // playing, and fades back in over the (still playing) outgoing video when it goes away.
     val imageAlpha by animateFloatAsState(
@@ -478,28 +476,16 @@ private fun AnimatedBackground(background: DashboardBackground?, modifier: Modif
 }
 
 /**
- * Renders [url] as a full-bleed, muted, looping video. Returns whether the video is actually
+ * Renders [video] as a full-bleed, muted, looping video. Returns whether the video is actually
  * attached and playing (as opposed to still loading, or failed).
  */
 @Composable
-private fun BackgroundVideo(url: String?): Boolean {
-    // Only start video playback once the url has settled for a bit, otherwise quickly
-    // browsing through Discover cards would spawn a player per property.
-    var activeUrl by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(url) {
-        if (activeUrl != url) {
-            activeUrl = null
-            if (url != null) {
-                delay(1200)
-                activeUrl = url
-            }
-        }
-    }
-    // The url whose player is currently ready and attached. Can lag behind [activeUrl]: it's
-    // the outgoing video's url while one is still fading out.
-    var readyUrl by remember { mutableStateOf<String?>(null) }
+private fun BackgroundVideo(video: ImmutableMediaSource?): Boolean {
+    // The video whose player is currently ready and attached. Can lag behind [video]: it's
+    // the outgoing video while one is still fading out.
+    var readyVideo by remember { mutableStateOf<ImmutableMediaSource?>(null) }
     AnimatedContent(
-        targetState = activeUrl,
+        targetState = video,
         transitionSpec = {
             // No enter animation: an incoming video is revealed by the image fading out
             // above it. The exit fade keeps the outgoing video playing while the image
@@ -511,39 +497,35 @@ private fun BackgroundVideo(url: String?): Boolean {
         },
         label = "bgVideo",
         modifier = Modifier.fillMaxSize()
-    ) { videoUrl ->
-        if (videoUrl != null) {
+    ) { mediaSource ->
+        if (mediaSource != null) {
             VideoPlayer(
-                url = videoUrl,
+                mediaSource = mediaSource,
                 onReadyChanged = { ready ->
-                    readyUrl = when {
-                        ready -> videoUrl
-                        readyUrl == videoUrl -> null
-                        else -> readyUrl
+                    readyVideo = when {
+                        ready -> mediaSource
+                        readyVideo == mediaSource -> null
+                        else -> readyVideo
                     }
                 }
             )
         }
     }
-    return readyUrl != null && readyUrl == activeUrl
+    return readyVideo != null && readyVideo == video
 }
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
-private fun VideoPlayer(url: String, onReadyChanged: (Boolean) -> Unit) {
+private fun VideoPlayer(mediaSource: ImmutableMediaSource, onReadyChanged: (Boolean) -> Unit) {
     // Only attach the PlayerView once the player is READY, so the background image stays
     // visible until the video actually has something to show (or forever, if playback fails).
     var ready by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val player = remember {
-        // TODO: Fake data returns plain video urls. Once the server model is ready, hero
-        //  videos will presumably be fabric links going through VideoOptionsFetcher.
-        val mediaSource =
-            DefaultMediaSourceFactory(context).createMediaSource(MediaItem.fromUri(url))
         ExoPlayer.Builder(context)
             .build()
             .apply {
-                setMediaSource(mediaSource)
+                setMediaSource(mediaSource.source)
                 repeatMode = Player.REPEAT_MODE_ALL
                 playWhenReady = true
                 volume = 0f

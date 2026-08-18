@@ -2,6 +2,7 @@ package app.eluvio.wallet.network.api.mwv2
 
 import app.eluvio.wallet.network.api.authd.AuthdApi
 import app.eluvio.wallet.network.dto.PagedContent
+import app.eluvio.wallet.network.dto.v2.DiscoverDto
 import app.eluvio.wallet.network.dto.v2.MediaItemV2Dto
 import app.eluvio.wallet.network.dto.v2.MediaPageDto
 import app.eluvio.wallet.network.dto.v2.MediaPageSectionDto
@@ -20,6 +21,12 @@ interface MediaWalletV2Api : AuthdApi {
      */
     @GET("mw/properties")
     fun getProperties(@Query("include_public") includePublic: Boolean = true): Single<PagedContent<MediaPropertyDto>>
+
+    /**
+     * Get the categorized rows of the Discover page, and the properties they reference.
+     */
+    @GET("mw/discover")
+    fun getDiscover(): Single<DiscoverDto>
 
     @GET("mw/properties/{propertyId}/pages/{pageId}")
     fun getPage(

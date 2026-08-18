@@ -31,8 +31,12 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
 
     // Background image used on Discover page when the Property is selected
     var bgImageUrl: FabricUrlEntity? = null
+
     val bgImageWithFallback: FabricUrl?
         get() = bgImageUrl ?: mainPage?.backgroundImageUrl
+
+    // Promo video played behind the Discover page when the Property is selected.
+    var heroVideoHash: String? = null
 
     // Property can also include a list of pages besides the main page.
     // But the TV apps have no use for it currently.
@@ -81,6 +85,7 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         if (headerLogoUrl != other.headerLogoUrl) return false
         if (image != other.image) return false
         if (bgImageUrl != other.bgImageUrl) return false
+        if (heroVideoHash != other.heroVideoHash) return false
         if (mainPage != other.mainPage) return false
         if (subpropertySelection != other.subpropertySelection) return false
         if (loginInfo != other.loginInfo) return false
@@ -103,6 +108,7 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         result = 31 * result + (headerLogoUrl?.hashCode() ?: 0)
         result = 31 * result + (image?.hashCode() ?: 0)
         result = 31 * result + (bgImageUrl?.hashCode() ?: 0)
+        result = 31 * result + (heroVideoHash?.hashCode() ?: 0)
         result = 31 * result + (mainPage?.hashCode() ?: 0)
         result = 31 * result + subpropertySelection.hashCode()
         result = 31 * result + (loginInfo?.hashCode() ?: 0)
@@ -120,36 +126,6 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
 
     override fun toString(): String {
         return "MediaPropertyEntity(id='$id', name='$name', headerLogoUrl=$headerLogoUrl, image=$image, bgImageUrl=$bgImageUrl, bgImageWithFallback=$bgImageWithFallback, mainPage=$mainPage, subpropertySelection=$subpropertySelection, loginInfo=$loginInfo, tenantId=$tenantId, startScreenBackground=$startScreenBackground, startScreenLogo=$startScreenLogo, countdownBackground=$countdownBackground, loginProvider='$loginProvider', permissionStates=$permissionStates, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, permissionChildren=$permissionChildren, propertyPermissions=$propertyPermissions, searchPermissions=$searchPermissions)"
-    }
-
-    // Index can't be saved as part of the PropertyEntity object because it will get overridden
-    // when fetching a single property from the API.
-    class PropertyOrderEntity : RealmObject {
-        @PrimaryKey
-        var propertyId: String = ""
-        var index: Int = Int.MAX_VALUE
-
-        override fun toString(): String {
-            return "PropertyOrderEntity(propertyId='$propertyId', index=$index)"
-        }
-
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
-
-            other as PropertyOrderEntity
-
-            if (propertyId != other.propertyId) return false
-            if (index != other.index) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = propertyId.hashCode()
-            result = 31 * result + index
-            return result
-        }
     }
 
     class SubpropertySelectionEntity : EmbeddedRealmObject {
@@ -193,7 +169,6 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         fun provideEntities(): Set<KClass<out TypedRealmObject>> =
             setOf(
                 MediaPropertyEntity::class,
-                PropertyOrderEntity::class,
                 SubpropertySelectionEntity::class
             )
     }

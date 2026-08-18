@@ -89,7 +89,13 @@ import coil3.compose.AsyncImage
 @Composable
 fun Discover(onBackgroundSet: (DashboardBackground?) -> Unit) {
     hiltViewModel<DiscoverViewModel>().subscribeToState { vm, state ->
-        Discover(state, onBackgroundSet, vm::onPropertyClicked, vm::retry)
+        Discover(
+            state,
+            onBackgroundSet,
+            vm::onPropertyFocused,
+            vm::onPropertyClicked,
+            vm::retry
+        )
     }
 }
 
@@ -97,6 +103,7 @@ fun Discover(onBackgroundSet: (DashboardBackground?) -> Unit) {
 private fun Discover(
     state: State,
     onBackgroundSet: (DashboardBackground?) -> Unit,
+    onPropertyFocused: (State.Property) -> Unit,
     onPropertyClicked: (State.Property) -> Unit,
     onRetryClicked: () -> Unit,
 ) {
@@ -115,6 +122,7 @@ private fun Discover(
             DiscoverPage(
                 state,
                 onBackgroundSet = onBackgroundSet,
+                onPropertyFocused = onPropertyFocused,
                 onPropertyClicked = onPropertyClicked,
                 onRetryClicked = onRetryClicked
             )
@@ -130,6 +138,7 @@ private fun Discover(
 private fun DiscoverPage(
     state: State,
     onBackgroundSet: (DashboardBackground?) -> Unit,
+    onPropertyFocused: (State.Property) -> Unit,
     onPropertyClicked: (State.Property) -> Unit,
     onRetryClicked: () -> Unit,
 ) {
@@ -152,9 +161,9 @@ private fun DiscoverPage(
 
     // The hero itself is drawn by the Dashboard, where it can be truly full-bleed
     // (extend under the nav drawer).
-    LaunchedEffect(displayedProperty) {
+    LaunchedEffect(displayedProperty, state.heroVideo) {
         onBackgroundSet(displayedProperty?.let {
-            DashboardBackground(imageUrl = it.focusBackgroundUrl, videoUrl = it.heroVideoUrl)
+            DashboardBackground(imageUrl = it.focusBackgroundUrl, video = state.heroVideo)
         })
     }
 
@@ -177,7 +186,10 @@ private fun DiscoverPage(
             DiscoverRows(
                 rows = state.rows,
                 lastClickedCard = lastClickedCard,
-                onPropertyFocused = { focusedProperty = it },
+                onPropertyFocused = {
+                    focusedProperty = it
+                    onPropertyFocused(it)
+                },
                 onPropertyClicked = onPropertyClicked,
             )
         }
@@ -299,13 +311,16 @@ private fun DiscoverRow(
     onPropertyClicked: (State.Property) -> Unit,
 ) {
     Column {
-        Text(
-            text = row.title,
-            style = MaterialTheme.typography.label_40.copy(fontSize = 13.sp),
-            fontWeight = FontWeight.Normal,
-            color = Color(0xFFF4F4F5),
-            modifier = Modifier.padding(start = 5.dp, bottom = 4.dp)
-        )
+        // Rows aren't required to have a title.
+        if (row.title.isNotEmpty()) {
+            Text(
+                text = row.title,
+                style = MaterialTheme.typography.label_40.copy(fontSize = 13.sp),
+                fontWeight = FontWeight.Normal,
+                color = Color(0xFFF4F4F5),
+                modifier = Modifier.padding(start = 5.dp, bottom = 4.dp)
+            )
+        }
         val horizontalSpec = remember { FractionBringIntoViewSpec(parentFraction = 0.02f) }
         val firstItemFocusRequester = remember { FocusRequester() }
         CompositionLocalProvider(LocalBringIntoViewSpec provides horizontalSpec) {
@@ -326,7 +341,7 @@ private fun DiscoverRow(
                 ) { index, property ->
                     PropertyCard(
                         property = property,
-                        // Fake data repeats properties across rows, so scope the key per row.
+                        // The same property can appear in multiple rows, so scope the key per row.
                         focusKey = "$rowIndex:${property.id}",
                         lastClickedCard = lastClickedCard,
                         onPropertyFocused = onPropertyFocused,
@@ -516,8 +531,7 @@ private fun previewState() = State(
                     cardImage = null,
                     focusBackgroundUrl = null,
                     logo = null,
-                    heroVideoUrl = null,
-                    hasWatchProgress = it % 2 == 0,
+                    heroVideoHash = null,
                     startScreenLogo = null,
                     startScreenBackground = null
                 )
@@ -532,6 +546,7 @@ private fun DiscoverPreview() = EluvioThemePreview {
     Discover(
         previewState(),
         onBackgroundSet = {},
+        onPropertyFocused = {},
         onPropertyClicked = {},
         onRetryClicked = {},
     )
@@ -543,6 +558,7 @@ private fun DiscoverLoadingPreview() = EluvioThemePreview {
     Discover(
         State(loading = true, isLoggedIn = false),
         onBackgroundSet = {},
+        onPropertyFocused = {},
         onPropertyClicked = {},
         onRetryClicked = {},
     )
@@ -554,6 +570,7 @@ private fun DiscoverEmptyPreview() = EluvioThemePreview {
     Discover(
         State(loading = false, isLoggedIn = false),
         onBackgroundSet = {},
+        onPropertyFocused = {},
         onPropertyClicked = {},
         onRetryClicked = {},
     )
@@ -565,6 +582,7 @@ private fun DiscoverRetryPreview() = EluvioThemePreview {
     Discover(
         State(loading = false, isLoggedIn = false, showRetryButton = true),
         onBackgroundSet = {},
+        onPropertyFocused = {},
         onPropertyClicked = {},
         onRetryClicked = {},
     )

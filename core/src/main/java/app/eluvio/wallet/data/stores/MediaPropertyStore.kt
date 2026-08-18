@@ -28,39 +28,6 @@ class MediaPropertyStore @Inject constructor(
     private val realm: Realm,
 ) {
 
-    fun observeDiscoverableProperties(forceRefresh: Boolean = true): Flowable<List<MediaPropertyEntity>> {
-        val orderedProperties =
-            Flowable.combineLatest(
-                realm.query<MediaPropertyEntity>().asFlowable(),
-                realm.query<MediaPropertyEntity.PropertyOrderEntity>().asFlowable()
-                    .distinctUntilChanged()
-                    .map { list -> list.associateBy { it.propertyId } }
-            ) { properties, orderMap ->
-                properties.forEach {
-                    PermissionResolver.resolvePermissions(
-                        it,
-                        null,
-                        it.permissionStates
-                    )
-                }
-                properties
-                    // The local cache of properties can contain properties that didn't come from /mw/properties,
-                    // filter out any property the BE didn't explicitly return to show in Discover.
-                    .filter { orderMap.containsKey(it.id) }
-                    .sortedBy { orderMap[it.id]?.index ?: Int.MAX_VALUE }
-            }
-                // Because we are observing 2 tables, it's important to not emit the same list twice
-                // or we might cancel an ongoing fetch request
-                .distinctUntilChanged()
-
-        return observeRealmAndFetch(
-            realmQuery = orderedProperties,
-            fetchOperation = { _, isFirstState ->
-                fetchMediaProperties().takeIf { isFirstState && forceRefresh }
-            }
-        )
-    }
-
     fun observeOwnedProperties(): Flowable<OwnedPropertiesEntity> {
         return observeRealmAndFetch(
             realmQuery = realm.query<OwnedPropertiesRealmEntity>().asFlowable(),
@@ -100,20 +67,7 @@ class MediaPropertyStore @Inject constructor(
             .flatMapCompletable { (response, baseUrl) ->
                 val properties = response.contents.orEmpty()
                     .mapNotNull { propertyDto -> propertyDto.toEntity(baseUrl) }
-                val order = properties
-                    .mapIndexed { index, property ->
-                        MediaPropertyEntity.PropertyOrderEntity().apply {
-                            this.propertyId = property.id
-                            // This will need to be updated once we support pagination
-                            val page = 0
-                            this.index = (page * 1000) + index
-                        }
-                    }
-
-                Completable.mergeArray(
-                    realm.saveAsync(properties, clearTable = clearOldProperties),
-                    realm.saveAsync(order, clearTable = clearOldProperties)
-                )
+                realm.saveAsync(properties, clearTable = clearOldProperties)
             }
     }
 

@@ -95,6 +95,12 @@ fun MediaItemCard(
     } else {
         val showPurchaseOptions =
             enablePurchaseOptionsOverlay && (media.showPurchaseOptions || media.showAlternatePage)
+        val liveTag: @Composable BoxScope.() -> Unit = {
+            val liveState = liveVideoState
+            if (liveState != null && media.mediaType == MediaEntity.MEDIA_TYPE_VIDEO) {
+                LiveVideoTag(liveState, circular)
+            }
+        }
         val restingOverlay: @Composable BoxScope.() -> Unit = {
             if (playbackProgress != null && playbackProgress > 0) {
                 ProgressBar(
@@ -107,7 +113,7 @@ fun MediaItemCard(
             if (media.mediaType == MediaEntity.MEDIA_TYPE_VIDEO) {
                 val liveState = liveVideoState
                 if (liveState != null) {
-                    LiveVideoUnFocusedOverlay(liveState, circular)
+                    liveTag()
                 } else {
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
@@ -157,6 +163,7 @@ fun MediaItemCard(
                             ProgressBar(playbackProgress)
                         }
                     }
+                    liveTag()
                 }
             },
             unFocusedOverlay = restingOverlay,
@@ -210,7 +217,7 @@ private fun DisabledCard(
         if (media.mediaType == MediaEntity.MEDIA_TYPE_VIDEO) {
             val liveState = liveState
             if (liveState != null) {
-                LiveVideoUnFocusedOverlay(liveState, circular)
+                LiveVideoTag(liveState, circular)
             } else {
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
@@ -242,6 +249,9 @@ private fun DisabledCard(
                         .padding(padding)
                         .align(Alignment.Center)
                 )
+                if (liveState != null && media.mediaType == MediaEntity.MEDIA_TYPE_VIDEO) {
+                    LiveVideoTag(liveState, circular)
+                }
             }
         },
         unFocusedOverlay = restingOverlay,
@@ -274,8 +284,9 @@ private fun ProgressBar(progress: Float, modifier: Modifier = Modifier) {
     )
 }
 
+/** Shown focused or not: it says something about the content, it isn't a focus affordance. */
 @Composable
-private fun BoxScope.LiveVideoUnFocusedOverlay(
+private fun BoxScope.LiveVideoTag(
     liveVideoState: LiveVideoState,
     circular: Boolean = false,
 ) {

@@ -60,6 +60,8 @@ import app.eluvio.wallet.util.compose.toBrush
 import app.eluvio.wallet.util.compose.cardBorder
 import app.eluvio.wallet.util.compose.cardShape
 import app.eluvio.wallet.util.compose.hasBorder
+import app.eluvio.wallet.util.compose.imageSaturation
+import app.eluvio.wallet.util.compose.saturationFilter
 import app.eluvio.wallet.util.subscribeToState
 import coil3.compose.AsyncImage
 
@@ -275,6 +277,7 @@ private fun CarouselCard(
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
+                colorFilter = saturationFilter(theme.imageSaturation(focused = false)),
             )
             if (item.isVideo()) {
                 Icon(

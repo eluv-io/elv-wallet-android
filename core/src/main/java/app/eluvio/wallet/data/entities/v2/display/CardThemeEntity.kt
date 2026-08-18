@@ -30,6 +30,10 @@ class CardThemeEntity : EmbeddedRealmObject {
     /** Renders square cards as circles. Cards with any other aspect ratio are unaffected. */
     var circularize: Boolean = false
 
+    @Ignore
+    var effect: CardEffect by realmEnum(::_effect)
+    private var _effect: String = CardEffect.NONE.value
+
     /** Visuals that differ between the focused ("active") and unfocused states. */
     var active: CardThemeStateEntity? = null
     var inactive: CardThemeStateEntity? = null
@@ -37,7 +41,7 @@ class CardThemeEntity : EmbeddedRealmObject {
     fun state(focused: Boolean): CardThemeStateEntity? = if (focused) active else inactive
 
     override fun toString(): String {
-        return "CardThemeEntity(id='$id', _borderRadius='$_borderRadius', borderWidth=$borderWidth, circularize=$circularize, active=$active, inactive=$inactive)"
+        return "CardThemeEntity(id='$id', _borderRadius='$_borderRadius', borderWidth=$borderWidth, circularize=$circularize, _effect='$_effect', active=$active, inactive=$inactive)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -50,6 +54,7 @@ class CardThemeEntity : EmbeddedRealmObject {
         if (_borderRadius != other._borderRadius) return false
         if (borderWidth != other.borderWidth) return false
         if (circularize != other.circularize) return false
+        if (_effect != other._effect) return false
         if (active != other.active) return false
         if (inactive != other.inactive) return false
 
@@ -61,6 +66,7 @@ class CardThemeEntity : EmbeddedRealmObject {
         result = 31 * result + _borderRadius.hashCode()
         result = 31 * result + borderWidth
         result = 31 * result + circularize.hashCode()
+        result = 31 * result + _effect.hashCode()
         result = 31 * result + (active?.hashCode() ?: 0)
         result = 31 * result + (inactive?.hashCode() ?: 0)
         return result
@@ -128,6 +134,26 @@ class CardThemeStateEntity : EmbeddedRealmObject {
         result = 31 * result + backgroundGradientAngle
         result = 31 * result + gradient.hashCode()
         return result
+    }
+}
+
+/**
+ * A visual treatment applied to the card on top of its shape and colors.
+ *
+ * The web has two more values we don't support - "desaturate-background" greys the card's
+ * background layer rather than its image, and unknown values simply do nothing.
+ */
+enum class CardEffect(override val value: String) : RealmEnum {
+    NONE(""),
+    DESATURATE("desaturate"),
+    ;
+
+    companion object {
+        fun from(value: String?): CardEffect = when (value) {
+            // Our desaturation only ever touches the image, so both spellings land here.
+            "desaturate", "desaturate-image" -> DESATURATE
+            else -> NONE
+        }
     }
 }
 

@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.DefaultAlpha
 import androidx.compose.ui.layout.ContentScale
 import androidx.tv.material3.MaterialTheme
@@ -27,6 +28,7 @@ fun ShimmerImage(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Fit,
     alpha: Float = DefaultAlpha,
+    colorFilter: ColorFilter? = null,
     onSuccess: ((AsyncImagePainter.State.Success) -> Unit)? = null,
     onError: ((AsyncImagePainter.State.Error) -> Unit)? = null,
 ) {
@@ -51,6 +53,7 @@ fun ShimmerImage(
         ),
         contentDescription = contentDescription,
         contentScale = contentScale,
-        alpha = alpha
+        alpha = alpha,
+        colorFilter = colorFilter
     )
 }

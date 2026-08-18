@@ -4,6 +4,7 @@ import app.eluvio.wallet.data.entities.v2.MediaPageEntity
 import app.eluvio.wallet.data.entities.v2.MediaPropertyEntity
 import app.eluvio.wallet.data.entities.v2.PropertyLoginInfoRealmEntity
 import app.eluvio.wallet.data.entities.v2.display.CardBorderRadius
+import app.eluvio.wallet.data.entities.v2.display.CardEffect
 import app.eluvio.wallet.data.entities.v2.display.CardThemeEntity
 import app.eluvio.wallet.data.entities.v2.display.CardThemeStateEntity
 import app.eluvio.wallet.network.converters.v2.permissions.toContentPermissionsEntity
@@ -88,6 +89,7 @@ private fun CardThemeDto.toEntity(themeId: String): CardThemeEntity {
         borderRadius = CardBorderRadius.from(dto.border_radius)
         borderWidth = dto.border_width ?: 0
         circularize = dto.circularize == true
+        effect = CardEffect.from(dto.effect)
         active = dto.active?.toEntity()
         inactive = dto.inactive?.toEntity()
     }

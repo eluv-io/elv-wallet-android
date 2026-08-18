@@ -1,6 +1,7 @@
 package app.eluvio.wallet.screens.common
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -40,6 +41,8 @@ import app.eluvio.wallet.util.compose.cardBackground
 import app.eluvio.wallet.util.compose.cardBorder
 import app.eluvio.wallet.util.compose.cardShape
 import app.eluvio.wallet.util.compose.hasBorder
+import app.eluvio.wallet.util.compose.imageSaturation
+import app.eluvio.wallet.util.compose.saturationFilter
 import app.eluvio.wallet.util.compose.requestInitialFocus
 import app.eluvio.wallet.util.compose.toBrush
 
@@ -126,10 +129,18 @@ fun ImageCard(
                     )
             )
         }
+        // Themes can grey out unfocused cards. Animated alongside the dim, so color washes
+        // back in as the card lights up.
+        val saturation by animateFloatAsState(
+            targetValue = cardTheme.imageSaturation(focused = isFocused),
+            animationSpec = tween(durationMillis = DIM_ANIMATION_MILLIS),
+            label = "cardSaturation"
+        )
         ShimmerImage(
             model = imageUrl,
             contentScale = ContentScale.Crop,
             contentDescription = contentDescription,
+            colorFilter = saturationFilter(saturation),
             modifier = Modifier
                 .matchParentSize()
                 .align(Alignment.Center)

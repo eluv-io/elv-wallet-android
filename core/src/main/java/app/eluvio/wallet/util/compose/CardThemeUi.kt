@@ -8,6 +8,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.LinearGradientShader
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shader
@@ -16,6 +18,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.data.entities.v2.display.CardBorderRadius
+import app.eluvio.wallet.data.entities.v2.display.CardEffect
 import app.eluvio.wallet.data.entities.v2.display.CardThemeEntity
 import kotlin.math.abs
 import kotlin.math.cos
@@ -65,6 +68,19 @@ val CardThemeEntity?.hasBorder: Boolean get() = (this?.borderWidth ?: 0) > 0
 fun CardThemeEntity.cardBorder(focused: Boolean): BorderStroke {
     val color = state(focused)?.borderColor ?: DEFAULT_BORDER_COLOR
     return BorderStroke(borderWidth.dp, Color.fromHex(color))
+}
+
+/**
+ * How saturated a card's image should be: fully grey while the theme's desaturate effect
+ * applies, full color otherwise. Like the web, focusing a card restores its color.
+ */
+fun CardThemeEntity?.imageSaturation(focused: Boolean): Float =
+    if (this?.effect == CardEffect.DESATURATE && !focused) DESATURATED else FULLY_SATURATED
+
+/** A filter that draws content at [saturation], or null when there's nothing to change. */
+fun saturationFilter(saturation: Float): ColorFilter? {
+    if (saturation >= FULLY_SATURATED) return null
+    return ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(saturation) })
 }
 
 /**
@@ -119,5 +135,7 @@ private fun cardColor(hex: String?, opacityPercent: Int): Color =
     Color.fromHex(hex ?: DEFAULT_BACKGROUND_COLOR)
         .copy(alpha = opacityPercent.coerceIn(0, 100) / 100f)
 
+private const val FULLY_SATURATED = 1f
+private const val DESATURATED = 0f
 private const val DEFAULT_BORDER_COLOR = "#FFFFFF"
 private const val DEFAULT_BACKGROUND_COLOR = "#000000"

@@ -18,6 +18,7 @@ class CardThemeSchemaTest {
         val theme = CardThemeEntity().apply {
             id = "theme1"
             borderWidth = 3
+            effect = CardEffect.DESATURATE
             inactive = CardThemeStateEntity().apply {
                 borderColor = "#5b29d6"
                 backgroundColor = "#a52c97"
@@ -47,6 +48,7 @@ class CardThemeSchemaTest {
         assertEquals(360, saved.inactive!!.backgroundGradientAngle)
         assertEquals(50, saved.inactive!!.backgroundColor2Opacity)
         assertEquals(0, saved.active!!.backgroundColorOpacity)
+        assertEquals(CardEffect.DESATURATE, saved.effect)
         assertEquals(saved.inactive, saved.state(focused = false))
         assertEquals(saved.active, saved.state(focused = true))
     }

@@ -18,6 +18,8 @@ data class CardThemeDto(
     val border_radius: String?,
     val border_width: Int?,
     val circularize: Boolean?,
+    // Singular. There's also an "effects" object in some payloads, but the web reads this one.
+    val effect: String?,
     val active: CardThemeStateDto?,
     val inactive: CardThemeStateDto?,
 )

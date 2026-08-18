@@ -20,7 +20,6 @@ import app.eluvio.wallet.data.entities.v2.display.DisplaySettings
 import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
 import app.eluvio.wallet.data.entities.v2.display.thumbnailUrlAndRatio
 import app.eluvio.wallet.screens.common.ImageCard
-import app.eluvio.wallet.screens.common.MetadataTexts
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.label_24
 
@@ -41,9 +40,8 @@ fun DisplaySettingsCard(
             imageUrl = imageUrl,
             contentDescription = title,
             aspectRatio = imageAspectRatio,
-            focusedOverlay = {
-                MetadataTexts(displaySettings)
-            },
+            // Finished artwork with its title below the card, so nothing goes over the image.
+            respondToFocus = false,
             onClick = onClick,
             modifier = Modifier
                 .height(cardHeight)

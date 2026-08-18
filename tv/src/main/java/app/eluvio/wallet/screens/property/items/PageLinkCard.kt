@@ -25,7 +25,6 @@ import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
 import app.eluvio.wallet.data.entities.v2.display.thumbnailUrlAndRatio
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.screens.common.ImageCard
-import app.eluvio.wallet.screens.common.MetadataTexts
 import app.eluvio.wallet.screens.common.ShimmerImage
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState
 import app.eluvio.wallet.theme.EluvioThemePreview
@@ -70,9 +69,9 @@ fun PageLinkCard(
                 imageUrl = imageUrl,
                 contentDescription = title,
                 aspectRatio = imageAspectRatio,
-                focusedOverlay = {
-                    MetadataTexts(item.displaySettings)
-                },
+                // These cards are finished artwork, and their title already sits below the
+                // card - so no scrim, and nothing drawn over the image.
+                respondToFocus = false,
                 onClick = onClick,
                 modifier = cardModifier
             )

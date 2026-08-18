@@ -55,6 +55,8 @@ import app.eluvio.wallet.screens.property.DynamicPageLayoutState.Section
 import app.eluvio.wallet.screens.property.PropertyDetailViewModel
 import app.eluvio.wallet.screens.videoplayer.VideoPlayerArgs
 import app.eluvio.wallet.util.compose.LocalCardTheme
+import app.eluvio.wallet.util.compose.cardBackground
+import app.eluvio.wallet.util.compose.toBrush
 import app.eluvio.wallet.util.compose.cardBorder
 import app.eluvio.wallet.util.compose.cardShape
 import app.eluvio.wallet.util.compose.hasBorder
@@ -254,6 +256,7 @@ private fun CarouselCard(
     val theme = LocalCardTheme.current
     val shape = theme.cardShape(AspectRatio.SQUARE, RoundedCornerShape(8.dp))
     val border = theme?.takeIf { it.hasBorder }?.cardBorder(focused = false)
+    val background = theme.cardBackground(focused = false)
     Column(
         modifier = Modifier
             .width(140.dp)
@@ -264,6 +267,7 @@ private fun CarouselCard(
                 .fillMaxWidth()
                 .aspectRatio(AspectRatio.SQUARE)
                 .clip(shape)
+                .then(if (background != null) Modifier.background(background.toBrush()) else Modifier)
                 .then(if (border != null) Modifier.border(border, shape) else Modifier),
         ) {
             AsyncImage(

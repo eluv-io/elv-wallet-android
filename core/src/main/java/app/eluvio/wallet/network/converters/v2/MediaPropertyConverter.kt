@@ -5,12 +5,14 @@ import app.eluvio.wallet.data.entities.v2.MediaPropertyEntity
 import app.eluvio.wallet.data.entities.v2.PropertyLoginInfoRealmEntity
 import app.eluvio.wallet.data.entities.v2.display.CardBorderRadius
 import app.eluvio.wallet.data.entities.v2.display.CardThemeEntity
+import app.eluvio.wallet.data.entities.v2.display.CardThemeStateEntity
 import app.eluvio.wallet.network.converters.v2.permissions.toContentPermissionsEntity
 import app.eluvio.wallet.network.converters.v2.permissions.toPagePermissionsEntity
 import app.eluvio.wallet.network.converters.v2.permissions.toPermissionStateEntities
 import app.eluvio.wallet.network.converters.v2.permissions.toPropertyPermissionsEntity
 import app.eluvio.wallet.network.converters.v2.permissions.toSearchPermissionsEntity
 import app.eluvio.wallet.network.dto.v2.CardThemeDto
+import app.eluvio.wallet.network.dto.v2.CardThemeStateDto
 import app.eluvio.wallet.network.dto.v2.LoginInfoDto
 import app.eluvio.wallet.network.dto.v2.MediaPageDto
 import app.eluvio.wallet.network.dto.v2.MediaPropertyDto
@@ -86,10 +88,26 @@ private fun CardThemeDto.toEntity(themeId: String): CardThemeEntity {
         borderRadius = CardBorderRadius.from(dto.border_radius)
         borderWidth = dto.border_width ?: 0
         circularize = dto.circularize == true
-        activeBorderColor = dto.active?.border_color?.ifEmpty { null }
-        inactiveBorderColor = dto.inactive?.border_color?.ifEmpty { null }
+        active = dto.active?.toEntity()
+        inactive = dto.inactive?.toEntity()
     }
 }
+
+private fun CardThemeStateDto.toEntity(): CardThemeStateEntity {
+    val dto = this
+    return CardThemeStateEntity().apply {
+        borderColor = dto.border_color?.ifEmpty { null }
+        backgroundColor = dto.background_color?.ifEmpty { null }
+        backgroundColorOpacity = dto.background_color_opacity ?: FULLY_OPAQUE
+        backgroundColor2 = dto.background_color_2?.ifEmpty { null }
+        backgroundColor2Opacity = dto.background_color_2_opacity ?: FULLY_OPAQUE
+        backgroundGradientAngle = dto.background_gradient_angle ?: 0
+        gradient = dto.background_type == "gradient"
+    }
+}
+
+/** Opacities are percentages, and a missing one means the color is fully opaque. */
+private const val FULLY_OPAQUE = 100
 
 fun MediaPageDto.toEntity(propertyId: String, baseUrl: String): MediaPageEntity {
     val dto = this

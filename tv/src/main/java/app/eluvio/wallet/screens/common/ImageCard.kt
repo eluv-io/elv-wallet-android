@@ -2,6 +2,7 @@ package app.eluvio.wallet.screens.common
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -35,10 +36,12 @@ import app.eluvio.wallet.theme.borders
 import app.eluvio.wallet.theme.focusedBorder
 import app.eluvio.wallet.util.compose.Black
 import app.eluvio.wallet.util.compose.LocalCardTheme
+import app.eluvio.wallet.util.compose.cardBackground
 import app.eluvio.wallet.util.compose.cardBorder
 import app.eluvio.wallet.util.compose.cardShape
 import app.eluvio.wallet.util.compose.hasBorder
 import app.eluvio.wallet.util.compose.requestInitialFocus
+import app.eluvio.wallet.util.compose.toBrush
 
 private val UnfocusedDim = Color.Black(alpha = 0.2f)
 private val FocusedDim = Color.Black(alpha = 0.8f)
@@ -101,6 +104,28 @@ fun ImageCard(
             animationSpec = tween(durationMillis = DIM_ANIMATION_MILLIS),
             label = "cardDim"
         )
+        val background = cardTheme.cardBackground(focused = isFocused)
+        if (background != null) {
+            // Cross-faded with focus, like the dim, so the two states don't fight each other.
+            // It isn't dimmed itself - the theme already says what each state should look like.
+            val startColor by animateColorAsState(
+                targetValue = background.startColor,
+                animationSpec = tween(durationMillis = DIM_ANIMATION_MILLIS),
+                label = "cardBackgroundStart"
+            )
+            val endColor by animateColorAsState(
+                targetValue = background.endColor,
+                animationSpec = tween(durationMillis = DIM_ANIMATION_MILLIS),
+                label = "cardBackgroundEnd"
+            )
+            Spacer(
+                Modifier
+                    .matchParentSize()
+                    .background(
+                        background.copy(startColor = startColor, endColor = endColor).toBrush()
+                    )
+            )
+        }
         ShimmerImage(
             model = imageUrl,
             contentScale = ContentScale.Crop,

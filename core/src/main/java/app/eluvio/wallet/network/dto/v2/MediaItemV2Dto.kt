@@ -40,6 +40,8 @@ data class MediaItemV2Dto(
     @field:Json(name = "end_time")
     val endTime: Date?,
     val icons: List<MediaIconDto>?,
+    @field:Json(name = "countdown_background_desktop")
+    val countdownBackground: AssetLinkDto?,
 
     // Search related stuff
     val attributes: Map<String, List<String>>?,

@@ -62,7 +62,6 @@ private fun clickWithPermissionContext(
             UpcomingVideoNavArgs(
                 propertyId = permissionContext.propertyId,
                 mediaItemId = media.id,
-                sourcePageId = permissionContext.pageId,
             )
         }
 

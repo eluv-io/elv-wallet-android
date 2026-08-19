@@ -42,6 +42,7 @@ fun MediaItemV2Dto.toEntity(baseUrl: String, parentPrefix: String = ""): MediaEn
         gallery = dto.gallery?.mapNotNull { it.toEntity() }.toRealmListOrEmpty()
 
         liveVideoInfo = parseLiveVideoInfo(dto)
+        countdownBackground = dto.countdownBackground?.toUrl(baseUrl)
 
         // Media Lists will have a list of media items under `media`, while Media Collections
         // will have a list of media lists under `mediaLists`. It is assumed that there will

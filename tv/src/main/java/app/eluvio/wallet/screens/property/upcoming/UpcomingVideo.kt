@@ -47,7 +47,13 @@ fun UpcomingVideo(vm: UpcomingVideoViewModel) {
 
 @Composable
 private fun UpcomingVideo(state: UpcomingVideoViewModel.State) {
-    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .fillMaxSize()
+            // Fallback for when there's no background image to show.
+            .background(Color.Black)
+    ) {
         if (state.imagesBaseUrl == null) {
             // UpcomingVideo is pretty useless without any images, so make sure to only show it
             // once we have a baseUrl to use.

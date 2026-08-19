@@ -77,6 +77,9 @@ class MediaEntity : RealmObject, EntityWithPermissions {
     // In the mwv2 data model, all video is of type "Video" and this boolean tells live vs on-demand apart.
     var liveVideoInfo: LiveVideoInfoEntity? = null
 
+    // Background for the countdown screen of this item, if it's an upcoming live event.
+    var countdownBackground: FabricUrlEntity? = null
+
     // Search API
     var attributes: RealmList<FilterAttributeEntity> = realmListOf()
     var tags: RealmList<String> = realmListOf()
@@ -140,6 +143,7 @@ class MediaEntity : RealmObject, EntityWithPermissions {
         if (mediaItemsIds != other.mediaItemsIds) return false
         if (lockedState != other.lockedState) return false
         if (liveVideoInfo != other.liveVideoInfo) return false
+        if (countdownBackground != other.countdownBackground) return false
         if (attributes != other.attributes) return false
         if (tags != other.tags) return false
         if (displaySettings != other.displaySettings) return false
@@ -176,6 +180,7 @@ class MediaEntity : RealmObject, EntityWithPermissions {
         result = 31 * result + mediaItemsIds.hashCode()
         result = 31 * result + (lockedState?.hashCode() ?: 0)
         result = 31 * result + (liveVideoInfo?.hashCode() ?: 0)
+        result = 31 * result + (countdownBackground?.hashCode() ?: 0)
         result = 31 * result + attributes.hashCode()
         result = 31 * result + tags.hashCode()
         result = 31 * result + (displaySettings?.hashCode() ?: 0)
@@ -184,7 +189,7 @@ class MediaEntity : RealmObject, EntityWithPermissions {
     }
 
     override fun toString(): String {
-        return "MediaEntity(id='$id', name='$name', image='$image', posterImagePath=$posterImagePath, mediaType='$mediaType', imageAspectRatio=$imageAspectRatio, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, mediaFile='$mediaFile', playableHash=$playableHash, mediaLinks=$mediaLinks, tvBackgroundImage='$tvBackgroundImage', gallery=$gallery, mediaItemsIds=$mediaItemsIds, lockedState=$lockedState, liveVideoInfo=$liveVideoInfo, attributes=$attributes, tags=$tags, displaySettings=$displaySettings)"
+        return "MediaEntity(id='$id', name='$name', image='$image', posterImagePath=$posterImagePath, mediaType='$mediaType', imageAspectRatio=$imageAspectRatio, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, mediaFile='$mediaFile', playableHash=$playableHash, mediaLinks=$mediaLinks, tvBackgroundImage='$tvBackgroundImage', gallery=$gallery, mediaItemsIds=$mediaItemsIds, lockedState=$lockedState, liveVideoInfo=$liveVideoInfo, countdownBackground=$countdownBackground, attributes=$attributes, tags=$tags, displaySettings=$displaySettings)"
     }
 
     companion object {

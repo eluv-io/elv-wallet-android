@@ -5,9 +5,6 @@ import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.entities.MediaEntity
-import app.eluvio.wallet.data.entities.v2.MediaPageSectionEntity
-import app.eluvio.wallet.data.permissions.PermissionContext
-import app.eluvio.wallet.data.permissions.PermissionContextResolver
 import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.di.ApiProvider
@@ -19,7 +16,6 @@ import app.eluvio.wallet.util.rx.timer
 import com.stavfx.nav3hiltvm.annotations.HiltNavArgViewModel
 import com.stavfx.nav3hiltvm.annotations.NavArg
 import io.reactivex.rxjava3.core.Flowable
-import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.kotlin.Flowables
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
@@ -33,7 +29,6 @@ open class UpcomingVideoViewModel(
     private val contentStore: ContentStore,
     private val propertyStore: MediaPropertyStore,
     private val apiProvider: ApiProvider,
-    private val permissionContextResolver: PermissionContextResolver,
     savedStateHandle: SavedStateHandle,
 ) : BaseViewModel<UpcomingVideoViewModel.State>(
     State(mediaItemId = navArgs.mediaItemId, propertyId = navArgs.propertyId),
@@ -42,14 +37,22 @@ open class UpcomingVideoViewModel(
     @Immutable
     data class State(
         val imagesBaseUrl: String? = null,
-        val backgroundImageUrl: FabricUrl? = null,
+        val mediaCountdownBackground: FabricUrl? = null,
+        val propertyCountdownBackground: FabricUrl? = null,
+        val mediaLandscapeThumbnail: FabricUrl? = null,
         val mediaItemId: String = "",
         val propertyId: String = "",
         val title: String = "",
         val icons: List<String> = emptyList(),
         val headers: List<String> = emptyList(),
         val startTimeMillis: Long? = null,
-    )
+    ) {
+        // Falls back to nothing (black screen) if none of these are defined.
+        val backgroundImageUrl: FabricUrl?
+            get() = mediaCountdownBackground
+                ?: propertyCountdownBackground
+                ?: mediaLandscapeThumbnail
+    }
 
     override fun onResume() {
         super.onResume()
@@ -58,14 +61,13 @@ open class UpcomingVideoViewModel(
             .subscribeBy { updateState { copy(imagesBaseUrl = it) } }
             .addTo(disposables)
 
-        // This has some duplicated logic from PropertyDetailViewModel, but I'm in a hurry.
-        if (navArgs.sourcePageId != null) {
-            updateBackgroundImage()
-        }
         propertyStore.observeMediaProperty(navArgs.propertyId)
-            .subscribeBy {
-                updateState { copy(backgroundImageUrl = it.mainPage?.backgroundImageUrl) }
-            }
+            .subscribeBy(
+                onNext = { property ->
+                    updateState { copy(propertyCountdownBackground = property.countdownBackground) }
+                },
+                onError = {}
+            )
             .addTo(disposables)
 
         contentStore.observeMediaItem(navArgs.mediaItemId)
@@ -79,7 +81,9 @@ open class UpcomingVideoViewModel(
                             title = mediaItem.name,
                             icons = mediaItem.liveVideoInfo?.icons.orEmpty(),
                             headers = mediaItem.displaySettings?.headers.orEmpty(),
-                            startTimeMillis = mediaItem.liveVideoInfo?.eventStartTime?.millis
+                            startTimeMillis = mediaItem.liveVideoInfo?.eventStartTime?.millis,
+                            mediaCountdownBackground = mediaItem.countdownBackground,
+                            mediaLandscapeThumbnail = mediaItem.displaySettings?.thumbnailLandscapeUrl,
                         )
                     }
                 },
@@ -114,34 +118,6 @@ open class UpcomingVideoViewModel(
         } else {
             Flowable.just(mediaItem)
         }
-    }
-
-    private fun updateBackgroundImage() {
-        // Fake permission context to quickly resolve property and page
-        val permissionContext = PermissionContext(
-            propertyId = navArgs.propertyId, pageId = navArgs.sourcePageId
-        )
-        permissionContextResolver.resolve(permissionContext)
-            .firstElement()
-            .flatMap { (property, page) ->
-                property.countdownBackground?.let {
-                    return@flatMap Maybe.just(it)
-                }
-                propertyStore.observeSections(property, page!!, forceRefresh = false)
-                    .firstElement()
-                    .mapNotNull { sections ->
-                        // Find the first hero section and use its background
-                        sections
-                            .firstOrNull { it.type == MediaPageSectionEntity.TYPE_HERO }
-                            ?.displaySettings
-                            ?.heroBackgroundImageUrl
-                            ?: page.backgroundImageUrl
-                    }
-            }
-            .subscribeBy {
-                updateState { copy(backgroundImageUrl = it) }
-            }
-            .addTo(disposables)
     }
 }
 

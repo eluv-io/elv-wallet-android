@@ -3,12 +3,14 @@ package app.eluvio.wallet.screens.property.items
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -73,8 +75,8 @@ val CarouselItem.aspectRatio: Float?
 fun CarouselItemCard(
     carouselItem: CarouselItem,
     cardHeight: Dp,
-    /** Whether the section this card belongs to shows a title under its cards. */
-    showTitle: Boolean,
+    /** How to align the title under the card, or null when the section shows no titles. */
+    titleAlign: TextAlign?,
     modifier: Modifier = Modifier
 ) {
     val navigator = LocalNavigator.current
@@ -96,7 +98,7 @@ fun CarouselItemCard(
                 forceDisabled = carouselItem.forceDisabled,
                 playbackProgress = carouselItem.playbackProgress,
             )
-            if (showTitle) {
+            if (titleAlign != null) {
                 Spacer(Modifier.height(10.dp))
                 val title = carouselItem.displayOverrides?.title ?: entity.name
                 Text(
@@ -104,9 +106,12 @@ fun CarouselItemCard(
                     style = MaterialTheme.typography.label_24.copy(fontSize = 10.sp),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.thenIf(entity.isDisabled) {
-                        alpha(MaterialTheme.colorScheme.disabledItemAlpha)
-                    }
+                    textAlign = titleAlign,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .thenIf(entity.isDisabled) {
+                            alpha(MaterialTheme.colorScheme.disabledItemAlpha)
+                        }
                 )
             }
         }
@@ -120,21 +125,21 @@ fun CarouselItemCard(
         is CarouselItem.PageLink -> PageLinkCard(
             carouselItem,
             cardHeight,
-            showTitle,
+            titleAlign,
             onClick
         )
 
         is CarouselItem.ExternalLink -> DisplaySettingsCard(
             displaySettings = carouselItem.displaySettings,
             cardHeight = cardHeight,
-            showTitle = showTitle,
+            titleAlign = titleAlign,
             onClick = onClick,
         )
 
         is CarouselItem.ItemPurchase -> DisplaySettingsCard(
             displaySettings = carouselItem.displaySettings,
             cardHeight = cardHeight,
-            showTitle = showTitle,
+            titleAlign = titleAlign,
             onClick = onClick,
         )
 
@@ -162,6 +167,6 @@ private fun CarouselItemCardPreview() = EluvioThemePreview {
                 name = "this is a very very very very long title"
             },
             playbackProgress = null,
-        ), CardSize.MEDIUM.cardHeight(AspectRatio.SQUARE), showTitle = true
+        ), CardSize.MEDIUM.cardHeight(AspectRatio.SQUARE), titleAlign = TextAlign.Start
     )
 }

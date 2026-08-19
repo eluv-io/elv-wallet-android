@@ -1,6 +1,7 @@
 package app.eluvio.wallet.screens.property.mediagrid
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.SavedStateHandle
 import app.eluvio.wallet.app.BaseViewModel
 import app.eluvio.wallet.app.Events
@@ -19,6 +20,7 @@ import app.eluvio.wallet.data.stores.PlaybackStore
 import app.eluvio.wallet.navigation.NavigationEvent
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState
 import app.eluvio.wallet.screens.property.toCarouselItems
+import app.eluvio.wallet.util.compose.cardTitleAlign
 import app.eluvio.wallet.util.logging.Log
 import com.stavfx.nav3hiltvm.annotations.HiltNavArgViewModel
 import com.stavfx.nav3hiltvm.annotations.NavArg
@@ -42,7 +44,8 @@ open class MediaGridViewModel(
         val items: List<DynamicPageLayoutState.CarouselItem> = emptyList(),
         val bgColor: String? = null,
         val bgImageUrl: FabricUrl? = null,
-        val showItemTitles: Boolean = true,
+        /** How item cards align their title, or null when the section shows no titles. */
+        val titleAlign: TextAlign? = TextAlign.Start,
     )
     private val permissionContext = navArgs.permissionContext
 
@@ -97,7 +100,7 @@ open class MediaGridViewModel(
                 items = items,
                 bgColor = display?.inlineBackgroundColor,
                 bgImageUrl = display?.inlineBackgroundImageUrl,
-                showItemTitles = display?.showItemTitles != false,
+                titleAlign = display.cardTitleAlign,
             )
         )
     }

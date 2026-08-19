@@ -3,6 +3,7 @@ package app.eluvio.wallet.network.converters.v2
 import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.data.entities.v2.CardSize
 import app.eluvio.wallet.data.entities.v2.DisplayFormat
+import app.eluvio.wallet.data.entities.v2.TextJustification
 import app.eluvio.wallet.data.entities.v2.display.DisplaySettingsEntity
 import app.eluvio.wallet.network.dto.v2.DisplaySettingsDto
 import app.eluvio.wallet.util.realm.toRealmListOrEmpty
@@ -39,5 +40,6 @@ fun DisplaySettingsDto.toEntity(baseUrl: String): DisplaySettingsEntity {
         fullBleed = dto.full_bleed
         cardThemeId = dto.card_theme_id?.ifEmpty { null }
         showItemTitles = dto.content_display_text?.ifEmpty { null }?.let { it != NO_TEXT }
+        textJustification = TextJustification.from(dto.text_justification)
     }
 }

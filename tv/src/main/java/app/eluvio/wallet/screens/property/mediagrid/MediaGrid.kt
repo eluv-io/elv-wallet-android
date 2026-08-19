@@ -110,7 +110,7 @@ private fun MediaGrid(state: MediaGridViewModel.State) {
                 CarouselItemCard(
                     carouselItem = item,
                     cardHeight = cardHeight,
-                    showTitle = state.showItemTitles,
+                    titleAlign = state.titleAlign,
                 )
             }
         }

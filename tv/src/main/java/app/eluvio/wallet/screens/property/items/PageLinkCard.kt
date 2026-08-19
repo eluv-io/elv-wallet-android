@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
@@ -13,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -38,7 +40,7 @@ import app.eluvio.wallet.util.compose.thenIf
 fun PageLinkCard(
     item: DynamicPageLayoutState.CarouselItem.PageLink,
     cardHeight: Dp,
-    showTitle: Boolean,
+    titleAlign: TextAlign?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -77,13 +79,15 @@ fun PageLinkCard(
                 modifier = cardModifier
             )
         }
-        if (showTitle && title != null) {
+        if (titleAlign != null && title != null) {
             Spacer(Modifier.height(10.dp))
             Text(
                 title,
                 style = MaterialTheme.typography.label_24.copy(fontSize = 10.sp),
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                textAlign = titleAlign,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
@@ -107,7 +111,7 @@ private fun SubpropertyCardPreview(modifier: Modifier = Modifier) = EluvioThemeP
                 ),
             ),
             cardHeight = 100.dp,
-            showTitle = true,
+            titleAlign = TextAlign.Start,
             onClick = {},
         )
     }

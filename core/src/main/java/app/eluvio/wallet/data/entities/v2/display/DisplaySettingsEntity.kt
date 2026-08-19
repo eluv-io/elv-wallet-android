@@ -3,6 +3,7 @@ package app.eluvio.wallet.data.entities.v2.display
 import app.eluvio.wallet.data.entities.FabricUrlEntity
 import app.eluvio.wallet.data.entities.v2.CardSize
 import app.eluvio.wallet.data.entities.v2.DisplayFormat
+import app.eluvio.wallet.data.entities.v2.TextJustification
 import app.eluvio.wallet.util.realm.realmEnum
 import dagger.Module
 import dagger.Provides
@@ -53,8 +54,12 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
 
     override var showItemTitles: Boolean? = null
 
+    @Ignore
+    override var textJustification: TextJustification by realmEnum(::_textJustification)
+    private var _textJustification: String = TextJustification.LEFT.value
+
     override fun toString(): String {
-        return "DisplaySettingsEntity(title=$title, subtitle=$subtitle, headers=$headers, description=$description, forcedAspectRatio=$forcedAspectRatio, thumbnailLandscapeUrl=$thumbnailLandscapeUrl, thumbnailPortraitUrl=$thumbnailPortraitUrl, thumbnailSquareUrl=$thumbnailSquareUrl, displayLimit=$displayLimit, displayLimitType=$displayLimitType, _displayFormat='$_displayFormat', _cardSize='$_cardSize', logoUrl=$logoUrl, logoText=$logoText, inlineBackgroundColor=$inlineBackgroundColor, inlineBackgroundImageUrl=$inlineBackgroundImageUrl, heroBackgroundImageUrl=$heroBackgroundImageUrl, heroBackgroundVideoHash=$heroBackgroundVideoHash, hiddenOnTv=$hiddenOnTv, fullBleed=$fullBleed, cardThemeId=$cardThemeId, showItemTitles=$showItemTitles)"
+        return "DisplaySettingsEntity(title=$title, subtitle=$subtitle, headers=$headers, description=$description, forcedAspectRatio=$forcedAspectRatio, thumbnailLandscapeUrl=$thumbnailLandscapeUrl, thumbnailPortraitUrl=$thumbnailPortraitUrl, thumbnailSquareUrl=$thumbnailSquareUrl, displayLimit=$displayLimit, displayLimitType=$displayLimitType, _displayFormat='$_displayFormat', _cardSize='$_cardSize', logoUrl=$logoUrl, logoText=$logoText, inlineBackgroundColor=$inlineBackgroundColor, inlineBackgroundImageUrl=$inlineBackgroundImageUrl, heroBackgroundImageUrl=$heroBackgroundImageUrl, heroBackgroundVideoHash=$heroBackgroundVideoHash, hiddenOnTv=$hiddenOnTv, fullBleed=$fullBleed, cardThemeId=$cardThemeId, showItemTitles=$showItemTitles, _textJustification='$_textJustification')"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -85,6 +90,7 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
         if (fullBleed != other.fullBleed) return false
         if (cardThemeId != other.cardThemeId) return false
         if (showItemTitles != other.showItemTitles) return false
+        if (_textJustification != other._textJustification) return false
 
         return true
     }
@@ -112,6 +118,7 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
         result = 31 * result + (fullBleed?.hashCode() ?: 0)
         result = 31 * result + (cardThemeId?.hashCode() ?: 0)
         result = 31 * result + (showItemTitles?.hashCode() ?: 0)
+        result = 31 * result + _textJustification.hashCode()
         return result
     }
 

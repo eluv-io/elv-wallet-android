@@ -45,4 +45,11 @@ interface DisplaySettingsDto {
      * Only Sections define this.
      */
     val content_display_text: String?
+
+    /**
+     * How the section's item cards align their text: "left"/"center"/"right".
+     * Note that the server also defines a "justification" field, which aligns the section itself,
+     * rather than the text inside it. Only Sections define this.
+     */
+    val text_justification: String?
 }

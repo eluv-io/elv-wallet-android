@@ -5,6 +5,7 @@ import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.entities.v2.CardSize
 import app.eluvio.wallet.data.entities.v2.DisplayFormat
+import app.eluvio.wallet.data.entities.v2.TextJustification
 
 // Realm classes are mutable by nature, but we make sure to only use them immutably, so adding this
 // annotation helps Compose treat them as immutable and avoid unnecessary recompositions.
@@ -52,6 +53,9 @@ interface DisplaySettings {
      * Null when unset, which means "show". Only Sections define this.
      */
     val showItemTitles: Boolean?
+
+    /** How the section's item cards align their text. Only Sections define this. */
+    val textJustification: TextJustification
 }
 
 /**
@@ -100,6 +104,7 @@ data class SimpleDisplaySettings(
     override val fullBleed: Boolean? = null,
     override val cardThemeId: String? = null,
     override val showItemTitles: Boolean? = null,
+    override val textJustification: TextJustification = TextJustification.LEFT,
 ) : DisplaySettings {
     companion object {
         fun from(other: DisplaySettings?, forcedAspectRatio: Float? = null): SimpleDisplaySettings {
@@ -126,6 +131,7 @@ data class SimpleDisplaySettings(
                 fullBleed = other?.fullBleed,
                 cardThemeId = other?.cardThemeId,
                 showItemTitles = other?.showItemTitles,
+                textJustification = other?.textJustification ?: TextJustification.LEFT,
             )
         }
     }
@@ -161,5 +167,7 @@ fun DisplaySettings.withOverrides(overrides: DisplaySettings?): DisplaySettings 
         fullBleed = overrides.fullBleed ?: default.fullBleed,
         cardThemeId = overrides.cardThemeId?.ifEmpty { null } ?: default.cardThemeId,
         showItemTitles = overrides.showItemTitles ?: default.showItemTitles,
+        textJustification = overrides.textJustification.takeIf { it != TextJustification.LEFT }
+            ?: default.textJustification,
     )
 }

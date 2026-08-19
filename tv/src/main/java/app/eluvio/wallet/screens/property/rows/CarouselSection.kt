@@ -52,6 +52,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Border
@@ -76,6 +77,7 @@ import app.eluvio.wallet.theme.button_24
 import app.eluvio.wallet.theme.label_24
 import app.eluvio.wallet.util.cast
 import app.eluvio.wallet.util.compose.LocalCardTheme
+import app.eluvio.wallet.util.compose.cardTitleAlign
 import app.eluvio.wallet.util.compose.focusCapturingGroup
 import app.eluvio.wallet.util.compose.focusCapturingLazyList
 import app.eluvio.wallet.util.compose.focusTrap
@@ -225,7 +227,7 @@ private fun CarouselSectionContent(
                         filteredItems,
                         startPadding,
                         display.cardSize,
-                        showTitles = display.showItemTitles != false,
+                        titleAlign = display.cardTitleAlign,
                         modifier = exitFocusModifier
                             .onGloballyPositioned { logoTopPaddingPx = it.boundsInParent().top }
                     )
@@ -242,7 +244,7 @@ private fun SectionItems(
     filteredItems: ImmutableList<CarouselItem>,
     startPadding: Dp,
     cardSize: CardSize,
-    showTitles: Boolean,
+    titleAlign: TextAlign?,
     modifier: Modifier = Modifier
 ) {
     when (displayFormat) {
@@ -250,7 +252,7 @@ private fun SectionItems(
             filteredItems,
             startPadding,
             cardSize,
-            showTitles,
+            titleAlign,
             modifier = modifier
         )
 
@@ -260,7 +262,7 @@ private fun SectionItems(
             filteredItems,
             startPadding,
             cardSize,
-            showTitles,
+            titleAlign,
             maxItemsInEachRow = 1,
             modifier = modifier
         )
@@ -271,7 +273,7 @@ private fun SectionItems(
             filteredItems,
             startPadding,
             cardSize,
-            showTitles,
+            titleAlign,
             modifier = modifier
         )
     }
@@ -414,7 +416,7 @@ private fun ItemGrid(
     items: ImmutableList<CarouselItem>,
     startPadding: Dp,
     cardSize: CardSize,
-    showTitles: Boolean,
+    titleAlign: TextAlign?,
     modifier: Modifier = Modifier,
     maxItemsInEachRow: Int = Int.MAX_VALUE
 ) {
@@ -441,7 +443,7 @@ private fun ItemGrid(
                 CarouselItemCard(
                     carouselItem = item,
                     cardHeight = cardSize.cardHeight(item.aspectRatio),
-                    showTitle = showTitles,
+                    titleAlign = titleAlign,
                     modifier = Modifier.thenIf(index == 0) {
                         onGloballyPositioned {
                             firstChildPositioned = true
@@ -459,7 +461,7 @@ private fun ItemRow(
     items: ImmutableList<CarouselItem>,
     startPadding: Dp,
     cardSize: CardSize,
-    showTitles: Boolean,
+    titleAlign: TextAlign?,
     modifier: Modifier = Modifier
 ) {
     // The 'key' function prevents from focusRestorer() from breaking when crashing when
@@ -482,7 +484,7 @@ private fun ItemRow(
             CarouselItemCard(
                 carouselItem = item,
                 cardHeight = cardSize.cardHeight(item.aspectRatio),
-                showTitle = showTitles,
+                titleAlign = titleAlign,
                 modifier = Modifier.focusRequester(childFocusRequesters[index])
             )
         }

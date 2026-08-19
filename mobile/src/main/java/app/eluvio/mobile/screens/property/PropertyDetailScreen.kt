@@ -41,6 +41,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.eluvio.mobile.R
@@ -56,6 +57,7 @@ import app.eluvio.wallet.screens.property.PropertyDetailViewModel
 import app.eluvio.wallet.screens.videoplayer.VideoPlayerArgs
 import app.eluvio.wallet.util.compose.LocalCardTheme
 import app.eluvio.wallet.util.compose.cardBackground
+import app.eluvio.wallet.util.compose.cardTitleAlign
 import app.eluvio.wallet.util.compose.toBrush
 import app.eluvio.wallet.util.compose.cardBorder
 import app.eluvio.wallet.util.compose.cardShape
@@ -243,7 +245,7 @@ private fun CarouselRow(
             ) { item ->
                 CarouselCard(
                     item,
-                    showTitle = section.displaySettings?.showItemTitles != false,
+                    titleAlign = section.displaySettings.cardTitleAlign,
                     onClick = onClick,
                 )
             }
@@ -254,7 +256,7 @@ private fun CarouselRow(
 @Composable
 private fun CarouselCard(
     item: CarouselItem,
-    showTitle: Boolean,
+    titleAlign: TextAlign?,
     onClick: (CarouselItem) -> Unit,
 ) {
     val card = item.toCard()
@@ -301,13 +303,16 @@ private fun CarouselCard(
                     .background(Color(0x99000000)))
             }
         }
-        if (showTitle) {
+        if (titleAlign != null) {
             Text(
                 text = card.title,
                 style = MaterialTheme.typography.labelLarge,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(8.dp),
+                textAlign = titleAlign,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
             )
         }
     }

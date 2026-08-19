@@ -38,6 +38,7 @@ import app.eluvio.wallet.util.compose.thenIf
 fun PageLinkCard(
     item: DynamicPageLayoutState.CarouselItem.PageLink,
     cardHeight: Dp,
+    showTitle: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -76,7 +77,7 @@ fun PageLinkCard(
                 modifier = cardModifier
             )
         }
-        if (title != null) {
+        if (showTitle && title != null) {
             Spacer(Modifier.height(10.dp))
             Text(
                 title,
@@ -106,6 +107,7 @@ private fun SubpropertyCardPreview(modifier: Modifier = Modifier) = EluvioThemeP
                 ),
             ),
             cardHeight = 100.dp,
+            showTitle = true,
             onClick = {},
         )
     }

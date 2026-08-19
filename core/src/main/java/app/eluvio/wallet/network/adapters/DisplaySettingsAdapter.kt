@@ -49,5 +49,6 @@ data class DisplaySettingsDtoImpl(
 
     override val hide_on_tv: Boolean?,
     override val full_bleed: Boolean?,
-    override val card_theme_id: String?
+    override val card_theme_id: String?,
+    override val content_display_text: String?
 ) : DisplaySettingsDto

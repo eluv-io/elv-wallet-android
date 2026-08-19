@@ -70,7 +70,13 @@ val CarouselItem.aspectRatio: Float?
     }?.thumbnailUrlAndRatio?.second
 
 @Composable
-fun CarouselItemCard(carouselItem: CarouselItem, cardHeight: Dp, modifier: Modifier = Modifier) {
+fun CarouselItemCard(
+    carouselItem: CarouselItem,
+    cardHeight: Dp,
+    /** Whether the section this card belongs to shows a title under its cards. */
+    showTitle: Boolean,
+    modifier: Modifier = Modifier
+) {
     val navigator = LocalNavigator.current
     val onClick: () -> Unit = remember {
         {
@@ -90,17 +96,19 @@ fun CarouselItemCard(carouselItem: CarouselItem, cardHeight: Dp, modifier: Modif
                 forceDisabled = carouselItem.forceDisabled,
                 playbackProgress = carouselItem.playbackProgress,
             )
-            Spacer(Modifier.height(10.dp))
-            val title = carouselItem.displayOverrides?.title ?: entity.name
-            Text(
-                title,
-                style = MaterialTheme.typography.label_24.copy(fontSize = 10.sp),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.thenIf(entity.isDisabled) {
-                    alpha(MaterialTheme.colorScheme.disabledItemAlpha)
-                }
-            )
+            if (showTitle) {
+                Spacer(Modifier.height(10.dp))
+                val title = carouselItem.displayOverrides?.title ?: entity.name
+                Text(
+                    title,
+                    style = MaterialTheme.typography.label_24.copy(fontSize = 10.sp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.thenIf(entity.isDisabled) {
+                        alpha(MaterialTheme.colorScheme.disabledItemAlpha)
+                    }
+                )
+            }
         }
 
         is CarouselItem.RedeemableOffer -> OfferCard(
@@ -112,19 +120,22 @@ fun CarouselItemCard(carouselItem: CarouselItem, cardHeight: Dp, modifier: Modif
         is CarouselItem.PageLink -> PageLinkCard(
             carouselItem,
             cardHeight,
+            showTitle,
             onClick
         )
 
         is CarouselItem.ExternalLink -> DisplaySettingsCard(
             displaySettings = carouselItem.displaySettings,
             cardHeight = cardHeight,
-            onClick
+            showTitle = showTitle,
+            onClick = onClick,
         )
 
         is CarouselItem.ItemPurchase -> DisplaySettingsCard(
             displaySettings = carouselItem.displaySettings,
             cardHeight = cardHeight,
-            onClick
+            showTitle = showTitle,
+            onClick = onClick,
         )
 
         is CarouselItem.BannerWrapper -> BannerItem(
@@ -151,6 +162,6 @@ private fun CarouselItemCardPreview() = EluvioThemePreview {
                 name = "this is a very very very very long title"
             },
             playbackProgress = null,
-        ), CardSize.MEDIUM.cardHeight(AspectRatio.SQUARE)
+        ), CardSize.MEDIUM.cardHeight(AspectRatio.SQUARE), showTitle = true
     )
 }

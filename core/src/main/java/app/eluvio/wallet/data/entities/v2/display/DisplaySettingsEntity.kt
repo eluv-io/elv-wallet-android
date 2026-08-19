@@ -51,8 +51,10 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
 
     override var cardThemeId: String? = null
 
+    override var showItemTitles: Boolean? = null
+
     override fun toString(): String {
-        return "DisplaySettingsEntity(title=$title, subtitle=$subtitle, headers=$headers, description=$description, forcedAspectRatio=$forcedAspectRatio, thumbnailLandscapeUrl=$thumbnailLandscapeUrl, thumbnailPortraitUrl=$thumbnailPortraitUrl, thumbnailSquareUrl=$thumbnailSquareUrl, displayLimit=$displayLimit, displayLimitType=$displayLimitType, _displayFormat='$_displayFormat', _cardSize='$_cardSize', logoUrl=$logoUrl, logoText=$logoText, inlineBackgroundColor=$inlineBackgroundColor, inlineBackgroundImageUrl=$inlineBackgroundImageUrl, heroBackgroundImageUrl=$heroBackgroundImageUrl, heroBackgroundVideoHash=$heroBackgroundVideoHash, hiddenOnTv=$hiddenOnTv, fullBleed=$fullBleed, cardThemeId=$cardThemeId)"
+        return "DisplaySettingsEntity(title=$title, subtitle=$subtitle, headers=$headers, description=$description, forcedAspectRatio=$forcedAspectRatio, thumbnailLandscapeUrl=$thumbnailLandscapeUrl, thumbnailPortraitUrl=$thumbnailPortraitUrl, thumbnailSquareUrl=$thumbnailSquareUrl, displayLimit=$displayLimit, displayLimitType=$displayLimitType, _displayFormat='$_displayFormat', _cardSize='$_cardSize', logoUrl=$logoUrl, logoText=$logoText, inlineBackgroundColor=$inlineBackgroundColor, inlineBackgroundImageUrl=$inlineBackgroundImageUrl, heroBackgroundImageUrl=$heroBackgroundImageUrl, heroBackgroundVideoHash=$heroBackgroundVideoHash, hiddenOnTv=$hiddenOnTv, fullBleed=$fullBleed, cardThemeId=$cardThemeId, showItemTitles=$showItemTitles)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -82,6 +84,7 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
         if (hiddenOnTv != other.hiddenOnTv) return false
         if (fullBleed != other.fullBleed) return false
         if (cardThemeId != other.cardThemeId) return false
+        if (showItemTitles != other.showItemTitles) return false
 
         return true
     }
@@ -108,6 +111,7 @@ class DisplaySettingsEntity : EmbeddedRealmObject, DisplaySettings {
         result = 31 * result + (hiddenOnTv?.hashCode() ?: 0)
         result = 31 * result + (fullBleed?.hashCode() ?: 0)
         result = 31 * result + (cardThemeId?.hashCode() ?: 0)
+        result = 31 * result + (showItemTitles?.hashCode() ?: 0)
         return result
     }
 

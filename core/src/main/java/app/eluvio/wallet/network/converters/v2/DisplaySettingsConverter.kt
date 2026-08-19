@@ -7,6 +7,9 @@ import app.eluvio.wallet.data.entities.v2.display.DisplaySettingsEntity
 import app.eluvio.wallet.network.dto.v2.DisplaySettingsDto
 import app.eluvio.wallet.util.realm.toRealmListOrEmpty
 
+/** The only [DisplaySettingsDto.content_display_text] value that hides an item card's title. */
+private const val NO_TEXT = "none"
+
 fun DisplaySettingsDto.toEntity(baseUrl: String): DisplaySettingsEntity {
     val dto = this
     return DisplaySettingsEntity().apply {
@@ -35,5 +38,6 @@ fun DisplaySettingsDto.toEntity(baseUrl: String): DisplaySettingsEntity {
         hiddenOnTv = dto.hide_on_tv
         fullBleed = dto.full_bleed
         cardThemeId = dto.card_theme_id?.ifEmpty { null }
+        showItemTitles = dto.content_display_text?.ifEmpty { null }?.let { it != NO_TEXT }
     }
 }

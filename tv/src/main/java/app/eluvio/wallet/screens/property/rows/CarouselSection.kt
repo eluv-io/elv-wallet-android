@@ -225,6 +225,7 @@ private fun CarouselSectionContent(
                         filteredItems,
                         startPadding,
                         display.cardSize,
+                        showTitles = display.showItemTitles != false,
                         modifier = exitFocusModifier
                             .onGloballyPositioned { logoTopPaddingPx = it.boundsInParent().top }
                     )
@@ -241,6 +242,7 @@ private fun SectionItems(
     filteredItems: ImmutableList<CarouselItem>,
     startPadding: Dp,
     cardSize: CardSize,
+    showTitles: Boolean,
     modifier: Modifier = Modifier
 ) {
     when (displayFormat) {
@@ -248,6 +250,7 @@ private fun SectionItems(
             filteredItems,
             startPadding,
             cardSize,
+            showTitles,
             modifier = modifier
         )
 
@@ -257,6 +260,7 @@ private fun SectionItems(
             filteredItems,
             startPadding,
             cardSize,
+            showTitles,
             maxItemsInEachRow = 1,
             modifier = modifier
         )
@@ -267,6 +271,7 @@ private fun SectionItems(
             filteredItems,
             startPadding,
             cardSize,
+            showTitles,
             modifier = modifier
         )
     }
@@ -409,6 +414,7 @@ private fun ItemGrid(
     items: ImmutableList<CarouselItem>,
     startPadding: Dp,
     cardSize: CardSize,
+    showTitles: Boolean,
     modifier: Modifier = Modifier,
     maxItemsInEachRow: Int = Int.MAX_VALUE
 ) {
@@ -435,6 +441,7 @@ private fun ItemGrid(
                 CarouselItemCard(
                     carouselItem = item,
                     cardHeight = cardSize.cardHeight(item.aspectRatio),
+                    showTitle = showTitles,
                     modifier = Modifier.thenIf(index == 0) {
                         onGloballyPositioned {
                             firstChildPositioned = true
@@ -452,6 +459,7 @@ private fun ItemRow(
     items: ImmutableList<CarouselItem>,
     startPadding: Dp,
     cardSize: CardSize,
+    showTitles: Boolean,
     modifier: Modifier = Modifier
 ) {
     // The 'key' function prevents from focusRestorer() from breaking when crashing when
@@ -474,6 +482,7 @@ private fun ItemRow(
             CarouselItemCard(
                 carouselItem = item,
                 cardHeight = cardSize.cardHeight(item.aspectRatio),
+                showTitle = showTitles,
                 modifier = Modifier.focusRequester(childFocusRequesters[index])
             )
         }

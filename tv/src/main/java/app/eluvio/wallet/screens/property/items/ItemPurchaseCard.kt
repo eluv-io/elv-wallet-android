@@ -30,6 +30,7 @@ import app.eluvio.wallet.theme.label_24
 fun DisplaySettingsCard(
     displaySettings: DisplaySettings?,
     cardHeight: Dp,
+    showTitle: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -50,7 +51,7 @@ fun DisplaySettingsCard(
                     matchHeightConstraintsFirst = true
                 )
         )
-        if (title != null) {
+        if (showTitle && title != null) {
             Spacer(Modifier.height(10.dp))
             Text(
                 title,
@@ -71,6 +72,7 @@ private fun ItemPurchaseCardPreview() = EluvioThemePreview {
             forcedAspectRatio = AspectRatio.SQUARE
         ),
         cardHeight = 150.dp,
+        showTitle = true,
         onClick = {}
     )
 }

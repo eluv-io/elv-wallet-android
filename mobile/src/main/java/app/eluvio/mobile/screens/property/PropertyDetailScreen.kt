@@ -241,7 +241,11 @@ private fun CarouselRow(
                 items = section.items,
                 key = { it.permissionContext.sectionItemId ?: it.permissionContext.toString() },
             ) { item ->
-                CarouselCard(item, onClick)
+                CarouselCard(
+                    item,
+                    showTitle = section.displaySettings?.showItemTitles != false,
+                    onClick = onClick,
+                )
             }
         }
     }
@@ -250,6 +254,7 @@ private fun CarouselRow(
 @Composable
 private fun CarouselCard(
     item: CarouselItem,
+    showTitle: Boolean,
     onClick: (CarouselItem) -> Unit,
 ) {
     val card = item.toCard()
@@ -296,12 +301,14 @@ private fun CarouselCard(
                     .background(Color(0x99000000)))
             }
         }
-        Text(
-            text = card.title,
-            style = MaterialTheme.typography.labelLarge,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(8.dp),
-        )
+        if (showTitle) {
+            Text(
+                text = card.title,
+                style = MaterialTheme.typography.labelLarge,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(8.dp),
+            )
+        }
     }
 }

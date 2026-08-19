@@ -39,4 +39,10 @@ interface DisplaySettingsDto {
 
     /** Points to a theme defined in [StylingDto.card_themes]. Only Sections define this. */
     val card_theme_id: String?
+
+    /**
+     * Which text fields to show under the section's item cards: "all"/"titles"/"title"/"none".
+     * Only Sections define this.
+     */
+    val content_display_text: String?
 }

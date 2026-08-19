@@ -71,7 +71,9 @@ data class MediaItemV2Dto(
     override val hide_on_tv: Boolean?,
     override val full_bleed: Boolean?,
     // Media items never define a card theme, they inherit it from the Section they appear in.
-    override val card_theme_id: String? = null
+    override val card_theme_id: String? = null,
+    // Only Sections decide which texts their items show.
+    override val content_display_text: String? = null
 ) : DisplaySettingsDto
 
 @JsonClass(generateAdapter = true)

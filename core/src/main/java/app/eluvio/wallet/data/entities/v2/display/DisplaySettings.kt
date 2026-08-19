@@ -45,6 +45,13 @@ interface DisplaySettings {
 
     /** Points to a theme defined by the Property. Only Sections define this. */
     val cardThemeId: String?
+
+    /**
+     * Whether the section's item cards show their title. The server also picks which other texts
+     * to show, but cards only ever show a title, so it all collapses to this.
+     * Null when unset, which means "show". Only Sections define this.
+     */
+    val showItemTitles: Boolean?
 }
 
 /**
@@ -92,6 +99,7 @@ data class SimpleDisplaySettings(
     override val hiddenOnTv: Boolean? = null,
     override val fullBleed: Boolean? = null,
     override val cardThemeId: String? = null,
+    override val showItemTitles: Boolean? = null,
 ) : DisplaySettings {
     companion object {
         fun from(other: DisplaySettings?, forcedAspectRatio: Float? = null): SimpleDisplaySettings {
@@ -117,6 +125,7 @@ data class SimpleDisplaySettings(
                 hiddenOnTv = other?.hiddenOnTv,
                 fullBleed = other?.fullBleed,
                 cardThemeId = other?.cardThemeId,
+                showItemTitles = other?.showItemTitles,
             )
         }
     }
@@ -151,5 +160,6 @@ fun DisplaySettings.withOverrides(overrides: DisplaySettings?): DisplaySettings 
         hiddenOnTv = overrides.hiddenOnTv ?: default.hiddenOnTv,
         fullBleed = overrides.fullBleed ?: default.fullBleed,
         cardThemeId = overrides.cardThemeId?.ifEmpty { null } ?: default.cardThemeId,
+        showItemTitles = overrides.showItemTitles ?: default.showItemTitles,
     )
 }

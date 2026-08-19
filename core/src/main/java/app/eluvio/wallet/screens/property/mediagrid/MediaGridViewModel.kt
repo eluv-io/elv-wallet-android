@@ -42,6 +42,7 @@ open class MediaGridViewModel(
         val items: List<DynamicPageLayoutState.CarouselItem> = emptyList(),
         val bgColor: String? = null,
         val bgImageUrl: FabricUrl? = null,
+        val showItemTitles: Boolean = true,
     )
     private val permissionContext = navArgs.permissionContext
 
@@ -96,6 +97,7 @@ open class MediaGridViewModel(
                 items = items,
                 bgColor = display?.inlineBackgroundColor,
                 bgImageUrl = display?.inlineBackgroundImageUrl,
+                showItemTitles = display?.showItemTitles != false,
             )
         )
     }

@@ -91,7 +91,7 @@ fun SignInView(state: TvSignInViewModel.State, onRequestNewToken: () -> Unit) {
                     modifier = Modifier.focusRequester(focusRequester)
                 )
                 focusRequester.requestOnce()
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(24.dp))
                 val navigator = LocalNavigator.current
                 TvButton(
                     text = "Back",

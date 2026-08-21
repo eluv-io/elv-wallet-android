@@ -25,7 +25,11 @@ class DiscoverRowsStore @Inject constructor(
     private val apiProvider: ApiProvider,
     private val realm: Realm,
 ) {
-    data class Row(val title: String, val properties: List<MediaPropertyEntity>)
+    data class Row(
+        val title: String,
+        val featured: Boolean,
+        val properties: List<MediaPropertyEntity>
+    )
 
     fun observeDiscoverRows(forceRefresh: Boolean = true): Flowable<List<Row>> {
         // We observe the whole Properties table and pick out the ones the rows reference,
@@ -43,6 +47,7 @@ class DiscoverRowsStore @Inject constructor(
                 .map { row ->
                     Row(
                         title = row.title,
+                        featured = row.featured,
                         // A row can reference properties we don't have (yet), skip those.
                         properties = row.propertyIds.mapNotNull { propertiesById[it] }
                     )
@@ -86,7 +91,8 @@ class DiscoverRowsStore @Inject constructor(
                     .mapIndexed { index, rowDto ->
                         DiscoverRowEntity().apply {
                             this.index = index
-                            title = rowDto.title.orEmpty()
+                            featured = rowDto.featured == true
+                            title = if (featured) "" else rowDto.title.orEmpty()
                             propertyIds = rowDto.propertyIds.orEmpty().toRealmList()
                         }
                     }

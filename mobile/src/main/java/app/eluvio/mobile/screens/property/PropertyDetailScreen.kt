@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,6 +33,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -66,6 +72,7 @@ import app.eluvio.wallet.util.compose.imageSaturation
 import app.eluvio.wallet.util.compose.saturationFilter
 import app.eluvio.wallet.util.subscribeToState
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.delay
 
 /**
  * Entry body for [app.eluvio.mobile.navigation.PropertyDetailNavArgs]: binds
@@ -142,6 +149,13 @@ fun PropertyDetailScreen(
             )
         },
     ) { padding ->
+        // Sections are fetched after the page itself resolves, so until they land there's
+        // nothing to draw but the toolbar. Mirrors `:tv`'s DynamicPageLayout, which shows
+        // DelayedFullscreenLoader while the state is still empty.
+        if (state.sections.isEmpty()) {
+            DelayedLoader(Modifier.padding(padding))
+            return@Scaffold
+        }
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -317,3 +331,23 @@ private fun CarouselCard(
         }
     }
 }
+
+/**
+ * Fullscreen spinner, held back briefly so a fast load doesn't flash it on screen.
+ * Mobile equivalent of `:tv`'s DelayedFullscreenLoader, which uses the TV-only spinner.
+ */
+@Composable
+private fun DelayedLoader(modifier: Modifier = Modifier) {
+    var showLoader by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(LOADER_DELAY_MS)
+        showLoader = true
+    }
+    Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        if (showLoader) {
+            CircularProgressIndicator()
+        }
+    }
+}
+
+private const val LOADER_DELAY_MS = 400L

@@ -504,6 +504,7 @@ private fun previewState() = State(
     rows = (1..4).map { rowIndex ->
         State.Row(
             title = "Row $rowIndex",
+            featured = false,
             properties = (1..15).map {
                 State.Property(
                     id = "$rowIndex-$it",
@@ -511,6 +512,8 @@ private fun previewState() = State(
                     loginProvider = "ory",
                     skipLogin = false,
                     cardImage = null,
+                    featuredCardImage = null,
+                    featuredCardLogo = null,
                     focusBackgroundUrl = null,
                     logo = null,
                     mainPageTitle = "Property $it Title",

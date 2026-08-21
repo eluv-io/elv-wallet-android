@@ -19,6 +19,17 @@ data class MediaPropertyDto(
     val id: String,
     val image: AssetLinkDto?,
     val image_hash: String?,
+    // Logo drawn on top of the Property's card in a featured Discover row.
+    // The server also sends a "main_page_logo_hash" (ThumbHash) alongside this, which we
+    // deliberately don't parse: these logos are transparent PNGs, and a blurred ThumbHash
+    // placeholder behind one looks like a smudge until the real image lands.
+    @field:Json(name = "main_page_logo")
+    val mainPageLogo: AssetLinkDto? = null,
+    // Portrait art for the Property's card in a featured Discover row.
+    @field:Json(name = "featured_image")
+    val featuredImage: AssetLinkDto? = null,
+    @field:Json(name = "featured_image_hash")
+    val featuredImageHash: String? = null,
     @field:Json(name = "image_tv")
     val discoverPageBgImage: AssetLinkDto?,
     @field:Json(name = "image_tv_hash")

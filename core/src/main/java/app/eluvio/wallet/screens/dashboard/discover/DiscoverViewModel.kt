@@ -58,7 +58,7 @@ class DiscoverViewModel @Inject constructor(
     ) {
         /**
          * Flat list of unique properties, for UIs that don't render categorized rows
-         * (single-property mode, mobile grid).
+         * (single-property mode).
          */
         val properties: List<Property>
             get() = rows.flatMap { it.properties }.distinctBy { it.id }
@@ -66,6 +66,8 @@ class DiscoverViewModel @Inject constructor(
         @Immutable
         data class Row(
             val title: String,
+            /** Featured rows are rendered as a hero pager instead of a plain titled row. */
+            val featured: Boolean,
             val properties: List<Property>,
         )
 
@@ -78,6 +80,10 @@ class DiscoverViewModel @Inject constructor(
 
             // For displaying Property-specific branding in the Discover screen.
             val cardImage: FabricUrl?,
+            /** Card art for featured rows. Falls back to [cardImage]. */
+            val featuredCardImage: FabricUrl?,
+            /** Logo drawn over the card in a featured row. */
+            val featuredCardLogo: FabricUrl?,
             val focusBackgroundUrl: FabricUrl?,
             val logo: FabricUrl?,
             val mainPageTitle: String?,
@@ -128,7 +134,15 @@ class DiscoverViewModel @Inject constructor(
                     propertyStore.observeMediaProperty(
                         BuildConfig.DEFAULT_PROPERTY_ID,
                         forceRefresh = true
-                    ).map { listOf(State.Row(title = "", properties = listOf(it.toStateProperty()))) }
+                    ).map {
+                        listOf(
+                            State.Row(
+                                title = "",
+                                featured = false,
+                                properties = listOf(it.toStateProperty())
+                            )
+                        )
+                    }
                 } else {
                     discoverRowsStore.observeDiscoverRows(true)
                         .map { rows -> rows.map { it.toStateRow() } }
@@ -240,6 +254,7 @@ private const val HERO_VIDEO_DELAY_MS = 1200L
 private fun DiscoverRowsStore.Row.toStateRow(): DiscoverViewModel.State.Row {
     return DiscoverViewModel.State.Row(
         title = title,
+        featured = featured,
         properties = properties.map { it.toStateProperty() }
     )
 }
@@ -252,6 +267,8 @@ private fun MediaPropertyEntity.toStateProperty(): DiscoverViewModel.State.Prope
         skipLogin = loginInfo?.skipLogin == true,
 
         cardImage = image,
+        featuredCardImage = featuredImageWithFallback,
+        featuredCardLogo = featuredCardLogo,
         focusBackgroundUrl = bgImageWithFallback,
         logo = headerLogoUrl,
         mainPageTitle = mainPageTitle,

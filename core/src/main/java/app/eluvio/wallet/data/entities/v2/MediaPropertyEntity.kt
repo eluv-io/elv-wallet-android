@@ -30,6 +30,15 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
     // Poster image used on Discover page
     var image: FabricUrlEntity? = null
 
+    // Logo drawn over the Property's card when it's in a featured Discover row.
+    var featuredCardLogo: FabricUrlEntity? = null
+
+    // Poster image used on Discover page when the Property is in a featured row.
+    // Not every Property defines one.
+    var featuredImage: FabricUrlEntity? = null
+
+    val featuredImageWithFallback: FabricUrl? get() = featuredImage ?: image
+
     // Background image used on Discover page when the Property is selected
     var bgImageUrl: FabricUrlEntity? = null
 
@@ -95,6 +104,8 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         if (name != other.name) return false
         if (headerLogoUrl != other.headerLogoUrl) return false
         if (image != other.image) return false
+        if (featuredImage != other.featuredImage) return false
+        if (featuredCardLogo != other.featuredCardLogo) return false
         if (bgImageUrl != other.bgImageUrl) return false
         if (heroVideoHash != other.heroVideoHash) return false
         if (mainPageTitle != other.mainPageTitle) return false
@@ -122,6 +133,8 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         result = 31 * result + name.hashCode()
         result = 31 * result + (headerLogoUrl?.hashCode() ?: 0)
         result = 31 * result + (image?.hashCode() ?: 0)
+        result = 31 * result + (featuredImage?.hashCode() ?: 0)
+        result = 31 * result + (featuredCardLogo?.hashCode() ?: 0)
         result = 31 * result + (bgImageUrl?.hashCode() ?: 0)
         result = 31 * result + (heroVideoHash?.hashCode() ?: 0)
         result = 31 * result + (mainPageTitle?.hashCode() ?: 0)
@@ -144,7 +157,7 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
     }
 
     override fun toString(): String {
-        return "MediaPropertyEntity(id='$id', name='$name', headerLogoUrl=$headerLogoUrl, image=$image, bgImageUrl=$bgImageUrl, bgImageWithFallback=$bgImageWithFallback, mainPageTitle=$mainPageTitle, mainPageDescription=$mainPageDescription, mainPage=$mainPage, subpropertySelection=$subpropertySelection, loginInfo=$loginInfo, tenantId=$tenantId, startScreenBackground=$startScreenBackground, startScreenLogo=$startScreenLogo, countdownBackground=$countdownBackground, cardThemes=$cardThemes, cardThemeId=$cardThemeId, loginProvider='$loginProvider', permissionStates=$permissionStates, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, permissionChildren=$permissionChildren, propertyPermissions=$propertyPermissions, searchPermissions=$searchPermissions)"
+        return "MediaPropertyEntity(id='$id', name='$name', headerLogoUrl=$headerLogoUrl, image=$image, featuredImage=$featuredImage, featuredCardLogo=$featuredCardLogo, bgImageUrl=$bgImageUrl, bgImageWithFallback=$bgImageWithFallback, mainPageTitle=$mainPageTitle, mainPageDescription=$mainPageDescription, mainPage=$mainPage, subpropertySelection=$subpropertySelection, loginInfo=$loginInfo, tenantId=$tenantId, startScreenBackground=$startScreenBackground, startScreenLogo=$startScreenLogo, countdownBackground=$countdownBackground, cardThemes=$cardThemes, cardThemeId=$cardThemeId, loginProvider='$loginProvider', permissionStates=$permissionStates, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, permissionChildren=$permissionChildren, propertyPermissions=$propertyPermissions, searchPermissions=$searchPermissions)"
     }
 
     class SubpropertySelectionEntity : EmbeddedRealmObject {

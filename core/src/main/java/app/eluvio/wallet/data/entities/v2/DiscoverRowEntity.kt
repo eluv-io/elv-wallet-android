@@ -19,10 +19,13 @@ class DiscoverRowEntity : RealmObject {
     @PrimaryKey
     var index: Int = 0
     var title: String = ""
+
+    /** Featured rows get a bigger, hero-style treatment instead of a plain titled row. */
+    var featured: Boolean = false
     var propertyIds = realmListOf<String>()
 
     override fun toString(): String {
-        return "DiscoverRowEntity(index=$index, title='$title', propertyIds=$propertyIds)"
+        return "DiscoverRowEntity(index=$index, title='$title', featured=$featured, propertyIds=$propertyIds)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -33,6 +36,7 @@ class DiscoverRowEntity : RealmObject {
 
         if (index != other.index) return false
         if (title != other.title) return false
+        if (featured != other.featured) return false
         if (propertyIds != other.propertyIds) return false
 
         return true
@@ -41,6 +45,7 @@ class DiscoverRowEntity : RealmObject {
     override fun hashCode(): Int {
         var result = index
         result = 31 * result + title.hashCode()
+        result = 31 * result + featured.hashCode()
         result = 31 * result + propertyIds.hashCode()
         return result
     }

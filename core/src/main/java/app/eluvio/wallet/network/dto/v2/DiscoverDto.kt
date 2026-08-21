@@ -17,6 +17,7 @@ data class DiscoverRowDto(
     /** Currently the only supported value is [TYPE_PROPERTIES]. */
     val type: String?,
     val title: String?,
+    val featured: Boolean? = null,
     @field:Json(name = "property_ids")
     val propertyIds: List<String>?,
 ) {

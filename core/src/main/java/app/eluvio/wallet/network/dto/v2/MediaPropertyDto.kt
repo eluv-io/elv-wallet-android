@@ -34,11 +34,9 @@ data class MediaPropertyDto(
     val discoverPageBgImage: AssetLinkDto?,
     @field:Json(name = "image_tv_hash")
     val discoverPageBgImageHash: String? = null,
-    // The Discover hero video. This isn't really the right field for it - it just happens to be
-    // the only property-level video the server exposes today. Repoint this once there's a field
-    // that actually means "hero video".
-    @field:Json(name = "main_page_card_video")
-    val mainPageCardVideo: PlayableHashDto? = null,
+    // The Discover hero video. No Property sets this yet.
+    @field:Json(name = "main_page_background_video_tv")
+    val heroVideo: PlayableHashDto? = null,
     val name: String,
     val title: String?,
     @field:Json(name = "main_page")

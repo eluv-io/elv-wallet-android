@@ -34,8 +34,7 @@ fun MediaPropertyDto.toEntity(baseUrl: String): MediaPropertyEntity? {
         // No ThumbHash here on purpose, see [MediaPropertyDto.mainPageLogo].
         featuredCardLogo = dto.mainPageLogo?.toUrl(baseUrl)
         bgImageUrl = dto.discoverPageBgImage?.toUrl(baseUrl, dto.discoverPageBgImageHash)
-        // Stand-in field, see [MediaPropertyDto.mainPageCardVideo].
-        heroVideoHash = dto.mainPageCardVideo?.hash
+        heroVideoHash = dto.heroVideo?.hash
         mainPageTitle = dto.mainPageTitle?.ifBlank { null }
         mainPageDescription = dto.mainPageDescription?.ifBlank { null }
         mainPage = dto.mainPage.toEntity(id, baseUrl)

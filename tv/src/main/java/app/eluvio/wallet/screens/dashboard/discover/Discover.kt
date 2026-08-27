@@ -1,5 +1,6 @@
 package app.eluvio.wallet.screens.dashboard.discover
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -18,9 +19,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -29,8 +32,10 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -77,6 +82,9 @@ import app.eluvio.wallet.util.compose.requestInitialFocus
 import app.eluvio.wallet.util.compose.thenIf
 import app.eluvio.wallet.util.subscribeToState
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun Discover(onBackgroundSet: (DashboardBackground?) -> Unit) {
@@ -166,6 +174,14 @@ private fun DiscoverPage(
      */
     val lastClickedCard = rememberSaveable { mutableStateOf<String?>(null) }
 
+    // Pressing Back walks focus back up to the top of the grid before it leaves Discover: first to
+    // the top row, then to that row's first card, and only then out of the app.
+    val focusState = rememberDiscoverFocusState()
+    val scope = rememberCoroutineScope()
+    BackHandler(enabled = !focusState.topCardFocused) {
+        scope.launch { focusState.stepUp() }
+    }
+
     Box(Modifier.fillMaxSize()) {
         HeroScrims()
         Column(
@@ -179,6 +195,7 @@ private fun DiscoverPage(
             DiscoverRows(
                 rows = state.rows,
                 lastClickedCard = lastClickedCard,
+                focusState = focusState,
                 onPropertyFocused = {
                     focusedProperty = it
                     onPropertyFocused(it)
@@ -307,6 +324,7 @@ private fun PropertyText(property: State.Property?, modifier: Modifier = Modifie
 private fun DiscoverRows(
     rows: List<State.Row>,
     lastClickedCard: MutableState<String?>,
+    focusState: DiscoverFocusState,
     onPropertyFocused: (State.Property) -> Unit,
     onPropertyClicked: (State.Property) -> Unit,
     modifier: Modifier = Modifier,
@@ -317,6 +335,7 @@ private fun DiscoverRows(
     val verticalSpec = remember { FractionBringIntoViewSpec(parentFraction = 0.13f) }
     CompositionLocalProvider(LocalBringIntoViewSpec provides verticalSpec) {
         LazyColumn(
+            state = focusState.rowsListState,
             // Top padding keeps the first row's title clear of the top fading edge, and lines
             // it up with where BringIntoView pins the other rows' titles.
             contentPadding = PaddingValues(top = 10.dp, bottom = 140.dp),
@@ -329,7 +348,14 @@ private fun DiscoverRows(
                 contentType = { _, _ -> "discover_row" },
                 key = { index, row -> "$index:${row.title}" }
             ) { rowIndex, row ->
-                DiscoverRow(rowIndex, row, lastClickedCard, onPropertyFocused, onPropertyClicked)
+                DiscoverRow(
+                    rowIndex,
+                    row,
+                    lastClickedCard,
+                    focusState,
+                    onPropertyFocused,
+                    onPropertyClicked
+                )
             }
         }
     }
@@ -341,6 +367,7 @@ private fun DiscoverRow(
     rowIndex: Int,
     row: State.Row,
     lastClickedCard: MutableState<String?>,
+    focusState: DiscoverFocusState,
     onPropertyFocused: (State.Property) -> Unit,
     onPropertyClicked: (State.Property) -> Unit,
 ) {
@@ -356,17 +383,29 @@ private fun DiscoverRow(
             )
         }
         val horizontalSpec = remember { FractionBringIntoViewSpec(parentFraction = 0.02f) }
-        val firstItemFocusRequester = remember { FocusRequester() }
+        // The top row's handles are hoisted, so Back can reach them from anywhere in the list.
+        val isTopRow = rowIndex == 0
+        val ownListState = rememberLazyListState()
+        val ownFocusRequester = remember { FocusRequester() }
+        val rowListState = if (isTopRow) focusState.topRowListState else ownListState
+        val firstItemFocusRequester =
+            if (isTopRow) focusState.topCardFocusRequester else ownFocusRequester
         CompositionLocalProvider(LocalBringIntoViewSpec provides horizontalSpec) {
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 // Vertical padding leaves room for the focused-card scale to draw without
                 // clipping, horizontal padding does the same for the first/last cards.
                 contentPadding = PaddingValues(start = 5.dp, end = 75.dp, top = 12.dp, bottom = 12.dp),
+                state = rowListState,
                 // When the row (re)gains focus, land on its last-focused card instead of
                 // whatever card happens to sit under the previous row's focus position.
                 // Rows that never held focus start at their first card.
-                modifier = Modifier.focusRestorer { firstItemFocusRequester }
+                modifier = Modifier
+                    // Which row holds focus decides whether Back steps up to the top row or
+                    // moves within it.
+                    .onFocusChanged { if (it.hasFocus) focusState.focusedRowIndex = rowIndex }
+                    .thenIf(isTopRow) { focusRequester(focusState.topRowFocusRequester) }
+                    .focusRestorer { firstItemFocusRequester }
             ) {
                 itemsIndexed(
                     row.properties,
@@ -381,9 +420,15 @@ private fun DiscoverRow(
                         onPropertyFocused = onPropertyFocused,
                         onPropertyClicked = onPropertyClicked,
                         modifier = when {
-                            // The very first card takes initial focus, so the nav drawer doesn't.
+                            // The very first card takes initial focus, so the nav drawer
+                            // doesn't. It also reports that focus, since Back exits from here
+                            // rather than stepping anywhere else.
                             rowIndex == 0 && index == 0 ->
-                                Modifier.requestInitialFocus(firstItemFocusRequester)
+                                Modifier
+                                    .requestInitialFocus(firstItemFocusRequester)
+                                    .onFocusChanged {
+                                        focusState.topCardFocused = it.isFocused
+                                    }
 
                             index == 0 -> Modifier.focusRequester(firstItemFocusRequester)
                             else -> Modifier
@@ -497,6 +542,68 @@ private fun Modifier.verticalFadingEdges(): Modifier = this
 private val HeroBaseColor = Color(0xFF08090C)
 private val CardBackground = Color(0xFF15161A)
 private val CardCornerRadius = 6.dp
+
+/**
+ * What Back needs to know to walk focus back up the grid: where focus currently is, and how to
+ * reach the top row and its first card from anywhere in the list.
+ */
+@Stable
+private class DiscoverFocusState(
+    val rowsListState: LazyListState,
+    val topRowListState: LazyListState,
+    val topRowFocusRequester: FocusRequester,
+    val topCardFocusRequester: FocusRequester,
+) {
+    /** Which row holds focus, or null before anything does. */
+    var focusedRowIndex by mutableStateOf<Int?>(null)
+
+    /** Whether the very first card holds focus - the point where Back stops handling it. */
+    var topCardFocused by mutableStateOf(false)
+
+    /**
+     * Moves focus one step towards the first card. Focus is what moves, not the scroll:
+     * BringIntoView scrolls whatever gains focus into view, whereas scrolling on its own would
+     * strand focus on an off-screen card - a focused lazy item stays composed and keeps it.
+     */
+    suspend fun stepUp() {
+        if (focusedRowIndex != 0) {
+            // The top row may have been scrolled away and disposed, so bring it back before
+            // handing it focus. It lands on the card it last held, via its focusRestorer.
+            rowsListState.scrollToItem(0)
+            requestFocusWhenAttached(topRowFocusRequester)
+        } else {
+            // Already in the top row, so step to its first card.
+            topRowListState.scrollToItem(0)
+            requestFocusWhenAttached(topCardFocusRequester)
+        }
+    }
+}
+
+@Composable
+private fun rememberDiscoverFocusState(): DiscoverFocusState {
+    val rowsListState = rememberLazyListState()
+    val topRowListState = rememberLazyListState()
+    return remember {
+        DiscoverFocusState(
+            rowsListState = rowsListState,
+            topRowListState = topRowListState,
+            topRowFocusRequester = FocusRequester(),
+            topCardFocusRequester = FocusRequester(),
+        )
+    }
+}
+
+/**
+ * Items scrolled back into view aren't attached until the next composition - the same 1ms hop
+ * [requestInitialFocus] takes. An unattached FocusRequester doesn't throw - it warns and returns
+ * false - so retry on the result until it takes.
+ */
+private suspend fun requestFocusWhenAttached(requester: FocusRequester) {
+    repeat(3) {
+        delay(1.milliseconds)
+        if (requester.requestFocus()) return
+    }
+}
 
 private fun previewState() = State(
     loading = false,

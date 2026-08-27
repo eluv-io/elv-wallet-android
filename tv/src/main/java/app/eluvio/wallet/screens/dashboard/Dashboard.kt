@@ -1,6 +1,7 @@
 package app.eluvio.wallet.screens.dashboard
 
 import android.view.LayoutInflater
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
@@ -120,6 +121,15 @@ fun Dashboard(tabs: ImmutableList<Tabs>) {
 
     val showDrawer = tabs.size > 1
     val contentFocusRequester = remember { FocusRequester() }
+
+    // Back from any other tab returns to the first one (Discover) instead of leaving the app.
+    // Tabs are switched in place rather than pushed, so without this there's nothing to pop
+    // but the Dashboard itself. Screens that handle their own Back (MyItems' search and
+    // property filter) are nested deeper, so they still get first refusal.
+    BackHandler(enabled = selectedTab != tabs.first()) {
+        selectedTab = tabs.first()
+        contentFocusRequester.requestFocus()
+    }
     ModalNavigationDrawer(
         scrimBrush = Brush.horizontalGradient(listOf(Color.Black, Color.Transparent)),
         drawerContent = { drawerValue ->

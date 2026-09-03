@@ -27,7 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -101,15 +100,15 @@ fun MediaItemCard(
                 LiveVideoTag(liveState, circular)
             }
         }
-        val restingOverlay: @Composable BoxScope.() -> Unit = {
+        // Shown focused or not: it says something about the content, it isn't a focus affordance.
+        // The Surface clips to the card's shape, so the bar's ends follow the card's corners.
+        val progressBar: @Composable BoxScope.() -> Unit = {
             if (playbackProgress != null && playbackProgress > 0) {
-                ProgressBar(
-                    progress = playbackProgress,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(8.dp)
-                )
+                ProgressBar(playbackProgress, Modifier.align(Alignment.BottomCenter))
             }
+        }
+        val restingOverlay: @Composable BoxScope.() -> Unit = {
+            progressBar()
             if (media.mediaType == MediaEntity.MEDIA_TYPE_VIDEO) {
                 val liveState = liveVideoState
                 if (liveState != null) {
@@ -158,11 +157,8 @@ fun MediaItemCard(
                             .padding(padding)
                     ) {
                         MetadataTexts(displaySettings)
-                        if (playbackProgress != null && playbackProgress > 0) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            ProgressBar(playbackProgress)
-                        }
                     }
+                    progressBar()
                     liveTag()
                 }
             },
@@ -270,9 +266,7 @@ private fun ProgressBar(progress: Float, modifier: Modifier = Modifier) {
         modifier
             .fillMaxWidth()
             .height(3.dp)
-            .clip(RoundedCornerShape(2.dp))
             .background(Color(0xFF5A5A5A))
-            .clipToBounds()
             .drawWithCache {
                 onDrawBehind {
                     drawRect(

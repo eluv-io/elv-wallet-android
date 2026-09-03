@@ -1,5 +1,7 @@
 package app.eluvio.wallet.screens.property.items
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Spacer
@@ -7,9 +9,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,11 +33,14 @@ import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.navigation.LocalNavigator
 import app.eluvio.wallet.navigation.asPush
 import app.eluvio.wallet.navigation.onClickTarget
+import app.eluvio.wallet.screens.common.DIM_ANIMATION_MILLIS
 import app.eluvio.wallet.screens.common.MediaItemCard
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState.CarouselItem
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.disabledItemAlpha
 import app.eluvio.wallet.theme.label_24
+import app.eluvio.wallet.util.compose.LocalCardTheme
+import app.eluvio.wallet.util.compose.isCircular
 import app.eluvio.wallet.util.compose.thenIf
 
 /**
@@ -87,8 +96,14 @@ fun CarouselItemCard(
             }
         }
     }
+    // Only read by the Media branch, but the Column needs it before its content runs.
+    var cardFocused by remember { mutableStateOf(false) }
     when (carouselItem) {
-        is CarouselItem.Media -> Column(modifier = modifier.width(IntrinsicSize.Min)) {
+        is CarouselItem.Media -> Column(
+            modifier
+                .width(IntrinsicSize.Min)
+                .onFocusChanged { cardFocused = it.hasFocus }
+        ) {
             val entity = carouselItem.entity
             MediaItemCard(
                 entity,
@@ -101,6 +116,16 @@ fun CarouselItemCard(
             if (titleAlign != null) {
                 Spacer(Modifier.height(10.dp))
                 val title = carouselItem.displayOverrides?.title ?: entity.name
+                // Focus draws the card's own title over the image, making this copy a duplicate.
+                // Circular cards don't react to focus, and disabled ones show an error instead of
+                // a title, so both keep the copy underneath.
+                val duplicate = cardFocused && !carouselItem.forceDisabled && !entity.isDisabled &&
+                        !LocalCardTheme.current.isCircular(carouselItem.aspectRatio)
+                val titleAlpha by animateFloatAsState(
+                    targetValue = if (duplicate) 0f else 1f,
+                    animationSpec = tween(durationMillis = DIM_ANIMATION_MILLIS),
+                    label = "cardTitleAlpha"
+                )
                 Text(
                     title,
                     style = MaterialTheme.typography.label_24.copy(fontSize = 10.sp),
@@ -109,6 +134,7 @@ fun CarouselItemCard(
                     textAlign = titleAlign,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .alpha(titleAlpha)
                         .thenIf(entity.isDisabled) {
                             alpha(MaterialTheme.colorScheme.disabledItemAlpha)
                         }

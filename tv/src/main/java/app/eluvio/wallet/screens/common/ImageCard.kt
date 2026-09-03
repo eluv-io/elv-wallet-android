@@ -74,7 +74,7 @@ private val FocusScrimBrush = Brush.verticalGradient(
 private const val FOCUS_SCRIM_HEIGHT = 0.64f
 
 /** The web uses 0.5s, which drags when moving focus quickly along a row. */
-private const val DIM_ANIMATION_MILLIS = 300
+const val DIM_ANIMATION_MILLIS = 300
 
 /**
  * An image card with a focus ring. The image sits slightly dimmed while unfocused; focusing it

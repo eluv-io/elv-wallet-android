@@ -66,6 +66,12 @@ data class SectionItemDto(
 
     // External link data
     val url: String?,
+
+    // Search page link data: the filter values the search page should open with selected.
+    @field:Json(name = "primary_filter")
+    val primaryFilter: String?,
+    @field:Json(name = "secondary_filter")
+    val secondaryFilter: String?,
 ) : DtoWithPermissions
 
 @JsonClass(generateAdapter = true)

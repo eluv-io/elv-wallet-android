@@ -104,19 +104,8 @@ open class PropertySearchViewModel(
             .subscribeBy(
                 onSuccess = { filters ->
                     val primaryFilter = filters.buildPrimaryFilter()
-                    if (primaryFilter != null) {
-                        primaryFilter.values
-                            // When filters contain an "All" option, it should be selected by default
-                            .firstOrNull { it.value == FilterValueEntity.ALL }
-                            ?.let { value ->
-                                State.SelectedFilters(
-                                    primaryFilter,
-                                    value.value,
-                                    value.nextFilter
-                                )
-                            }
-                            ?.let { selectedFilter.onNext(Optional.of(it)) }
-                    }
+                    primaryFilter?.initialSelection()
+                        ?.let { selectedFilter.onNext(Optional.of(it)) }
                     updateState {
                         copy(
                             // Technically we might not have finished loading the Property at this point,
@@ -135,6 +124,28 @@ open class PropertySearchViewModel(
                 }
             )
             .addTo(disposables)
+    }
+
+    /**
+     * The filter selection to open with: whatever a "search_page_link" item asked for, or the
+     * "All" value when the property defines one. Null when neither applies, and the page opens
+     * with no filter selected.
+     */
+    private fun SearchFilter.initialSelection(): State.SelectedFilters? {
+        val requested = values.firstOrNull { it.value == navArgs.primaryFilter }
+        if (requested != null) {
+            return State.SelectedFilters(
+                primaryFilterAttribute = this,
+                primaryFilterValue = requested.value,
+                secondaryFilterAttribute = requested.nextFilter,
+                // A secondary value only means anything under the primary one that asked for it.
+                secondaryFilterValue = navArgs.secondaryFilter?.takeIf { secondary ->
+                    requested.nextFilter?.values?.any { it.value == secondary } == true
+                },
+            )
+        }
+        val all = values.firstOrNull { it.value == FilterValueEntity.ALL } ?: return null
+        return State.SelectedFilters(this, all.value, all.nextFilter)
     }
 
     fun onQueryChanged(query: String) {

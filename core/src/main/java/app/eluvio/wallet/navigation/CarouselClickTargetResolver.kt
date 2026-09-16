@@ -3,6 +3,7 @@ package app.eluvio.wallet.navigation
 import androidx.navigation3.runtime.NavKey
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState.CarouselItem
 import app.eluvio.wallet.screens.property.PropertyDetailNavArgs
+import app.eluvio.wallet.screens.property.search.PropertySearchNavArgs
 import app.eluvio.wallet.screens.purchaseprompt.PurchasePromptNavArgs
 import app.eluvio.wallet.screens.qrdialogs.generic.FullscreenQRDialogNavArgs
 import app.eluvio.wallet.screens.redeemdialog.RedeemDialogNavArgs
@@ -41,6 +42,12 @@ fun CarouselItem.onClickTarget(): NavKey? {
             contractAddress = contractAddress,
             tokenId = tokenId,
             offerId = offerId
+        )
+
+        is CarouselItem.SearchPageLink -> PropertySearchNavArgs(
+            propertyId = permissionContext.propertyId,
+            primaryFilter = primaryFilter,
+            secondaryFilter = secondaryFilter,
         )
 
         // VisualOnly items don't react to clicks

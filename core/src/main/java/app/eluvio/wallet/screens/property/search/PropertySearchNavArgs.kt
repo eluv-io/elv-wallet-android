@@ -6,5 +6,10 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class PropertySearchNavArgs(
     val propertyId: String,
-    val primaryFilter: String? = null
+    /**
+     * Filter values to open with already selected, set by "search_page_link" section items.
+     * Null means no preselection - the property's default filter applies.
+     */
+    val primaryFilter: String? = null,
+    val secondaryFilter: String? = null,
 ) : NavKey

@@ -23,6 +23,11 @@ internal fun CarouselItem.toCard(): CardData = when (this) {
         displaySettings?.title.orEmpty()
     )
 
+    is CarouselItem.SearchPageLink -> CardData(
+        displaySettings?.thumbnail(),
+        displaySettings?.title.orEmpty()
+    )
+
     is CarouselItem.RedeemableOffer -> CardData(image = imageUrl, title = name)
     is CarouselItem.ItemPurchase -> CardData(
         displaySettings?.thumbnail(),

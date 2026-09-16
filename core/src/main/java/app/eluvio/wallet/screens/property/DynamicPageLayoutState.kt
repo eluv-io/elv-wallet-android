@@ -141,6 +141,17 @@ data class DynamicPageLayoutState(
             val displaySettings: DisplaySettings?,
         ) : CarouselItem
 
+        /** A link to the property's search page. */
+        @Immutable
+        data class SearchPageLink(
+            override val permissionContext: PermissionContext,
+            override val forceDisabled: Boolean,
+            val displaySettings: DisplaySettings?,
+            /** Filter values the search page should open with selected, when defined. */
+            val primaryFilter: String?,
+            val secondaryFilter: String?,
+        ) : CarouselItem
+
         @Immutable
         data class RedeemableOffer(
             override val permissionContext: PermissionContext,

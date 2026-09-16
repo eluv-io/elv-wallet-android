@@ -264,6 +264,16 @@ fun List<SectionItemEntity>.toCarouselItems(
                 )
             }
 
+            item.isSearchPageLink -> {
+                CarouselItem.SearchPageLink(
+                    permissionContext = permissionContext,
+                    displaySettings = item.displaySettings,
+                    forceDisabled = item.disabled,
+                    primaryFilter = item.searchPrimaryFilter,
+                    secondaryFilter = item.searchSecondaryFilter,
+                )
+            }
+
             item.media != null -> {
                 val aspectRatioOverride = sectionDisplaySettings?.forcedAspectRatio
                 val displayOverrides = item.displaySettings

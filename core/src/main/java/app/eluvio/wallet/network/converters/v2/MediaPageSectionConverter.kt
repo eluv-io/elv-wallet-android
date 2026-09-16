@@ -15,6 +15,7 @@ private const val TYPE_PROPERTY_LINK = "property_link"
 private const val TYPE_SUBPROPERTY_LINK = "subproperty_link"
 private const val TYPE_PAGE_LINK = "page_link"
 private const val TYPE_EXTERNAL_LINK = "external_link"
+private const val TYPE_SEARCH_PAGE_LINK = "search_page_link"
 
 private val supportedSectionItemTypes =
     setOf(
@@ -25,6 +26,7 @@ private val supportedSectionItemTypes =
         TYPE_SUBPROPERTY_LINK,
         TYPE_PAGE_LINK,
         TYPE_EXTERNAL_LINK,
+        TYPE_SEARCH_PAGE_LINK,
     )
 
 fun MediaPageSectionDto.toEntity(baseUrl: String): MediaPageSectionEntity {
@@ -81,6 +83,13 @@ private fun SectionItemDto.toEntity(baseUrl: String): SectionItemEntity? {
         bannerImageUrl = dto.bannerImage?.toUrl(baseUrl)
 
         isPurchaseItem = dto.type == "item_purchase"
+
+        isSearchPageLink = dto.type == TYPE_SEARCH_PAGE_LINK
+        if (isSearchPageLink) {
+            // Like the link fields, these are only meaningful for this item type.
+            searchPrimaryFilter = dto.primaryFilter?.ifEmpty { null }
+            searchSecondaryFilter = dto.secondaryFilter?.ifEmpty { null }
+        }
 
         displaySettings = dto.display?.toEntity(baseUrl)
 

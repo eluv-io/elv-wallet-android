@@ -33,6 +33,16 @@ class SectionItemEntity : RealmObject, EntityWithPermissions {
 
     var isPurchaseItem = false
 
+    /** When true, this item is a link to the property's search page. */
+    var isSearchPageLink = false
+
+    /**
+     * Filter values the search page should open with already selected.
+     * Only defined for search page links, and only when the item asks for a preselection.
+     */
+    var searchPrimaryFilter: String? = null
+    var searchSecondaryFilter: String? = null
+
     // This field is defined only if the SectionItem is inside a Banner section.
     var bannerImageUrl: FabricUrlEntity? = null
 
@@ -55,7 +65,7 @@ class SectionItemEntity : RealmObject, EntityWithPermissions {
         get() = super.isHidden || media?.isHidden == true
 
     override fun toString(): String {
-        return "SectionItemEntity(id='$id', disabled='$disabled', mediaType=$mediaType, media=$media, linkData=$linkData, isPurchaseItem=$isPurchaseItem, bannerImageUrl=$bannerImageUrl, actions=$actions, useMediaDisplaySettings=$useMediaDisplaySettings, displaySettings=$displaySettings, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions)"
+        return "SectionItemEntity(id='$id', disabled='$disabled', mediaType=$mediaType, media=$media, linkData=$linkData, isPurchaseItem=$isPurchaseItem, isSearchPageLink=$isSearchPageLink, searchPrimaryFilter=$searchPrimaryFilter, searchSecondaryFilter=$searchSecondaryFilter, bannerImageUrl=$bannerImageUrl, actions=$actions, useMediaDisplaySettings=$useMediaDisplaySettings, displaySettings=$displaySettings, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -69,6 +79,9 @@ class SectionItemEntity : RealmObject, EntityWithPermissions {
         if (media != other.media) return false
         if (linkData != other.linkData) return false
         if (isPurchaseItem != other.isPurchaseItem) return false
+        if (isSearchPageLink != other.isSearchPageLink) return false
+        if (searchPrimaryFilter != other.searchPrimaryFilter) return false
+        if (searchSecondaryFilter != other.searchSecondaryFilter) return false
         if (bannerImageUrl != other.bannerImageUrl) return false
         if (actions != other.actions) return false
         if (useMediaDisplaySettings != other.useMediaDisplaySettings) return false
@@ -87,6 +100,9 @@ class SectionItemEntity : RealmObject, EntityWithPermissions {
         result = 31 * result + (media?.hashCode() ?: 0)
         result = 31 * result + (linkData?.hashCode() ?: 0)
         result = 31 * result + isPurchaseItem.hashCode()
+        result = 31 * result + isSearchPageLink.hashCode()
+        result = 31 * result + (searchPrimaryFilter?.hashCode() ?: 0)
+        result = 31 * result + (searchSecondaryFilter?.hashCode() ?: 0)
         result = 31 * result + (bannerImageUrl?.hashCode() ?: 0)
         result = 31 * result + actions.hashCode()
         result = 31 * result + useMediaDisplaySettings.hashCode()

@@ -75,6 +75,7 @@ val CarouselItem.aspectRatio: Float?
         is CarouselItem.ExternalLink -> displaySettings
         is CarouselItem.ItemPurchase -> displaySettings
         is CarouselItem.PageLink -> displaySettings
+        is CarouselItem.SearchPageLink -> displaySettings
         is CarouselItem.RedeemableOffer,
         is CarouselItem.VisualOnly,
         is CarouselItem.BannerWrapper -> null
@@ -163,6 +164,13 @@ fun CarouselItemCard(
         )
 
         is CarouselItem.ItemPurchase -> DisplaySettingsCard(
+            displaySettings = carouselItem.displaySettings,
+            cardHeight = cardHeight,
+            titleAlign = titleAlign,
+            onClick = onClick,
+        )
+
+        is CarouselItem.SearchPageLink -> DisplaySettingsCard(
             displaySettings = carouselItem.displaySettings,
             cardHeight = cardHeight,
             titleAlign = titleAlign,

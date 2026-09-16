@@ -10,6 +10,7 @@ import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -186,10 +187,9 @@ private fun DiscoverPage(
     Box(Modifier.fillMaxSize()) {
         HeroScrims()
         Column(
-            verticalArrangement = Arrangement.Bottom,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 70.dp)
+                .padding(start = 70.dp, top = LogoTopPadding)
         ) {
             PropertyLogo(displayedProperty, Modifier.padding(start = 5.dp, bottom = 22.dp))
             PropertyText(displayedProperty, Modifier.padding(start = 5.dp))
@@ -202,6 +202,9 @@ private fun DiscoverPage(
                     onPropertyFocused(it)
                 },
                 onPropertyClicked = onPropertyClicked,
+                // Everything above is fixed height, so the rows take the rest of the screen
+                // and always start at the same y.
+                modifier = Modifier.weight(1f),
             )
         }
     }
@@ -280,42 +283,39 @@ private fun PropertyLogo(property: State.Property?, modifier: Modifier = Modifie
 }
 
 /**
- * The property's Discover-page title and description, under its logo.
- * Most properties don't define either, in which case this takes up no space at all.
+ * The property's Discover-page title and description, under its logo. Always reserves its full
+ * height, whether or not the property defines either, so the rows below don't move as focus
+ * travels between properties - a blank line takes up the same room as a real one.
  */
 @Composable
 private fun PropertyText(property: State.Property?, modifier: Modifier = Modifier) {
     Crossfade(targetState = property, modifier = modifier, label = "Property text") { prop ->
-        val title = prop?.mainPageTitle
-        val description = prop?.mainPageDescription
-        if (title == null && description == null) return@Crossfade
         Column(
             Modifier
                 .fillMaxWidth(0.42f)
                 .padding(bottom = 22.dp)
         ) {
-            if (title != null) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.label_40.copy(fontSize = 16.sp),
-                    color = Color(0xFFF4F4F5),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            if (description != null) {
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.body_32.copy(
-                        fontSize = 12.sp,
-                        lineHeight = 16.sp
-                    ),
-                    color = Color(0xFFB4B6BD),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
+            Text(
+                // An empty string gets no line box at all, so a blank keeps the height.
+                text = prop?.mainPageTitle ?: " ",
+                style = MaterialTheme.typography.label_40.copy(fontSize = 16.sp),
+                color = Color(0xFFF4F4F5),
+                minLines = 1,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = prop?.mainPageDescription ?: " ",
+                style = MaterialTheme.typography.body_32.copy(
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp
+                ),
+                color = Color(0xFFB4B6BD),
+                minLines = 2,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
     }
 }
@@ -339,28 +339,28 @@ private fun DiscoverRows(
         focusedRow?.let { focusState.rowsListState.animateScrollToItem(it) }
     }
     CompositionLocalProvider(LocalBringIntoViewSpec provides NoScrollBringIntoViewSpec) {
-        LazyColumn(
-            state = focusState.rowsListState,
-            // No top padding, so the first row lands exactly where every other row does. The
-            // bottom padding is what lets the last row scroll all the way up to the top.
-            contentPadding = PaddingValues(bottom = RowsViewportHeight),
-            modifier = modifier
-                .height(RowsViewportHeight)
-                .verticalFadingEdges()
-        ) {
-            itemsIndexed(
-                rows,
-                contentType = { _, _ -> "discover_row" },
-                key = { index, row -> "$index:${row.title}" }
-            ) { rowIndex, row ->
-                DiscoverRow(
-                    rowIndex,
-                    row,
-                    lastClickedCard,
-                    focusState,
-                    onPropertyFocused,
-                    onPropertyClicked
-                )
+        BoxWithConstraints(modifier.verticalFadingEdges()) {
+            LazyColumn(
+                state = focusState.rowsListState,
+                // No top padding, so the first row lands exactly where every other row does. A
+                // viewport's worth of bottom padding is what lets the last row scroll all the
+                // way up to the top.
+                contentPadding = PaddingValues(bottom = maxHeight),
+            ) {
+                itemsIndexed(
+                    rows,
+                    contentType = { _, _ -> "discover_row" },
+                    key = { index, row -> "$index:${row.title}" }
+                ) { rowIndex, row ->
+                    DiscoverRow(
+                        rowIndex,
+                        row,
+                        lastClickedCard,
+                        focusState,
+                        onPropertyFocused,
+                        onPropertyClicked
+                    )
+                }
             }
         }
     }
@@ -548,7 +548,8 @@ private val NoScrollBringIntoViewSpec = object : BringIntoViewSpec {
     override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float) = 0f
 }
 
-private val RowsViewportHeight = 342.dp
+/** Room above the logo, matching tvOS DiscoverView's 160pt. */
+private val LogoTopPadding = 80.dp
 private val HeroBaseColor = Color(0xFF08090C)
 private val CardBackground = Color(0xFF15161A)
 private val CardCornerRadius = 6.dp

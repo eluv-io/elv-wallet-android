@@ -6,6 +6,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -329,18 +330,22 @@ private fun DiscoverRows(
     onPropertyClicked: (State.Property) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Pin the focused row near the top of the viewport (rows "rise" as you move down).
-    // The fraction leaves enough room above the focused card for the row title
-    // (~18dp text + 4dp margin + 12dp of LazyRow padding) plus the top fading edge.
-    val verticalSpec = remember { FractionBringIntoViewSpec(parentFraction = 0.13f) }
-    CompositionLocalProvider(LocalBringIntoViewSpec provides verticalSpec) {
+    // Pin the focused row to the top of the viewport, so it sits at the same y whichever row it
+    // is, and no row above it is ever on screen. The scroll is driven by which row holds focus
+    // rather than by the focused card's bring-into-view request: where a card sits inside its
+    // row varies (not every row has a title), which would shift the row itself around.
+    val focusedRow = focusState.focusedRowIndex
+    LaunchedEffect(focusedRow) {
+        focusedRow?.let { focusState.rowsListState.animateScrollToItem(it) }
+    }
+    CompositionLocalProvider(LocalBringIntoViewSpec provides NoScrollBringIntoViewSpec) {
         LazyColumn(
             state = focusState.rowsListState,
-            // Top padding keeps the first row's title clear of the top fading edge, and lines
-            // it up with where BringIntoView pins the other rows' titles.
-            contentPadding = PaddingValues(top = 10.dp, bottom = 140.dp),
+            // No top padding, so the first row lands exactly where every other row does. The
+            // bottom padding is what lets the last row scroll all the way up to the top.
+            contentPadding = PaddingValues(bottom = RowsViewportHeight),
             modifier = modifier
-                .height(342.dp)
+                .height(RowsViewportHeight)
                 .verticalFadingEdges()
         ) {
             itemsIndexed(
@@ -522,7 +527,8 @@ private fun PropertyCard(
 }
 
 /**
- * Fades out content near the top and bottom edges of the rows viewport.
+ * Fades out content near the bottom edge of the rows viewport. The top edge needs no fade -
+ * the focused row is pinned to it, and nothing above it is ever on screen.
  */
 private fun Modifier.verticalFadingEdges(): Modifier = this
     .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
@@ -530,8 +536,6 @@ private fun Modifier.verticalFadingEdges(): Modifier = this
         drawContent()
         drawRect(
             brush = Brush.verticalGradient(
-                0f to Color.Transparent,
-                0.03f to Color.Black,
                 0.55f to Color.Black,
                 1f to Color.Transparent,
             ),
@@ -539,6 +543,12 @@ private fun Modifier.verticalFadingEdges(): Modifier = this
         )
     }
 
+/** Ignores bring-into-view requests. [DiscoverRows] scrolls vertically on its own terms. */
+private val NoScrollBringIntoViewSpec = object : BringIntoViewSpec {
+    override fun calculateScrollDistance(offset: Float, size: Float, containerSize: Float) = 0f
+}
+
+private val RowsViewportHeight = 342.dp
 private val HeroBaseColor = Color(0xFF08090C)
 private val CardBackground = Color(0xFF15161A)
 private val CardCornerRadius = 6.dp

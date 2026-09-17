@@ -98,6 +98,11 @@ fun ImageCard(
      * on focus changes while the dim is still animating.
      */
     alwaysDim: Boolean = false,
+    /**
+     * Whether an unfocused card is dimmed. Cards that light themselves up some other way turn
+     * this off, rather than stacking a second dim on top of their own.
+     */
+    dimWhileUnfocused: Boolean = true,
     shape: Shape = MaterialTheme.shapes.medium,
     /** Lets the card theme decide whether this card should be circularized. */
     aspectRatio: Float? = null,
@@ -132,7 +137,7 @@ fun ImageCard(
         // inactive brightness.
         val targetDim = when {
             alwaysDim -> UnauthorizedDim
-            !isFocused -> UnfocusedDim
+            !isFocused && dimWhileUnfocused -> UnfocusedDim
             else -> Color.Transparent
         }
         val dim by animateColorAsState(

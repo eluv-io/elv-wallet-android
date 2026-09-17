@@ -248,6 +248,11 @@ private fun FilterImageCard(
                 // treatment (sheen, scrim, sweeping ring) applies to it.
                 respondToFocus = false,
                 showFocusRing = false,
+                // A filter says "inactive" with the alpha above, so the card's own unfocused dim
+                // has nothing left to do - it would only darken a selected filter that doesn't
+                // hold focus, and it traces the card's box rather than the circular artwork
+                // filter images tend to be, which reads as a halo around the image.
+                dimWhileUnfocused = false,
                 onImageSuccess = {
                     it.painter.intrinsicSize.toAspectRatio()?.let { ratio -> aspectRatio = ratio }
                 },

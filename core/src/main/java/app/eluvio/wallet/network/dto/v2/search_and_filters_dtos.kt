@@ -65,6 +65,12 @@ data class SearchFilterAttributeDto(
 data class PrimaryFilterOptionsDto(
     @field:Json(name = "primary_filter_value")
     val primaryFilterValue: String,
+    @field:Json(name = "primary_filter_image")
+    val image: AssetLinkDto?,
+    @field:Json(name = "primary_filter_image_tv")
+    val tvImage: AssetLinkDto?,
+    @field:Json(name = "primary_filter_image_hash")
+    val imageHash: String?,
 
     @field:Json(name = "secondary_filter_attribute")
     val secondaryFilterAttribute: String?,
@@ -73,12 +79,17 @@ data class PrimaryFilterOptionsDto(
 
     @field:Json(name = "secondary_filter_style")
     val secondaryFilterStyle: String?,
+    /** Points to a theme in [StylingDto.card_themes], for an "image" styled secondary filter. */
+    @field:Json(name = "secondary_filter_card_theme_id")
+    val secondaryFilterCardThemeId: String?,
 )
 
 @JsonClass(generateAdapter = true)
 data class SecondaryFilterOptionsDto(
-    @field:Json(name = "secondary_filter_image_tv")
+    @field:Json(name = "secondary_filter_image")
     val image: AssetLinkDto?,
+    @field:Json(name = "secondary_filter_image_tv")
+    val tvImage: AssetLinkDto?,
     @field:Json(name = "secondary_filter_value")
     val value: String,
 )

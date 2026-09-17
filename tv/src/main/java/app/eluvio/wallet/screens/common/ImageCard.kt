@@ -48,6 +48,7 @@ import app.eluvio.wallet.util.compose.imageSaturation
 import app.eluvio.wallet.util.compose.saturationFilter
 import app.eluvio.wallet.util.compose.requestInitialFocus
 import app.eluvio.wallet.util.compose.toBrush
+import coil3.compose.AsyncImagePainter
 
 private val UnfocusedDim = Color.Black(alpha = 0.2f)
 
@@ -100,6 +101,13 @@ fun ImageCard(
     shape: Shape = MaterialTheme.shapes.medium,
     /** Lets the card theme decide whether this card should be circularized. */
     aspectRatio: Float? = null,
+    /**
+     * Whether focus draws the [AnimatedFocusRing]. A card theme's own border always takes
+     * precedence over it either way.
+     */
+    showFocusRing: Boolean = true,
+    /** Called with the loaded image, for cards that size themselves by what they got. */
+    onImageSuccess: ((AsyncImagePainter.State.Success) -> Unit)? = null,
     onClick: () -> Unit,
     scale: ClickableSurfaceScale = LocalSurfaceScale.current,
 ) {
@@ -166,6 +174,7 @@ fun ImageCard(
             contentScale = ContentScale.Crop,
             contentDescription = contentDescription,
             colorFilter = saturationFilter(saturation),
+            onSuccess = onImageSuccess,
             modifier = Modifier
                 .matchParentSize()
                 .align(Alignment.Center)
@@ -202,7 +211,7 @@ fun ImageCard(
         if (alwaysDim) {
             Spacer(Modifier.matchParentSize().border(2.dp, UnauthorizedStroke, cardShape))
         }
-        if (isFocused && !cardTheme.hasBorder) {
+        if (isFocused && showFocusRing && !cardTheme.hasBorder) {
             AnimatedFocusRing(cardShape)
         }
     }

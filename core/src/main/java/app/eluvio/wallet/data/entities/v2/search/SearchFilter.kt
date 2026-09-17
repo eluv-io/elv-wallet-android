@@ -2,6 +2,7 @@ package app.eluvio.wallet.data.entities.v2.search
 
 import androidx.compose.runtime.Immutable
 import app.eluvio.wallet.data.FabricUrl
+import app.eluvio.wallet.data.entities.v2.display.CardThemeEntity
 
 /**
  * A fully built search filter that includes all [FilterOptions] data and references sub-filters objects,
@@ -12,7 +13,9 @@ data class SearchFilter(
     val id: String,
     val title: String,
     val values: List<Value>,
-    val style: Style
+    val style: Style,
+    /** The theme this filter's image cards render with, when the Property defines one. */
+    val cardTheme: CardThemeEntity? = null,
 ) {
     init {
         values.forEach { it.parent = this }

@@ -62,6 +62,8 @@ data class MediaPropertyDto(
     val card_theme_id: String?,
     val styling: StylingDto?,
 
+    val search: MediaPropertySearchDto?,
+
     // For single-property custom builds
     val start_screen_background: AssetLinkDto?,
     val start_screen_logo: AssetLinkDto?,
@@ -108,6 +110,20 @@ data class LoginStylingDto(
     @field:Json(name = "logo_tv")
     val logoTv: AssetLinkDto?,
     val logo: AssetLinkDto?
+)
+
+/**
+ * Search settings the Property defines. Note that the filters themselves come from the
+ * separate "filters" endpoint - only these two presentation fields live here.
+ */
+@JsonClass(generateAdapter = true)
+data class MediaPropertySearchDto(
+    /** "box"/"text"/"image" (assume "box" if null). */
+    @field:Json(name = "primary_filter_style")
+    val primaryFilterStyle: String?,
+    /** Points to a theme in [StylingDto.card_themes], applied to the primary filter's cards. */
+    @field:Json(name = "primary_filter_card_theme_id")
+    val primaryFilterCardThemeId: String?,
 )
 
 @JsonClass(generateAdapter = true)

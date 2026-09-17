@@ -33,9 +33,14 @@ private fun PrimaryFilterOptionsDto.toEntity(baseUrl: String): PrimaryFilterOpti
     val dto = this
     return PrimaryFilterOptionsEntity().apply {
         primaryFilterValue = dto.primaryFilterValue
+        // Prefer the TV-specific image, like the Property's header logo does. The ThumbHash only
+        // describes the default image, so it doesn't carry over to the TV one.
+        primaryFilterImage = dto.tvImage?.toUrl(baseUrl)
+            ?: dto.image?.toUrl(baseUrl, dto.imageHash)
         secondaryFilterAttribute = dto.secondaryFilterAttribute
         secondaryFilterOptions = dto.secondaryFilterOptions?.map { it.toEntity(baseUrl) }.toRealmListOrEmpty()
         secondaryFilterStyle = dto.secondaryFilterStyle
+        secondaryFilterCardThemeId = dto.secondaryFilterCardThemeId
     }
 }
 
@@ -43,7 +48,7 @@ private fun SecondaryFilterOptionsDto.toEntity(baseUrl: String): SecondaryFilter
     val dto = this
     return SecondaryFilterOptionsEntity().apply {
         secondaryFilterValue = dto.value
-        secondaryFilterImage = dto.image?.toUrl(baseUrl)
+        secondaryFilterImage = (dto.tvImage ?: dto.image)?.toUrl(baseUrl)
     }
 }
 

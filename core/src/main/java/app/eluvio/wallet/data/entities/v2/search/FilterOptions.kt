@@ -18,6 +18,9 @@ interface FilterOptions {
 
     // Either "image" or "text" (assume "text" if null)
     val nextFilterStyle: String?
+
+    /** The card theme the next filter's cards render with, when it defines one. */
+    val nextFilterCardThemeId: String?
 }
 
 class PrimaryFilterOptionsEntity : EmbeddedRealmObject, FilterOptions {
@@ -33,11 +36,14 @@ class PrimaryFilterOptionsEntity : EmbeddedRealmObject, FilterOptions {
     var secondaryFilterStyle: String? = null
     override val nextFilterStyle: String? get() = secondaryFilterStyle
 
-    // No images for primary filters
-    override val image: FabricUrl? get() = null
+    var secondaryFilterCardThemeId: String? = null
+    override val nextFilterCardThemeId: String? get() = secondaryFilterCardThemeId
+
+    var primaryFilterImage: FabricUrlEntity? = null
+    override val image: FabricUrl? get() = primaryFilterImage
 
     override fun toString(): String {
-        return "PrimaryFilterOptionsEntity(primaryFilterValue='$primaryFilterValue', secondaryFilterAttribute=$secondaryFilterAttribute, secondaryFilterOptions=$secondaryFilterOptions, secondaryFilterStyle=$secondaryFilterStyle)"
+        return "PrimaryFilterOptionsEntity(primaryFilterValue='$primaryFilterValue', primaryFilterImage=$primaryFilterImage, secondaryFilterAttribute=$secondaryFilterAttribute, secondaryFilterOptions=$secondaryFilterOptions, secondaryFilterStyle=$secondaryFilterStyle, secondaryFilterCardThemeId=$secondaryFilterCardThemeId)"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -47,18 +53,22 @@ class PrimaryFilterOptionsEntity : EmbeddedRealmObject, FilterOptions {
         other as PrimaryFilterOptionsEntity
 
         if (primaryFilterValue != other.primaryFilterValue) return false
+        if (primaryFilterImage != other.primaryFilterImage) return false
         if (secondaryFilterAttribute != other.secondaryFilterAttribute) return false
         if (secondaryFilterOptions != other.secondaryFilterOptions) return false
         if (secondaryFilterStyle != other.secondaryFilterStyle) return false
+        if (secondaryFilterCardThemeId != other.secondaryFilterCardThemeId) return false
 
         return true
     }
 
     override fun hashCode(): Int {
         var result = primaryFilterValue.hashCode()
+        result = 31 * result + (primaryFilterImage?.hashCode() ?: 0)
         result = 31 * result + (secondaryFilterAttribute?.hashCode() ?: 0)
         result = 31 * result + secondaryFilterOptions.hashCode()
         result = 31 * result + (secondaryFilterStyle?.hashCode() ?: 0)
+        result = 31 * result + (secondaryFilterCardThemeId?.hashCode() ?: 0)
         return result
     }
 }
@@ -74,6 +84,7 @@ class SecondaryFilterOptionsEntity : EmbeddedRealmObject, FilterOptions {
     override val nextFilterAttribute: String? get() = null
     override val nextFilterOptions: List<FilterOptions> get() = emptyList()
     override val nextFilterStyle: String? get() = null
+    override val nextFilterCardThemeId: String? get() = null
 
     override fun toString(): String {
         return "SecondaryFilterOptionsEntity(secondaryFilterValue='$secondaryFilterValue', secondaryFilterImage=$secondaryFilterImage)"

@@ -1,5 +1,6 @@
 package app.eluvio.wallet.data.entities.v2
 
+import app.eluvio.wallet.data.entities.v2.display.CardThemeEntity
 import app.eluvio.wallet.data.entities.v2.search.FilterAttributeEntity
 import app.eluvio.wallet.data.entities.v2.search.FilterOptions
 import app.eluvio.wallet.data.entities.v2.search.FilterValueEntity
@@ -34,8 +35,36 @@ class PropertySearchFiltersEntity : RealmObject {
     /** Do  not use directly. Use [buildPrimaryFilter] instead. */
     var filterOptions = realmListOf<PrimaryFilterOptionsEntity>()
 
-    fun buildPrimaryFilter(): SearchFilter? {
-        return attributes[primaryFilterAttribute]?.build(filterOptions, secondaryFilterAttribute, attributes)
+    /**
+     * [primaryFilterStyle] and [primaryCardThemeId] are the Property's "primary_filter_style" and
+     * "primary_filter_card_theme_id" - the filters endpoint doesn't carry either. Secondary
+     * filters define their own style and theme per filter option, so those come from here.
+     * See [MediaPropertyEntity.searchPrimaryFilterStyle].
+     */
+    fun buildPrimaryFilter(
+        primaryFilterStyle: String?,
+        primaryCardThemeId: String?,
+        cardThemes: Map<String, CardThemeEntity?>,
+    ): SearchFilter? {
+        return attributes[primaryFilterAttribute]?.build(
+            filterOptions,
+            secondaryFilterAttribute,
+            attributes,
+            cardThemes,
+            primaryStyle(primaryFilterStyle),
+            cardThemes[primaryCardThemeId]
+        )
+    }
+
+    /**
+     * An explicit "primary_filter_style" always wins. Properties configured before that field
+     * existed only have images to go by, so - like tvOS - we show them when there's no style
+     * saying otherwise.
+     */
+    private fun primaryStyle(primaryFilterStyle: String?): SearchFilter.Style = when {
+        primaryFilterStyle != null -> SearchFilter.Style.from(primaryFilterStyle)
+        filterOptions.any { it.image != null } -> SearchFilter.Style.IMAGE
+        else -> SearchFilter.Style.TEXT
     }
 
     private fun FilterAttributeEntity.build(
@@ -43,7 +72,9 @@ class PropertySearchFiltersEntity : RealmObject {
         // Only the top level has a "default". Everything else has to be explicitly set via FilterOptions.
         defaultNextFilterAttribute: String?,
         attributeMap: Map<String, FilterAttributeEntity?>,
-        style: SearchFilter.Style = SearchFilter.Style.TEXT
+        cardThemes: Map<String, CardThemeEntity?>,
+        style: SearchFilter.Style = SearchFilter.Style.TEXT,
+        cardTheme: CardThemeEntity? = null,
     ): SearchFilter {
 
         val src = this
@@ -52,7 +83,8 @@ class PropertySearchFiltersEntity : RealmObject {
             val nextFilter = attributeMap[defaultNextFilterAttribute]?.build(
                 filterOptions = emptyList(),
                 defaultNextFilterAttribute = null,
-                attributeMap = attributeMap
+                attributeMap = attributeMap,
+                cardThemes = cardThemes
             )
             src.values.map {
                 SearchFilter.Value(it.value, nextFilter, it.imageUrl)
@@ -69,7 +101,9 @@ class PropertySearchFiltersEntity : RealmObject {
                             filterOptions = option.nextFilterOptions,
                             defaultNextFilterAttribute = null,
                             attributeMap = attributeMap,
-                            style = SearchFilter.Style.from(option.nextFilterStyle)
+                            cardThemes = cardThemes,
+                            style = SearchFilter.Style.from(option.nextFilterStyle),
+                            cardTheme = cardThemes[option.nextFilterCardThemeId]
                         ),
                     imageUrl = option.image
                 )
@@ -80,7 +114,8 @@ class PropertySearchFiltersEntity : RealmObject {
             id = src.id,
             title = src.title,
             values = values,
-            style = style
+            style = style,
+            cardTheme = cardTheme
         )
     }
 

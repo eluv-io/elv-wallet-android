@@ -96,6 +96,12 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
     // technically still in the same property, but we show it anyway.
     var propertyPermissions: PermissionSettingsEntity? = null
 
+    /** "box"/"text"/"image" (assume "box" if null). Styles the search page's primary filter. */
+    var searchPrimaryFilterStyle: String? = null
+
+    /** The theme [cardThemes] entry the search page's primary filter cards render with. */
+    var searchPrimaryFilterCardThemeId: String? = null
+
     // Permissions settings that apply for search results.
     var searchPermissions: PermissionSettingsEntity? = null
 
@@ -130,6 +136,8 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         if (resolvedPermissions != other.resolvedPermissions) return false
         if (rawPermissions != other.rawPermissions) return false
         if (propertyPermissions != other.propertyPermissions) return false
+        if (searchPrimaryFilterStyle != other.searchPrimaryFilterStyle) return false
+        if (searchPrimaryFilterCardThemeId != other.searchPrimaryFilterCardThemeId) return false
         if (searchPermissions != other.searchPermissions) return false
 
         return true
@@ -161,12 +169,14 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         result = 31 * result + (resolvedPermissions?.hashCode() ?: 0)
         result = 31 * result + (rawPermissions?.hashCode() ?: 0)
         result = 31 * result + (propertyPermissions?.hashCode() ?: 0)
+        result = 31 * result + (searchPrimaryFilterStyle?.hashCode() ?: 0)
+        result = 31 * result + (searchPrimaryFilterCardThemeId?.hashCode() ?: 0)
         result = 31 * result + (searchPermissions?.hashCode() ?: 0)
         return result
     }
 
     override fun toString(): String {
-        return "MediaPropertyEntity(id='$id', name='$name', headerLogoUrl=$headerLogoUrl, image=$image, featuredImage=$featuredImage, featuredCardLogo=$featuredCardLogo, bgImageUrl=$bgImageUrl, bgImageWithFallback=$bgImageWithFallback, mainPageTitle=$mainPageTitle, mainPageDescription=$mainPageDescription, mainPageInaccessible=$mainPageInaccessible, mainPageInaccessibleMessage=$mainPageInaccessibleMessage, mainPage=$mainPage, subpropertySelection=$subpropertySelection, loginInfo=$loginInfo, tenantId=$tenantId, startScreenBackground=$startScreenBackground, startScreenLogo=$startScreenLogo, countdownBackground=$countdownBackground, cardThemes=$cardThemes, cardThemeId=$cardThemeId, loginProvider='$loginProvider', permissionStates=$permissionStates, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, permissionChildren=$permissionChildren, propertyPermissions=$propertyPermissions, searchPermissions=$searchPermissions)"
+        return "MediaPropertyEntity(id='$id', name='$name', headerLogoUrl=$headerLogoUrl, image=$image, featuredImage=$featuredImage, featuredCardLogo=$featuredCardLogo, bgImageUrl=$bgImageUrl, bgImageWithFallback=$bgImageWithFallback, mainPageTitle=$mainPageTitle, mainPageDescription=$mainPageDescription, mainPageInaccessible=$mainPageInaccessible, mainPageInaccessibleMessage=$mainPageInaccessibleMessage, mainPage=$mainPage, subpropertySelection=$subpropertySelection, loginInfo=$loginInfo, tenantId=$tenantId, startScreenBackground=$startScreenBackground, startScreenLogo=$startScreenLogo, countdownBackground=$countdownBackground, cardThemes=$cardThemes, cardThemeId=$cardThemeId, loginProvider='$loginProvider', permissionStates=$permissionStates, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, permissionChildren=$permissionChildren, propertyPermissions=$propertyPermissions, searchPermissions=$searchPermissions, searchPrimaryFilterStyle=$searchPrimaryFilterStyle, searchPrimaryFilterCardThemeId=$searchPrimaryFilterCardThemeId)"
     }
 
     class SubpropertySelectionEntity : EmbeddedRealmObject {

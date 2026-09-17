@@ -62,6 +62,8 @@ fun MediaPropertyDto.toEntity(baseUrl: String): MediaPropertyEntity? {
         rawPermissions = dto.permissions?.toContentPermissionsEntity()
         propertyPermissions = dto.permissions?.toPropertyPermissionsEntity()
         searchPermissions = dto.permissions?.toSearchPermissionsEntity()
+        searchPrimaryFilterStyle = dto.search?.primaryFilterStyle?.ifEmpty { null }
+        searchPrimaryFilterCardThemeId = dto.search?.primaryFilterCardThemeId?.ifEmpty { null }
     }
 }
 

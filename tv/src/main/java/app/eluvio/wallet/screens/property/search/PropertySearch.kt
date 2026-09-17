@@ -1,25 +1,23 @@
 package app.eluvio.wallet.screens.property.search
 
 import androidx.activity.compose.BackHandler
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,27 +26,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.LocalInspectionMode
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.MaterialTheme
-import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
-import app.eluvio.wallet.R
+import app.eluvio.wallet.data.AspectRatio
 import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.entities.MediaEntity
 import app.eluvio.wallet.data.entities.RedeemableOfferEntity
 import app.eluvio.wallet.data.entities.v2.DisplayFormat
+import app.eluvio.wallet.data.entities.v2.display.CardThemeEntity
 import app.eluvio.wallet.data.entities.v2.display.SimpleDisplaySettings
 import app.eluvio.wallet.data.entities.v2.search.SearchFilter
 import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.screens.common.EluvioLoadingSpinner
+import app.eluvio.wallet.screens.common.ImageCard
 import app.eluvio.wallet.screens.common.Overscan
 import app.eluvio.wallet.screens.common.SearchBox
 import app.eluvio.wallet.screens.common.SearchFilterChip
@@ -57,8 +55,8 @@ import app.eluvio.wallet.screens.property.DynamicPageLayoutState
 import app.eluvio.wallet.screens.property.sections
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.carousel_36
+import app.eluvio.wallet.util.compose.LocalCardTheme
 import app.eluvio.wallet.util.subscribeToState
-import coil3.compose.AsyncImage
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
@@ -186,27 +184,14 @@ private fun FiltersRow(
         }
         val filterPadding = 16.dp
         filter.values.forEach { filterValue ->
-            val interactionSource = remember { MutableInteractionSource() }
             val selected = selectedFilterValue == filterValue.value
-            val focused by interactionSource.collectIsFocusedAsState()
             if (filter.style == SearchFilter.Style.IMAGE && filterValue.imageUrl != null) {
-                Surface(
-                    onClick = { onClick(filterValue) },
-                    interactionSource = interactionSource,
-                    colors = ClickableSurfaceDefaults.colors(
-                        containerColor = Color.Transparent,
-                        focusedContainerColor = Color.Transparent,
-                    ),
-                ) {
-                    AsyncImage(
-                        model = filterValue.imageUrl,
-                        contentDescription = filterValue.value,
-                        placeholder = previewPlaceholder(),
-                        modifier = Modifier
-                            .alpha(if (selected || focused) 1f else 0.3f)
-                            .size(56.dp)
-                    )
-                }
+                FilterImageCard(
+                    filterValue = filterValue,
+                    selected = selected,
+                    cardTheme = filter.cardTheme,
+                    onClick = onClick
+                )
             } else {
                 SearchFilterChip(
                     title = filterValue.value,
@@ -220,6 +205,64 @@ private fun FiltersRow(
         Spacer(Modifier.width(Overscan.horizontalPadding - filterPadding))
     }
 }
+
+/** The height every filter image card is laid out at. Width follows the image's own shape. */
+private val FilterImageHeight = 56.dp
+
+/** How far an unselected, unfocused filter is dimmed. */
+private const val UnselectedFilterAlpha = 0.3f
+
+/**
+ * A filter value rendered as an image card, themed by the Property's card theme like any section
+ * item. Unselected cards sit dimmed until focused, matching the web's inactive filters.
+ */
+@Composable
+private fun FilterImageCard(
+    filterValue: SearchFilter.Value,
+    selected: Boolean,
+    cardTheme: CardThemeEntity?,
+    onClick: (SearchFilter.Value) -> Unit,
+) {
+    var focused by remember { mutableStateOf(false) }
+    // Filters don't declare an aspect ratio, so each card takes the shape of its own image.
+    // Until it loads there's nothing to measure, and the card has to start at the same ratio its
+    // box falls back to: a null ratio would lay the card out square but stop the theme
+    // circularizing it, so every card would start as a rounded rect and pop into a circle.
+    var aspectRatio by remember(filterValue.imageUrl) { mutableStateOf(AspectRatio.SQUARE) }
+    Box(
+        modifier = Modifier
+            .onFocusChanged { focused = it.hasFocus }
+            // Dimming introduces a graphics layer, which clips drawing to its bounds. A theme
+            // draws its border straddling the card's bounds, so half the stroke lands outside
+            // them and would be sliced off wherever the shape meets its box - the top and bottom
+            // of a circle, say. Reserving half the stroke around the card keeps it whole.
+            .alpha(if (selected || focused) 1f else UnselectedFilterAlpha)
+            .padding(((cardTheme?.borderWidth ?: 0) / 2f).dp)
+    ) {
+        CompositionLocalProvider(LocalCardTheme provides cardTheme) {
+            ImageCard(
+                imageUrl = filterValue.imageUrl,
+                contentDescription = filterValue.value,
+                aspectRatio = aspectRatio,
+                // Like tvOS, a focused filter is just lit up and scaled - none of the card focus
+                // treatment (sheen, scrim, sweeping ring) applies to it.
+                respondToFocus = false,
+                showFocusRing = false,
+                onImageSuccess = {
+                    it.painter.intrinsicSize.toAspectRatio()?.let { ratio -> aspectRatio = ratio }
+                },
+                onClick = { onClick(filterValue) },
+                modifier = Modifier
+                    .height(FilterImageHeight)
+                    .aspectRatio(aspectRatio)
+            )
+        }
+    }
+}
+
+/** The ratio of a loaded image, or null when it doesn't report a usable size. */
+private fun Size.toAspectRatio(): Float? =
+    takeIf { it.isSpecified && it.height > 0f }?.let { it.width / it.height }
 
 @Composable
 private fun Header(
@@ -237,15 +280,6 @@ private fun Header(
         )
         Spacer(Modifier.height(2.dp))
         HorizontalDivider()
-    }
-}
-
-@Composable
-private fun previewPlaceholder(@DrawableRes id: Int = R.drawable.elv_logo_bw): Painter? {
-    return if (LocalInspectionMode.current) {
-        painterResource(id = id)
-    } else {
-        null
     }
 }
 

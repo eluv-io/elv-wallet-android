@@ -26,6 +26,7 @@ import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
+import io.reactivex.rxjava3.kotlin.zipWith
 import io.reactivex.rxjava3.processors.BehaviorProcessor
 import io.reactivex.rxjava3.processors.PublishProcessor
 import kotlin.time.Duration.Companion.milliseconds
@@ -101,18 +102,20 @@ open class PropertySearchViewModel(
                 // We don't actually want to observe changes, because in the rare case that filters
                 // change WHILE we're already showing them, the user can get into a weird state.
             )
+            // How the primary filter is styled, and the theme its cards use, are defined by the
+            // Property rather than the filters endpoint, so we need both before we can build it.
+            .zipWith(property.firstOrError()) { filters, property -> filters to property }
             .subscribeBy(
-                onSuccess = { filters ->
-                    val primaryFilter = filters.buildPrimaryFilter()
+                onSuccess = { (filters, property) ->
+                    val primaryFilter = filters.buildPrimaryFilter(
+                        property.searchPrimaryFilterStyle,
+                        property.searchPrimaryFilterCardThemeId,
+                        property.cardThemes
+                    )
                     primaryFilter?.initialSelection()
                         ?.let { selectedFilter.onNext(Optional.of(it)) }
                     updateState {
-                        copy(
-                            // Technically we might not have finished loading the Property at this point,
-                            // but we still know the filters, so we can show them.
-                            loading = false,
-                            primaryFilter = primaryFilter,
-                        )
+                        copy(loading = false, primaryFilter = primaryFilter)
                     }
 
                     // Now that everything is ready, we can start observing search triggers.

@@ -2,6 +2,7 @@ package app.eluvio.wallet.network.api.mwv2
 
 import app.eluvio.wallet.network.api.authd.AuthdApi
 import app.eluvio.wallet.network.dto.PagedContent
+import app.eluvio.wallet.network.dto.v2.AutoplayRequest
 import app.eluvio.wallet.network.dto.v2.DiscoverDto
 import app.eluvio.wallet.network.dto.v2.MediaItemV2Dto
 import app.eluvio.wallet.network.dto.v2.MediaPageDto
@@ -54,6 +55,16 @@ interface MediaWalletV2Api : AuthdApi {
 
     @GET("mw/properties/{propertyId}/permissions?no_cache=true")
     fun getPermissionStates(@Path("propertyId") propertyId: String): Single<GetPermissionResponse>
+
+    /**
+     * Returns the upcoming items of a sequential run, in order, or an empty [PagedContent.contents]
+     * when the item isn't part of one. The run is handed over regardless of entitlement.
+     */
+    @POST("mw/properties/{propertyId}/autoplay/next")
+    fun getAutoplayNext(
+        @Path("propertyId") propertyId: String,
+        @Body request: AutoplayRequest
+    ): Single<PagedContent<MediaItemV2Dto>>
 
     @POST("mw/properties/{propertyId}/sidebar/live")
     fun getStreamSelections(@Path("propertyId") propertyId: String): Single<PagedContent<MediaItemV2Dto>>

@@ -20,6 +20,11 @@ data class PermissionContext(
     val sectionId: String? = null,
     val sectionItemId: String? = null,
     val mediaItemId: String? = null,
+    /**
+     * The media list [mediaItemId] was opened from, when it was reached through one.
+     * Not part of the permission hierarchy - Up Next needs it to know which run is playing.
+     */
+    val mediaListId: String? = null,
 ) {
     /**
      * A resolved version of the context, where every defined ID is resolved to the actual entity.

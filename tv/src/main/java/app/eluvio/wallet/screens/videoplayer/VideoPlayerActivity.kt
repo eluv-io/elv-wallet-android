@@ -1,7 +1,9 @@
 package app.eluvio.wallet.screens.videoplayer
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
+import android.os.Looper
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
@@ -12,10 +14,12 @@ import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.fragment.app.FragmentActivity
 import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.PlayerMessage
 import androidx.media3.ui.DefaultTimeBar
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.TimeBar
@@ -28,9 +32,14 @@ import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.data.stores.EnvironmentStore
 import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.PlaybackStore
+import app.eluvio.wallet.data.permissions.PermissionContext
 import app.eluvio.wallet.data.stores.TokenStore
+import app.eluvio.wallet.navigation.onClickTarget
+import app.eluvio.wallet.screens.property.upcoming.UpcomingVideoNavArgs
+import app.eluvio.wallet.screens.purchaseprompt.PurchasePromptNavArgs
 import app.eluvio.wallet.screens.videoplayer.ui.ScrubThumbnailView
 import app.eluvio.wallet.screens.videoplayer.ui.StreamSelectionPane
+import app.eluvio.wallet.screens.videoplayer.ui.UpNextPane
 import app.eluvio.wallet.screens.videoplayer.ui.VideoInfoPane
 import app.eluvio.wallet.util.crypto.Base58
 import app.eluvio.wallet.util.exoplayer.defaultSeekPositionMs
@@ -50,6 +59,7 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.kotlin.Singles
 import io.reactivex.rxjava3.kotlin.addTo
 import io.reactivex.rxjava3.kotlin.subscribeBy
@@ -83,6 +93,9 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
     @Inject
     lateinit var streamSelectionLoader: StreamSelectionLoader
 
+    @Inject
+    lateinit var upNextLoader: UpNextLoader
+
     private var disposables = CompositeDisposable()
 
     private var playerView: PlayerView? = null
@@ -99,6 +112,23 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
     private var streamsButton: View? = null
     private var streamSelectionPane: StreamSelectionPane? = null
     private var availableStreams: List<StreamItem> = emptyList()
+
+    private var upNextPane: UpNextPane? = null
+
+    /** The answer to "what plays after this?", fetched while the video is still running. */
+    private var upNextItem: MediaEntity? = null
+
+    /** The item the card is currently offering. */
+    private var offeredUpNextItem: MediaEntity? = null
+
+    /** Set once playback reaches the end, so a late answer still puts the card up. */
+    private var upNextRequested = false
+
+    /** The viewer declined this ending. Watching up to it again earns a fresh offer. */
+    private var upNextDeclined = false
+
+    private var upNextDisposable: Disposable? = null
+    private var upNextPrefetchMessage: PlayerMessage? = null
 
     // List of buttons that aren't handled by exoplayer, and we need to handle manually.
     private val customControllerButtons: List<View>
@@ -191,6 +221,11 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
         streamSelectionPane = findViewById(R.id.video_player_stream_selection_pane)
         streamSelectionPane?.setOnStreamSelectedListener { stream ->
             switchToStream(stream)
+        }
+
+        upNextPane = findViewById<UpNextPane>(R.id.video_player_up_next_pane)?.apply {
+            onCancel = { declineUpNext() }
+            onPlay = { offeredUpNextItem?.let { playUpNext(it) } }
         }
 
         exoPlayer = ExoPlayer.Builder(this)
@@ -416,6 +451,15 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
         }
     }
 
+    override fun onPlaybackStateChanged(playbackState: Int) {
+        when (playbackState) {
+            Player.STATE_READY -> scheduleUpNextPrefetch()
+            // An empty player reports itself as ended too, and [onResume] prepares one before the
+            // playout request comes back. Only a real ending is worth offering the next item for.
+            Player.STATE_ENDED -> if (exoPlayer?.currentMediaItem != null) offerUpNext()
+        }
+    }
+
     override fun onPlayerError(error: PlaybackException) {
         Log.e("Error playing video ${error.errorCodeName}")
         if (error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
@@ -460,6 +504,9 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
 
     override fun onDestroy() {
         Log.d("onDestroy")
+        upNextPrefetchMessage?.cancel()
+        upNextPrefetchMessage = null
+        upNextPane = null
         playerView = null
         exoPlayer?.release()
         exoPlayer = null
@@ -470,6 +517,14 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
 
     @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (upNextPane?.isVisible == true) {
+            // Back declines the offer, same as pressing Cancel.
+            if (event.keyCode == KeyEvent.KEYCODE_BACK) {
+                if (event.action == KeyEvent.ACTION_UP) declineUpNext()
+                return true
+            }
+            return upNextPane?.dispatchKeyEvent(event) == true
+        }
         if (infoPane?.isVisible == true) {
             Log.d("Forwarding key event to info pane")
             if (event.keyCode == KeyEvent.KEYCODE_BACK) {
@@ -579,6 +634,7 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
         streamSelectionPane?.visibility = View.GONE
         playerView?.controllerAutoShow = true
         titleView?.text = stream.title
+        resetUpNext()
 
         when (stream) {
             is StreamItem.MediaItem -> {
@@ -598,6 +654,167 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             }
         }
     }
+
+    // region Up Next
+
+    /**
+     * Asks the server what plays next while the video is still running, so the card can go up the
+     * moment playback stops instead of after a round trip.
+     *
+     * The boundary message isn't deleted after delivery, so seeking back and watching up to the
+     * end again re-arms an offer the viewer previously declined.
+     */
+    private fun scheduleUpNextPrefetch() {
+        val exoPlayer = exoPlayer ?: return
+        if (upNextPrefetchMessage != null || !upNextSupported) return
+        val duration = exoPlayer.duration
+        if (duration == C.TIME_UNSET || exoPlayer.isCurrentMediaItemLive) {
+            // Nothing to count down to.
+            return
+        }
+        val prefetchAt = duration - UP_NEXT_PREFETCH_LEAD_MS
+        if (prefetchAt <= 0) {
+            // Item is shorter than the prefetch window. [offerUpNext] asks for itself instead.
+            return
+        }
+        Log.d("Up next will ask at ${prefetchAt}ms of ${duration}ms (now ${exoPlayer.currentPosition}ms)")
+        upNextPrefetchMessage = exoPlayer.createMessage { _, _ -> prefetchUpNext() }
+            .setLooper(Looper.getMainLooper())
+            .setPosition(prefetchAt)
+            .setDeleteAfterDelivery(false)
+            .send()
+    }
+
+    private fun prefetchUpNext() {
+        if (!upNextSupported) return
+        val propertyId = navArgs.propertyId ?: return
+        // Crossing the boundary again means the viewer watched this ending a second time, which
+        // earns a fresh offer even if they declined the first one.
+        upNextDeclined = false
+        if (upNextDisposable != null || upNextItem != null) return
+
+        upNextDisposable = upNextLoader
+            .getNextItem(
+                propertyId = propertyId,
+                mediaItemId = currentlyPlayingStreamId,
+                sectionId = navArgs.sectionId,
+                mediaListId = navArgs.mediaListId,
+            )
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeBy(
+                onSuccess = { next ->
+                    Log.d("Up next prefetched ${next.id}")
+                    upNextItem = next
+                    // Playback can reach the end before the answer does.
+                    showUpNextIfReady()
+                },
+                onComplete = { Log.d("Nothing to play after $currentlyPlayingStreamId") },
+            )
+            .addTo(disposables)
+    }
+
+    /** Playback reached the end: offer the next item, if there is one to offer. */
+    private fun offerUpNext() {
+        if (upNextDeclined || offeredUpNextItem != null) return
+        upNextRequested = true
+        // A no-op unless the item was too short for the prefetch window.
+        prefetchUpNext()
+        showUpNextIfReady()
+    }
+
+    /**
+     * Puts the card up, once playback has reached the end and the server has answered - whichever
+     * order those happen in.
+     */
+    private fun showUpNextIfReady() {
+        if (!upNextRequested || upNextDeclined || offeredUpNextItem != null) return
+        val next = upNextItem ?: return
+        Log.d("Up next offering ${next.id}")
+        offeredUpNextItem = next
+        playerView?.hideController()
+        playerView?.controllerAutoShow = false
+        upNextPane?.show(next)
+    }
+
+    private fun declineUpNext() {
+        Log.d("Up next declined")
+        upNextPane?.hide()
+        offeredUpNextItem = null
+        upNextDeclined = true
+        playerView?.controllerAutoShow = true
+        playerView?.showController()
+    }
+
+    /**
+     * Takes the viewer to the offered item. Autoplay hands back items they aren't entitled to and
+     * events that haven't started, so this routes through the same resolver a card tap uses, and
+     * hands anything the player can't open itself back to whoever launched it.
+     */
+    private fun playUpNext(next: MediaEntity) {
+        upNextPane?.hide()
+        offeredUpNextItem = null
+        val propertyId = navArgs.propertyId ?: return
+        val permissionContext = PermissionContext(
+            propertyId = propertyId,
+            pageId = navArgs.pageId,
+            sectionId = navArgs.sectionId,
+            mediaItemId = next.id,
+            mediaListId = navArgs.mediaListId,
+        )
+        when (val target = next.onClickTarget(permissionContext)) {
+            is VideoPlayerArgs -> {
+                Log.d("Up next playing ${next.id}")
+                switchToStream(StreamItem.MediaItem.from(next))
+            }
+
+            is PurchasePromptNavArgs -> exitTo(VideoPlayerExit.Purchase(target))
+            is UpcomingVideoNavArgs -> exitTo(VideoPlayerExit.Upcoming(target))
+
+            else -> {
+                // Nothing we can open from here. Leave the viewer on the finished video rather
+                // than closing the player out from under them.
+                Log.w("Up next item ${next.id} has nowhere to go: $target")
+                declineUpNext()
+            }
+        }
+    }
+
+    /** Closes the player and asks whoever launched it to open [exit] in its place. */
+    private fun exitTo(exit: VideoPlayerExit) {
+        setResult(
+            RESULT_OK,
+            Intent().putExtra(
+                VIDEO_PLAYER_EXIT_EXTRA,
+                Json.encodeToString(VideoPlayerExit.serializer(), exit)
+            )
+        )
+        finish()
+    }
+
+    private fun resetUpNext() {
+        upNextPane?.hide()
+        upNextDisposable.safeDispose()
+        upNextDisposable = null
+        // Otherwise it's still pending against the item we just left.
+        upNextPrefetchMessage?.cancel()
+        upNextPrefetchMessage = null
+        upNextItem = null
+        offeredUpNextItem = null
+        upNextRequested = false
+        upNextDeclined = false
+    }
+
+    /**
+     * Up Next only makes sense for media items played inside a Property. The deeplink demo path
+     * fakes its media item, and additional views aren't media items at all.
+     */
+    private val upNextSupported: Boolean
+        get() = navArgs.propertyId != null &&
+                navArgs.deeplinkhack_contract == null &&
+                // Additional views are fabric objects, not media items the server knows a run for.
+                !currentlyPlayingStreamId.startsWith(ADDITIONAL_VIEW_ID_PREFIX)
+
+    // endregion
 
     // ExoPlayer has a hard time when "bottom bar" is higher than 50% of the screen,
     // so we need to manually position the thumbnail view above the time bar.
@@ -622,3 +839,6 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
 }
 
 private val LIVE_EDGE_PROXIMITY_THRESHOLD = 20.seconds.inWholeMilliseconds
+
+/** How long before the end we ask the server what plays next. */
+private val UP_NEXT_PREFETCH_LEAD_MS = 30.seconds.inWholeMilliseconds

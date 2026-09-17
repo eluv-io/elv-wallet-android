@@ -71,7 +71,10 @@ private fun clickWithPermissionContext(
         ) -> VideoPlayerArgs(
             mediaItemId = media.id,
             mediaTitle = media.requireDisplaySettings().title,
-            propertyId = permissionContext.propertyId
+            propertyId = permissionContext.propertyId,
+            pageId = permissionContext.pageId,
+            sectionId = permissionContext.sectionId,
+            mediaListId = permissionContext.mediaListId,
         )
 
         else -> clickWithoutContext(media)

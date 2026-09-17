@@ -12,6 +12,14 @@ data class VideoPlayerArgs(
     // Given as a convenience to avoid delaying video load just for analytics purposes
     val mediaTitle: String? = null,
     val propertyId: String? = null,
+    /**
+     * Where the user was when they started playback. Up Next needs these together to work out
+     * what comes next, and they're what the purchase gate is opened with when the next item
+     * turns out to be gated.
+     */
+    val pageId: String? = null,
+    val sectionId: String? = null,
+    val mediaListId: String? = null,
     /** if this is supplied, just play the first featured video */
     val deeplinkhack_contract: String? = null,
 ) : NavKey

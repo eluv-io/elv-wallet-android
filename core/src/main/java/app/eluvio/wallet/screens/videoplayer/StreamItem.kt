@@ -4,6 +4,9 @@ import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.entities.AdditionalViewEntity
 import app.eluvio.wallet.data.entities.MediaEntity
 
+/** Marks a [StreamItem.AdditionalView]'s id, which is ours and not a media item id. */
+const val ADDITIONAL_VIEW_ID_PREFIX = "additional_view"
+
 /**
  * A unified sealed class for stream selection items, supporting both MediaEntity
  * (from stream selection API) and AdditionalViewEntity (from media item's additional_views).
@@ -41,7 +44,7 @@ sealed class StreamItem {
         companion object {
             fun from(entity: AdditionalViewEntity, index: Int): AdditionalView {
                 return AdditionalView(
-                    id = "additional_view_$index",
+                    id = "${ADDITIONAL_VIEW_ID_PREFIX}_$index",
                     title = entity.title,
                     image = entity.imageUrl,
                     playableHash = entity.playableHash ?: "",

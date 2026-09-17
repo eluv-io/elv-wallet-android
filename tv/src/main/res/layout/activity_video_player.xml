@@ -30,4 +30,10 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:visibility="gone" />
+
+    <app.eluvio.wallet.screens.videoplayer.ui.UpNextPane
+        android:id="@+id/video_player_up_next_pane"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
 </FrameLayout>

@@ -2,6 +2,7 @@ package app.eluvio.wallet.navigation
 
 import android.content.Context
 import android.content.Intent
+import androidx.activity.result.ActivityResultLauncher
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import app.eluvio.wallet.screens.videoplayer.VIDEO_PLAYER_ARGS_EXTRA
@@ -17,6 +18,11 @@ import kotlinx.serialization.json.Json
 class ComposeNavigator(
     private val backStack: NavBackStack<NavKey>,
     private val context: Context,
+    /**
+     * Launches the player for a result, so a gated or not-yet-started Up Next item can send us
+     * somewhere the player itself can't reach. See [app.eluvio.wallet.screens.videoplayer.VideoPlayerExit].
+     */
+    private val videoPlayerLauncher: ActivityResultLauncher<Intent>,
 ) : Navigator {
     override fun invoke(event: NavigationEvent) {
         when (event) {
@@ -56,6 +62,6 @@ class ComposeNavigator(
         val intent = Intent(context, VideoPlayerActivity::class.java).apply {
             putExtra(VIDEO_PLAYER_ARGS_EXTRA, Json.encodeToString(VideoPlayerArgs.serializer(), args))
         }
-        context.startActivity(intent)
+        videoPlayerLauncher.launch(intent)
     }
 }

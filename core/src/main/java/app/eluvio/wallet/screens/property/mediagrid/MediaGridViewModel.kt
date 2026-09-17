@@ -116,7 +116,8 @@ open class MediaGridViewModel(
         return observeMediaItems(
             contentOverride.mediaItemsOverride,
             resolved.property.searchPermissions,
-            resolved.property.permissionStates
+            resolved.property.permissionStates,
+            mediaListId = null,
         ).map { State(loading = false, title = contentOverride.title, items = it) }
     }
 
@@ -135,7 +136,8 @@ open class MediaGridViewModel(
         return observeMediaItems(
             mediaContainer.mediaItemsIds,
             mediaContainer.resolvedPermissions,
-            resolved.property.permissionStates
+            resolved.property.permissionStates,
+            mediaListId = mediaContainer.id,
         ).map { State(loading = false, title = mediaContainer.name, items = it) }
     }
 
@@ -145,7 +147,8 @@ open class MediaGridViewModel(
     private fun observeMediaItems(
         mediaItemIds: List<String>,
         parentPermissions: PermissionSettings?,
-        permissionStates: Map<String, PermissionStatesEntity?>
+        permissionStates: Map<String, PermissionStatesEntity?>,
+        mediaListId: String?,
     ): Flowable<List<DynamicPageLayoutState.CarouselItem.Media>> {
         return contentStore.observeMediaItems(
             permissionContext.propertyId,
@@ -165,8 +168,10 @@ open class MediaGridViewModel(
                     .filterNot { it.isHidden }
                     .map { mediaEntity ->
                         DynamicPageLayoutState.CarouselItem.Media(
-                            // TODO: potential bug? we are losing info about the containing list/collection
-                            permissionContext = permissionContext.copy(mediaItemId = mediaEntity.id),
+                            permissionContext = permissionContext.copy(
+                                mediaItemId = mediaEntity.id,
+                                mediaListId = mediaListId,
+                            ),
                             forceDisabled = false,
                             entity = mediaEntity,
                             // Note: if a playback position is saved for LIVE, it'll also show.

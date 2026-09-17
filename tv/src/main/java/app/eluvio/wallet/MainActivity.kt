@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,13 +30,18 @@ import androidx.core.util.Consumer
 import app.eluvio.wallet.navigation.ComposeNavigator
 import app.eluvio.wallet.navigation.LocalNavigator
 import app.eluvio.wallet.navigation.MainNavHost
+import app.eluvio.wallet.navigation.NavigationEvent
+import app.eluvio.wallet.navigation.Navigator
 import app.eluvio.wallet.screens.home.DeeplinkArgs
+import app.eluvio.wallet.screens.videoplayer.VIDEO_PLAYER_EXIT_EXTRA
+import app.eluvio.wallet.screens.videoplayer.VideoPlayerExit
 import app.eluvio.wallet.theme.EluvioTheme
 import app.eluvio.wallet.util.logging.Log
 import com.google.firebase.FirebaseApp
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.serialization.json.Json
 
 /**
  * Marker typealias for the main activity on TV, to make it easy to search in IDE.
@@ -45,6 +51,20 @@ typealias MainTvActivity = MainActivity
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private var navigator: Navigator? = null
+
+    /**
+     * The video player hands back a destination it can't open itself - the purchase gate for a
+     * gated Up Next item, or the countdown for an event that hasn't started.
+     */
+    private val videoPlayerLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val json = result.data?.getStringExtra(VIDEO_PLAYER_EXIT_EXTRA) ?: return@registerForActivityResult
+            val exit = Json.decodeFromString(VideoPlayerExit.serializer(), json)
+            Log.d("Video player exited to: $exit")
+            navigator?.invoke(NavigationEvent.Push(exit.destination))
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -78,7 +98,8 @@ class MainActivity : ComponentActivity() {
                         ComposeNavigator(
                             backStack = backStack,
                             context = this@MainActivity,
-                        )
+                            videoPlayerLauncher = videoPlayerLauncher,
+                        ).also { this@MainActivity.navigator = it }
                     }
                     CompositionLocalProvider(LocalNavigator provides navigator) {
                         MainNavHost(

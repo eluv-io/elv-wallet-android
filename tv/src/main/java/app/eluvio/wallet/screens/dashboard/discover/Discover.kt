@@ -508,7 +508,7 @@ private fun PropertyCard(
                     .padding(10.dp)
             )
         }
-        if (property.mainPageInaccessible) {
+        if (focused && property.mainPageInaccessible) {
             InaccessibleOverlay(
                 message = property.mainPageInaccessibleMessage
                     ?: stringResource(R.string.property_coming_soon)
@@ -533,8 +533,8 @@ private fun PropertyCard(
 }
 
 /**
- * Covers the card of a Property whose main page can't be opened, with the Property's own copy
- * ("Coming Soon" when it doesn't define any).
+ * Covers the focused card of a Property whose main page can't be opened, with the Property's
+ * own copy ("Coming Soon" when it doesn't define any).
  */
 @Composable
 private fun InaccessibleOverlay(message: String, modifier: Modifier = Modifier) {

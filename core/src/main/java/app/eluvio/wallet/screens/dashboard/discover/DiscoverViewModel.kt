@@ -89,6 +89,13 @@ class DiscoverViewModel @Inject constructor(
             val mainPageTitle: String?,
             val mainPageDescription: String?,
 
+            /**
+             * Set when this Property's main page can't be opened from Discover. Its card is
+             * covered by [mainPageInaccessibleMessage] instead, and pressing it does nothing.
+             */
+            val mainPageInaccessible: Boolean,
+            val mainPageInaccessibleMessage: String?,
+
             /** Hash of the promo video to play behind the page when this Property is focused. */
             val heroVideoHash: String?,
 
@@ -230,6 +237,11 @@ class DiscoverViewModel @Inject constructor(
     }
 
     fun onPropertyClicked(property: State.Property) {
+        if (property.mainPageInaccessible) {
+            // The card stays focusable so the hero still follows it, but there's nothing to open.
+            Log.d("Press ignored - main page is inaccessible: ${property.id}")
+            return
+        }
         val target = PropertyDetailNavArgs(property.id)
         val loggedInWithSameProvider =
             tokenStore.isLoggedIn && tokenStore.loginProvider.get() == property.loginProvider
@@ -273,6 +285,8 @@ private fun MediaPropertyEntity.toStateProperty(): DiscoverViewModel.State.Prope
         logo = headerLogoUrl,
         mainPageTitle = mainPageTitle,
         mainPageDescription = mainPageDescription,
+        mainPageInaccessible = mainPageInaccessible,
+        mainPageInaccessibleMessage = mainPageInaccessibleMessage,
 
         heroVideoHash = heroVideoHash,
 

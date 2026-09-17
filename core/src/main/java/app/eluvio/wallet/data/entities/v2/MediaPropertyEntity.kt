@@ -52,6 +52,11 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
     var mainPageTitle: String? = null
     var mainPageDescription: String? = null
 
+    // Set when this Property's main page can't be opened from Discover. Its card is covered
+    // by [mainPageInaccessibleMessage] instead.
+    var mainPageInaccessible: Boolean = false
+    var mainPageInaccessibleMessage: String? = null
+
     // Property can also include a list of pages besides the main page.
     // But the TV apps have no use for it currently.
     var mainPage: MediaPageEntity? = null
@@ -110,6 +115,8 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         if (heroVideoHash != other.heroVideoHash) return false
         if (mainPageTitle != other.mainPageTitle) return false
         if (mainPageDescription != other.mainPageDescription) return false
+        if (mainPageInaccessible != other.mainPageInaccessible) return false
+        if (mainPageInaccessibleMessage != other.mainPageInaccessibleMessage) return false
         if (mainPage != other.mainPage) return false
         if (subpropertySelection != other.subpropertySelection) return false
         if (loginInfo != other.loginInfo) return false
@@ -139,6 +146,8 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         result = 31 * result + (heroVideoHash?.hashCode() ?: 0)
         result = 31 * result + (mainPageTitle?.hashCode() ?: 0)
         result = 31 * result + (mainPageDescription?.hashCode() ?: 0)
+        result = 31 * result + mainPageInaccessible.hashCode()
+        result = 31 * result + (mainPageInaccessibleMessage?.hashCode() ?: 0)
         result = 31 * result + (mainPage?.hashCode() ?: 0)
         result = 31 * result + subpropertySelection.hashCode()
         result = 31 * result + (loginInfo?.hashCode() ?: 0)
@@ -157,7 +166,7 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
     }
 
     override fun toString(): String {
-        return "MediaPropertyEntity(id='$id', name='$name', headerLogoUrl=$headerLogoUrl, image=$image, featuredImage=$featuredImage, featuredCardLogo=$featuredCardLogo, bgImageUrl=$bgImageUrl, bgImageWithFallback=$bgImageWithFallback, mainPageTitle=$mainPageTitle, mainPageDescription=$mainPageDescription, mainPage=$mainPage, subpropertySelection=$subpropertySelection, loginInfo=$loginInfo, tenantId=$tenantId, startScreenBackground=$startScreenBackground, startScreenLogo=$startScreenLogo, countdownBackground=$countdownBackground, cardThemes=$cardThemes, cardThemeId=$cardThemeId, loginProvider='$loginProvider', permissionStates=$permissionStates, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, permissionChildren=$permissionChildren, propertyPermissions=$propertyPermissions, searchPermissions=$searchPermissions)"
+        return "MediaPropertyEntity(id='$id', name='$name', headerLogoUrl=$headerLogoUrl, image=$image, featuredImage=$featuredImage, featuredCardLogo=$featuredCardLogo, bgImageUrl=$bgImageUrl, bgImageWithFallback=$bgImageWithFallback, mainPageTitle=$mainPageTitle, mainPageDescription=$mainPageDescription, mainPageInaccessible=$mainPageInaccessible, mainPageInaccessibleMessage=$mainPageInaccessibleMessage, mainPage=$mainPage, subpropertySelection=$subpropertySelection, loginInfo=$loginInfo, tenantId=$tenantId, startScreenBackground=$startScreenBackground, startScreenLogo=$startScreenLogo, countdownBackground=$countdownBackground, cardThemes=$cardThemes, cardThemeId=$cardThemeId, loginProvider='$loginProvider', permissionStates=$permissionStates, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, permissionChildren=$permissionChildren, propertyPermissions=$propertyPermissions, searchPermissions=$searchPermissions)"
     }
 
     class SubpropertySelectionEntity : EmbeddedRealmObject {

@@ -37,6 +37,8 @@ fun MediaPropertyDto.toEntity(baseUrl: String): MediaPropertyEntity? {
         heroVideoHash = dto.heroVideo?.hash
         mainPageTitle = dto.mainPageTitle?.ifBlank { null }
         mainPageDescription = dto.mainPageDescription?.ifBlank { null }
+        mainPageInaccessible = dto.mainPageInaccessible == true
+        mainPageInaccessibleMessage = dto.mainPageInaccessibleMessage?.ifBlank { null }
         mainPage = dto.mainPage.toEntity(id, baseUrl)
         subpropertySelection = dto.property_selection
             .takeIf { dto.show_property_selection == true }

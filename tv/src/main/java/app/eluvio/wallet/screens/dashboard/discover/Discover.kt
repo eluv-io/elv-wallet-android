@@ -508,6 +508,12 @@ private fun PropertyCard(
                     .padding(10.dp)
             )
         }
+        if (property.mainPageInaccessible) {
+            InaccessibleOverlay(
+                message = property.mainPageInaccessibleMessage
+                    ?: stringResource(R.string.property_coming_soon)
+            )
+        }
         if (focused) {
             // Top "sheen" highlight on the focused card.
             Box(
@@ -523,6 +529,32 @@ private fun PropertyCard(
             )
             AnimatedFocusRing(RoundedCornerShape(CardCornerRadius))
         }
+    }
+}
+
+/**
+ * Covers the card of a Property whose main page can't be opened, with the Property's own copy
+ * ("Coming Soon" when it doesn't define any).
+ */
+@Composable
+private fun InaccessibleOverlay(message: String, modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.6f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = message.uppercase(),
+            style = MaterialTheme.typography.label_40.copy(
+                fontSize = 14.sp,
+                lineHeight = 16.sp
+            ),
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFF4F4F5),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 8.dp)
+        )
     }
 }
 
@@ -637,6 +669,9 @@ private fun previewState() = State(
                     mainPageTitle = "Property $it Title",
                     mainPageDescription = "Lorem ipsum dolor sit amet, consectetur adipiscing " +
                             "elit. Sed do eiusmod tempor incididunt ut labore.",
+                    // Every 5th card is covered by an "inaccessible" overlay.
+                    mainPageInaccessible = it % 5 == 0,
+                    mainPageInaccessibleMessage = null,
                     heroVideoHash = null,
                     startScreenLogo = null,
                     startScreenBackground = null

@@ -46,6 +46,12 @@ data class MediaPropertyDto(
     val mainPageTitle: String?,
     @field:Json(name = "main_page_description")
     val mainPageDescription: String?,
+    // Set when this Property's main page can't be opened from Discover. Its card is covered
+    // by [mainPageInaccessibleMessage] instead.
+    @field:Json(name = "main_page_inaccessible")
+    val mainPageInaccessible: Boolean? = null,
+    @field:Json(name = "main_page_inaccessible_message")
+    val mainPageInaccessibleMessage: String? = null,
     val show_property_selection: Boolean?,
     val property_selection: List<PropertySelectionDto>?,
 

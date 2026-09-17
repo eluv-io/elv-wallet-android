@@ -10,4 +10,5 @@
     <string name="dashboard_tab_search">Search</string>
     <string name="request_new_code">Request New Code</string>
     <string name="no_content_warning">No items to display</string>
+    <string name="property_coming_soon">Coming Soon</string>
 </resources>

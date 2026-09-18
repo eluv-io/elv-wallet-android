@@ -94,6 +94,12 @@ data class LoginInfoDto(
 
 @JsonClass(generateAdapter = true)
 data class LoginSettingsDto(
+    // The provider the Property authenticates against, including any domain/endpoint qualifier.
+    // Clients are meant to compare this blindly, without knowing anything about the providers
+    // themselves. Still rolling out server-side, so when it's missing we fall back to deriving it
+    // from the fields below - see [toLoginProvider].
+    val provider_id: String?,
+
     val use_auth0: Boolean?,
     val disable_login: Boolean?,
     val auth0_domain: String?,

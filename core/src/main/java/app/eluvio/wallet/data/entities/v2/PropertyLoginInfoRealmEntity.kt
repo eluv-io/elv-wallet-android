@@ -15,10 +15,9 @@ class PropertyLoginInfoRealmEntity : EmbeddedRealmObject {
     var backgroundImageUrl: FabricUrlEntity? = null
     var logoUrl: FabricUrlEntity? = null
 
-    // "ory" by default. However if the server returns [use_auth0: true] with an [auth0_domain],
-    // this will be "auth0_{domain}", and for [use_openid: true] with an [openid_endpoint],
-    // "openid_{endpoint}". The domain/endpoint is part of the value because sessions are only
-    // shared between Properties that authenticate against the same one.
+    // Opaque identifier for the Property's login provider - only ever compared to another
+    // Property's. Comes from the server's "provider_id" when it has one, otherwise we derive an
+    // equivalent string ourselves. See MediaPropertyConverter.toLoginProvider.
     var loginProvider: String? = null
 
     var skipLogin: Boolean = false

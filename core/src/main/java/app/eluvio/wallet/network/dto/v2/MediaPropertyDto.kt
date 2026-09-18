@@ -57,6 +57,8 @@ data class MediaPropertyDto(
 
     val login: LoginInfoDto?,
 
+    val domain: PropertyDomainDto?,
+
     val tenant: TenantDto?,
 
     val card_theme_id: String?,
@@ -84,6 +86,17 @@ data class TenantDto(
     val id: String,
     // The real tenant id (iten...)
     val tenant_iten: String?,
+)
+
+/**
+ * Custom domains this Property is served from. Only the login one matters to us.
+ */
+@JsonClass(generateAdapter = true)
+data class PropertyDomainDto(
+    // Full URL the login web app is served from for this Property. When set, it replaces the
+    // environment's wallet URL as the base of the device-activation login URL.
+    @field:Json(name = "tv_login_custom_domain")
+    val tvLoginCustomDomain: String?,
 )
 
 @JsonClass(generateAdapter = true)

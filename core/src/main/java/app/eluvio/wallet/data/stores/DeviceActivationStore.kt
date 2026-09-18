@@ -22,6 +22,7 @@ class DeviceActivationStore @Inject constructor(
     private val apiProvider: ApiProvider,
     private val tokenStore: TokenStore,
     private val environmentStore: EnvironmentStore,
+    private val propertyStore: MediaPropertyStore,
     private val installation: Installation,
 ) {
 
@@ -30,10 +31,10 @@ class DeviceActivationStore @Inject constructor(
         redirect: String? = null,
     ): Flowable<ActivationCodeResponse> {
         return apiProvider.getApi(AuthServicesApi::class)
-            .zipWith(environmentStore.observeSelectedEnvironment().firstOrError())
-            .flatMap { (api, env) ->
+            .zipWith(loginBaseUrl(propertyId))
+            .flatMap { (api, loginBaseUrl) ->
                 val dest = buildString {
-                    append(env.walletUrl)
+                    append(loginBaseUrl)
                     append("?action=login&mode=login")
                     if (redirect != null) {
                         // window.location-based redirect — wallet appends ?elvToken=<token> and
@@ -65,6 +66,24 @@ class DeviceActivationStore @Inject constructor(
                     }
             }
             .retry()
+    }
+
+    /**
+     * Where the login web app is served from for [propertyId]: the Property's own login domain
+     * when it defines one, otherwise the selected environment's wallet URL.
+     */
+    private fun loginBaseUrl(propertyId: String): Single<String> {
+        return propertyStore.observeMediaProperty(propertyId, forceRefresh = false)
+            .firstOrError()
+            .mapNotNull { it.tvLoginCustomDomain }
+            // A Property we can't read isn't worth failing sign-in over - fall back to the env's
+            // wallet URL. Without this, the caller's retry() would loop on it forever.
+            .onErrorComplete()
+            .switchIfEmpty(
+                environmentStore.observeSelectedEnvironment()
+                    .firstOrError()
+                    .map { it.walletUrl }
+            )
     }
 
     /**

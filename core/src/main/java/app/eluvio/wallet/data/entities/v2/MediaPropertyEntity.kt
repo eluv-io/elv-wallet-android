@@ -64,6 +64,10 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
 
     var loginInfo: PropertyLoginInfoRealmEntity? = null
 
+    // Base URL the login web app is served from for this Property, when it has a custom domain.
+    // Replaces the environment's wallet URL when building the sign-in URL. Usually null.
+    var tvLoginCustomDomain: String? = null
+
     var tenantId: String? = null
 
     // For single-property custom builds, these can be used to show a custom start screen.
@@ -126,6 +130,7 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         if (mainPage != other.mainPage) return false
         if (subpropertySelection != other.subpropertySelection) return false
         if (loginInfo != other.loginInfo) return false
+        if (tvLoginCustomDomain != other.tvLoginCustomDomain) return false
         if (tenantId != other.tenantId) return false
         if (startScreenBackground != other.startScreenBackground) return false
         if (startScreenLogo != other.startScreenLogo) return false
@@ -159,6 +164,7 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
         result = 31 * result + (mainPage?.hashCode() ?: 0)
         result = 31 * result + subpropertySelection.hashCode()
         result = 31 * result + (loginInfo?.hashCode() ?: 0)
+        result = 31 * result + (tvLoginCustomDomain?.hashCode() ?: 0)
         result = 31 * result + (tenantId?.hashCode() ?: 0)
         result = 31 * result + (startScreenBackground?.hashCode() ?: 0)
         result = 31 * result + (startScreenLogo?.hashCode() ?: 0)
@@ -176,7 +182,7 @@ class MediaPropertyEntity : RealmObject, EntityWithPermissions {
     }
 
     override fun toString(): String {
-        return "MediaPropertyEntity(id='$id', name='$name', headerLogoUrl=$headerLogoUrl, image=$image, featuredImage=$featuredImage, featuredCardLogo=$featuredCardLogo, bgImageUrl=$bgImageUrl, bgImageWithFallback=$bgImageWithFallback, mainPageTitle=$mainPageTitle, mainPageDescription=$mainPageDescription, mainPageInaccessible=$mainPageInaccessible, mainPageInaccessibleMessage=$mainPageInaccessibleMessage, mainPage=$mainPage, subpropertySelection=$subpropertySelection, loginInfo=$loginInfo, tenantId=$tenantId, startScreenBackground=$startScreenBackground, startScreenLogo=$startScreenLogo, countdownBackground=$countdownBackground, cardThemes=$cardThemes, cardThemeId=$cardThemeId, loginProvider='$loginProvider', permissionStates=$permissionStates, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, permissionChildren=$permissionChildren, propertyPermissions=$propertyPermissions, searchPermissions=$searchPermissions, searchPrimaryFilterStyle=$searchPrimaryFilterStyle, searchPrimaryFilterCardThemeId=$searchPrimaryFilterCardThemeId)"
+        return "MediaPropertyEntity(id='$id', name='$name', headerLogoUrl=$headerLogoUrl, image=$image, featuredImage=$featuredImage, featuredCardLogo=$featuredCardLogo, bgImageUrl=$bgImageUrl, bgImageWithFallback=$bgImageWithFallback, mainPageTitle=$mainPageTitle, mainPageDescription=$mainPageDescription, mainPageInaccessible=$mainPageInaccessible, mainPageInaccessibleMessage=$mainPageInaccessibleMessage, mainPage=$mainPage, subpropertySelection=$subpropertySelection, loginInfo=$loginInfo, tvLoginCustomDomain=$tvLoginCustomDomain, tenantId=$tenantId, startScreenBackground=$startScreenBackground, startScreenLogo=$startScreenLogo, countdownBackground=$countdownBackground, cardThemes=$cardThemes, cardThemeId=$cardThemeId, loginProvider='$loginProvider', permissionStates=$permissionStates, resolvedPermissions=$resolvedPermissions, rawPermissions=$rawPermissions, permissionChildren=$permissionChildren, propertyPermissions=$propertyPermissions, searchPermissions=$searchPermissions, searchPrimaryFilterStyle=$searchPrimaryFilterStyle, searchPrimaryFilterCardThemeId=$searchPrimaryFilterCardThemeId)"
     }
 
     class SubpropertySelectionEntity : EmbeddedRealmObject {

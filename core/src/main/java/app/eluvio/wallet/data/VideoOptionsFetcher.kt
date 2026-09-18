@@ -1,6 +1,7 @@
 package app.eluvio.wallet.data
 
 import android.content.Context
+import app.eluvio.wallet.data.entities.unprefixedMediaId
 import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.di.ApiProvider
 import app.eluvio.wallet.di.TokenAwareHttpClient
@@ -45,9 +46,7 @@ class VideoOptionsFetcher @Inject constructor(
         propertyId: String,
         mediaItemId: String
     ): Single<VideoPlayoutInfo> {
-        // This is kind of hacky and dangerous, but in case the media id is prefixed (in the case
-        // of sectionItems), we want to strip that prefix before asking the server about it.
-        val id = mediaItemId.substringAfter("_")
+        val id = mediaItemId.unprefixedMediaId
         return apiProvider.getApi(VideoPlayoutApi::class)
             .zipWith(apiProvider.getFabricEndpoint())
             .flatMap { (api, baseUrl) ->

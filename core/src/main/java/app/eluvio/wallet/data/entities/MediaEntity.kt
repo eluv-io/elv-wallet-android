@@ -288,6 +288,16 @@ class AdditionalViewEntity : EmbeddedRealmObject {
     }
 }
 
+/**
+ * The id the server knows this media item by.
+ *
+ * Media that came out of a section item is stored under a "<sectionItemId>_" prefixed id, to keep
+ * two section items pointing at the same media from colliding in the DB. That prefix is ours, so
+ * anything we send back to the server has to drop it. Ids that were never prefixed pass through.
+ */
+val String.unprefixedMediaId: String
+    get() = substringAfter("_")
+
 private fun MediaEntity.defaultDisplaySettings(): DisplaySettings {
     val base = SimpleDisplaySettings(title = name)
     // Not using FabricUrlEntity because [image] can be a fully formed URL and we

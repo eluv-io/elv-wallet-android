@@ -130,6 +130,9 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
     private var upNextDisposable: Disposable? = null
     private var upNextPrefetchMessage: PlayerMessage? = null
 
+    /** Where [upNextPrefetchMessage] is waiting, or [C.TIME_UNSET] if nothing is scheduled. */
+    private var upNextPrefetchPositionMs = C.TIME_UNSET
+
     // List of buttons that aren't handled by exoplayer, and we need to handle manually.
     private val customControllerButtons: List<View>
         get() = listOfNotNull(liveIndicator, infoButton, streamsButton)
@@ -460,6 +463,25 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
         }
     }
 
+    override fun onPositionDiscontinuity(
+        oldPosition: Player.PositionInfo,
+        newPosition: Player.PositionInfo,
+        reason: Int
+    ) {
+        if (reason != Player.DISCONTINUITY_REASON_SEEK) return
+        // A seek jumps the position in one step, so ExoPlayer never covers the span it skipped and
+        // doesn't deliver the message waiting in it. Scrubbing into the last stretch has to ask for
+        // itself, or the card would wait on a round trip that should already be done.
+        val prefetchAt = upNextPrefetchPositionMs
+        if (prefetchAt != C.TIME_UNSET &&
+            oldPosition.positionMs < prefetchAt &&
+            newPosition.positionMs >= prefetchAt
+        ) {
+            Log.d("Seeked past the up next boundary at ${prefetchAt}ms")
+            prefetchUpNext()
+        }
+    }
+
     override fun onPlayerError(error: PlaybackException) {
         Log.e("Error playing video ${error.errorCodeName}")
         if (error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
@@ -678,6 +700,7 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
             return
         }
         Log.d("Up next will ask at ${prefetchAt}ms of ${duration}ms (now ${exoPlayer.currentPosition}ms)")
+        upNextPrefetchPositionMs = prefetchAt
         upNextPrefetchMessage = exoPlayer.createMessage { _, _ -> prefetchUpNext() }
             .setLooper(Looper.getMainLooper())
             .setPosition(prefetchAt)
@@ -798,6 +821,7 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
         // Otherwise it's still pending against the item we just left.
         upNextPrefetchMessage?.cancel()
         upNextPrefetchMessage = null
+        upNextPrefetchPositionMs = C.TIME_UNSET
         upNextItem = null
         offeredUpNextItem = null
         upNextRequested = false

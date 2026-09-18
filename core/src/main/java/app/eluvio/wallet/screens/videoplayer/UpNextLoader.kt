@@ -1,6 +1,7 @@
 package app.eluvio.wallet.screens.videoplayer
 
 import app.eluvio.wallet.data.entities.MediaEntity
+import app.eluvio.wallet.data.entities.unprefixedMediaId
 import app.eluvio.wallet.data.permissions.PermissionResolver
 import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.di.ApiProvider
@@ -32,6 +33,9 @@ class UpNextLoader @Inject constructor(
      * Nothing to play arrives as an empty response rather than an error, so an empty response and
      * a failed one both come back as empty.
      *
+     * @param mediaItemId may carry the section item prefix media items pick up in the DB, which is
+     *   stripped before asking the server.
+     *
      * @param sectionId the section being viewed, which resolves groups configured as
      *   "<Current Section>".
      * @param mediaListId the media list being viewed, if the user came in through one.
@@ -47,7 +51,7 @@ class UpNextLoader @Inject constructor(
                 api.getAutoplayNext(
                     propertyId,
                     AutoplayRequest(
-                        mediaId = mediaItemId,
+                        mediaId = mediaItemId.unprefixedMediaId,
                         sectionId = sectionId,
                         mediaListId = mediaListId,
                     )

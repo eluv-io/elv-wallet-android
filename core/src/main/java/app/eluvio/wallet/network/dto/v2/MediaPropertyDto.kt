@@ -97,6 +97,8 @@ data class LoginSettingsDto(
     val use_auth0: Boolean?,
     val disable_login: Boolean?,
     val auth0_domain: String?,
+    val use_openid: Boolean?,
+    val openid_endpoint: String?,
 )
 
 @JsonClass(generateAdapter = true)

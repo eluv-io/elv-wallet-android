@@ -15,7 +15,10 @@ class PropertyLoginInfoRealmEntity : EmbeddedRealmObject {
     var backgroundImageUrl: FabricUrlEntity? = null
     var logoUrl: FabricUrlEntity? = null
 
-    // "ory" by default. However if server returns [use_auth0: true] this will be "auth0_{domain}"
+    // "ory" by default. However if the server returns [use_auth0: true] with an [auth0_domain],
+    // this will be "auth0_{domain}", and for [use_openid: true] with an [openid_endpoint],
+    // "openid_{endpoint}". The domain/endpoint is part of the value because sessions are only
+    // shared between Properties that authenticate against the same one.
     var loginProvider: String? = null
 
     var skipLogin: Boolean = false

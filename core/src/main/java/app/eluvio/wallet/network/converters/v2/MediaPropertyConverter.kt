@@ -15,6 +15,7 @@ import app.eluvio.wallet.network.converters.v2.permissions.toSearchPermissionsEn
 import app.eluvio.wallet.network.dto.v2.CardThemeDto
 import app.eluvio.wallet.network.dto.v2.CardThemeStateDto
 import app.eluvio.wallet.network.dto.v2.LoginInfoDto
+import app.eluvio.wallet.network.dto.v2.LoginSettingsDto
 import app.eluvio.wallet.network.dto.v2.MediaPageDto
 import app.eluvio.wallet.network.dto.v2.MediaPropertyDto
 import app.eluvio.wallet.network.dto.v2.PropertySelectionDto
@@ -83,9 +84,22 @@ private fun LoginInfoDto.toEntity(baseUrl: String): PropertyLoginInfoRealmEntity
         backgroundImageUrl =
             (dto.styling?.backgroundImageTv ?: dto.styling?.backgroundImageDesktop)?.toUrl(baseUrl)
         logoUrl = (dto.styling?.logoTv ?: dto.styling?.logo)?.toUrl(baseUrl)
-        loginProvider = if (dto.settings?.use_auth0 == true) "auth0_${dto.settings.auth0_domain}" else "ory"
+        loginProvider = dto.settings.toLoginProvider()
         skipLogin = dto.settings?.disable_login == true
     }
+}
+
+/**
+ * Identifies which login provider a Property uses, so we can tell whether an existing session is
+ * usable for it. Auth0/OpenID sessions are only shared between Properties pointing at the same
+ * domain/endpoint, so that's encoded into the string.
+ * Like the web client, a provider flag only counts when its domain/endpoint is set too.
+ */
+private fun LoginSettingsDto?.toLoginProvider(): String = when {
+    this == null -> "ory"
+    use_auth0 == true && !auth0_domain.isNullOrEmpty() -> "auth0_$auth0_domain"
+    use_openid == true && !openid_endpoint.isNullOrEmpty() -> "openid_$openid_endpoint"
+    else -> "ory"
 }
 
 private fun CardThemeDto.toEntity(themeId: String): CardThemeEntity {

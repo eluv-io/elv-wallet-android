@@ -33,10 +33,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.Text
@@ -169,7 +169,7 @@ private fun BoxWithConstraintsScope.MyItemsGrid(
                 )
                 Spacer(Modifier.height(2.dp))
                 HorizontalDivider()
-                PropertyFilterRow(state, onPropertySelected)
+                PropertyFilterRow(state, onPropertySelected, contentWidth = width)
             }
         }
         if (state.allMedia.loading) {
@@ -203,17 +203,22 @@ private fun BoxWithConstraintsScope.MyItemsGrid(
 private fun PropertyFilterRow(
     state: MyItemsViewModel.State,
     onPropertySelected: (MyItemsViewModel.State.PropertyInfo?) -> Unit,
+    contentWidth: Dp,
     modifier: Modifier = Modifier
 ) {
     BackHandler(enabled = state.selectedProperty != null) {
         onPropertySelected(null)
     }
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(horizontal = Overscan.horizontalPadding, vertical = 22.dp),
         modifier = Modifier
-            .requiredWidth(screenWidth)
+            // Chips sit at overscan padding rather than the grid's wider horizontal padding, so
+            // the row has to outgrow the grid's content area. [contentWidth] is what the grid
+            // itself was handed (already inset by the nav rail), not the full screen width: the
+            // oversized row gets centered in its slot, so a row exactly this wide lands back on
+            // the content's own bounds. The screen width would overhang into the rail.
+            .requiredWidth(contentWidth)
             .focusRestorer()
     ) {
         items(state.properties) { it ->

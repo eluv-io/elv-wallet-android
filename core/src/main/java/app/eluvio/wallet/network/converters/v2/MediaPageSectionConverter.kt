@@ -108,6 +108,7 @@ private fun HeroItemDto.toEntity(baseUrl: String): SectionItemEntity {
 
 private fun HeroActionDto.toEntity(): HeroActionEntity? {
     val dto = this
+    if (dto.hideOnTv == true) return null
     if (dto.behavior !in HeroActionEntity.supportedBehaviors) return null
     return HeroActionEntity().apply {
         id = dto.id

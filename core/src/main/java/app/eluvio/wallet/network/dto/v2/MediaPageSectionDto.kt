@@ -99,6 +99,10 @@ data class HeroActionDto(
     /** Defined for "link" actions. */
     val url: String?,
 
+    /** When true, we drop the action entirely and never show a button for it. */
+    @field:Json(name = "hide_on_tv")
+    val hideOnTv: Boolean?,
+
     /**
      * The button's text and styling. Actions also carry legacy "text"/"label"/"colors"/
      * "border_radius" fields, but the server only ever populates them with stale defaults - this

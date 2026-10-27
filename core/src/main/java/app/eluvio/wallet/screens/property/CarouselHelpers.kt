@@ -55,6 +55,8 @@ fun MediaPageSectionEntity.toDynamicSections(
      * sub-sections of a "container" can each override the theme.
      */
     cardThemeResolver: (MediaPageSectionEntity) -> CardThemeEntity? = { null },
+    /** Hides sub-sections per [MediaPageSectionEntity.shouldHide]. Null skips the check. */
+    isLoggedIn: Boolean? = null,
 ): List<DynamicPageLayoutState.Section> {
     return when (type) {
         MediaPageSectionEntity.TYPE_AUTOMATIC,
@@ -82,15 +84,18 @@ fun MediaPageSectionEntity.toDynamicSections(
             })
             // For now, just swap out container sections with their sub-sections.
             // In the future we'll want to add proper support for containers with filtering.
-            titleRow + subSections.flatMap {
-                it.toDynamicSections(
-                    parentPermissionContext,
-                    playbackStore,
-                    filters,
-                    heroActionMedia,
-                    cardThemeResolver
-                )
-            }
+            titleRow + subSections
+                .filterNot { isLoggedIn != null && it.shouldHide(isLoggedIn) }
+                .flatMap {
+                    it.toDynamicSections(
+                        parentPermissionContext,
+                        playbackStore,
+                        filters,
+                        heroActionMedia,
+                        cardThemeResolver,
+                        isLoggedIn
+                    )
+                }
         }
 
         else -> emptyList()

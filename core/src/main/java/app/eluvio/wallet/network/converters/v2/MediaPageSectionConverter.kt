@@ -56,6 +56,8 @@ fun MediaPageSectionDto.toEntity(baseUrl: String): MediaPageSectionEntity {
 
         rawPermissions = dto.permissions?.toContentPermissionsEntity()
 
+        visibility = dto.visibility?.ifEmpty { null }
+
         subSections = dto.subSections?.map { it.toEntity(baseUrl) }.toRealmListOrEmpty()
     }
 }

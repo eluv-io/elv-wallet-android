@@ -18,6 +18,7 @@ import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.data.stores.MediaPropertyStore
 import app.eluvio.wallet.data.stores.PlaybackStore
 import app.eluvio.wallet.data.stores.PropertySearchStore
+import app.eluvio.wallet.data.stores.TokenStore
 import app.eluvio.wallet.screens.dashboard.myitems.MyItemsNavArgs
 import app.eluvio.wallet.screens.dashboard.profile.ProfileNavArgs
 import app.eluvio.wallet.navigation.NavigationEvent
@@ -56,6 +57,7 @@ open class PropertyDetailViewModel(
     private val videoOptionsFetcher: VideoOptionsFetcher,
     private val playbackStore: PlaybackStore,
     private val contentStore: ContentStore,
+    private val tokenStore: TokenStore,
 ) : BaseViewModel<DynamicPageLayoutState>(DynamicPageLayoutState()) {
 
     private val propertyId = navArgs.propertyId
@@ -155,12 +157,15 @@ open class PropertyDetailViewModel(
         Flowables.combineLatest(
             pageLayout,
             propertySearchStore.getFilters(propertyId)
-                .onErrorReturnItem(PropertySearchFiltersEntity())
+                .onErrorReturnItem(PropertySearchFiltersEntity()),
+            tokenStore.loggedInObservable.distinctUntilChanged()
         )
-            .switchMap { (layout, filters) ->
+            .switchMap { (layout, filters, isLoggedIn) ->
                 val (property, page, sections) = layout
                 heroActionMedia(sections.values)
-                    .map { heroMedia -> sections(property, page, sections, filters, heroMedia) }
+                    .map { heroMedia ->
+                        sections(property, page, sections, filters, heroMedia, isLoggedIn)
+                    }
             }
             .subscribeBy(
                 onNext = { newSections ->
@@ -316,6 +321,7 @@ open class PropertyDetailViewModel(
         sections: Map<String, MediaPageSectionEntity>,
         filters: PropertySearchFiltersEntity,
         heroActionMedia: Map<String, MediaEntity>,
+        isLoggedIn: Boolean,
     ): List<DynamicPageLayoutState.Section> {
         val pagePermissionContext = PermissionContext(
             propertyId = propertyId,
@@ -326,16 +332,18 @@ open class PropertyDetailViewModel(
         return page.sectionIds
             .mapNotNull { sections[it] }
             .filterNot { section ->
-                section.isHidden
-                    .also { if (it) Log.v("Hiding unauthorized section ${section.id}") }
+                section.shouldHide(isLoggedIn)
+                    .also { if (it) Log.v("Hiding section ${section.id}") }
             }
             .flatMap { section ->
                 section.toDynamicSections(
                     pagePermissionContext,
                     playbackStore,
                     filters,
-                    heroActionMedia
-                ) { property.resolveCardTheme(page, it) }
+                    heroActionMedia,
+                    cardThemeResolver = { property.resolveCardTheme(page, it) },
+                    isLoggedIn = isLoggedIn
+                )
             }
     }
 }

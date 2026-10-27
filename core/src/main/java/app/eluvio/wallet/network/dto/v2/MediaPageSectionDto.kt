@@ -21,6 +21,8 @@ data class MediaPageSectionDto(
     @field:Json(name = "secondary_filter")
     val secondaryFilter: String?,
     override val permissions: PermissionsDto?,
+    /** "authenticated" (signed-in only), "unauthenticated" (signed-out only), or empty for always. */
+    val visibility: String?,
 
     // Section of type "container" will have this field defined (assuming ?resolve_subsections=true)
     @field:Json(name = "sections_resolved")

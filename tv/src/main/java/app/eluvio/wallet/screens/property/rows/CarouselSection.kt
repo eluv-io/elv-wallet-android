@@ -7,6 +7,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -95,13 +96,18 @@ fun CarouselSection(
     /** The list can suggest padding, but carousel might decide to not use it
      * if the first element is a full-bleed banner. */
     preferredTopPadding: Dp,
+    /**
+     * Lays the items out as a grid of this many columns, whatever the section's display format,
+     * with the cards sized to fill the width.
+     */
+    gridColumns: Int? = null,
 ) {
     val display = item.displaySettings
     if (display == null || item.items.isEmpty()) {
         return
     }
     CompositionLocalProvider(LocalCardTheme provides item.cardTheme) {
-        CarouselSectionContent(item, display, preferredTopPadding)
+        CarouselSectionContent(item, display, preferredTopPadding, gridColumns)
     }
 }
 
@@ -111,6 +117,7 @@ private fun CarouselSectionContent(
     item: DynamicPageLayoutState.Section.Carousel,
     display: DisplaySettings,
     preferredTopPadding: Dp,
+    gridColumns: Int?,
 ) {
     // Individual cards resolve their own height, but we need an approximation for the parts of the
     // section that are laid out next to the cards, rather than as part of the card row.
@@ -228,6 +235,7 @@ private fun CarouselSectionContent(
                         startPadding,
                         display.cardSize,
                         titleAlign = display.cardTitleAlign,
+                        gridColumns = gridColumns,
                         modifier = exitFocusModifier
                             .onGloballyPositioned { logoTopPaddingPx = it.boundsInParent().top }
                     )
@@ -245,8 +253,20 @@ private fun SectionItems(
     startPadding: Dp,
     cardSize: CardSize,
     titleAlign: TextAlign?,
+    gridColumns: Int? = null,
     modifier: Modifier = Modifier
 ) {
+    if (gridColumns != null) {
+        ItemGrid(
+            filteredItems,
+            startPadding,
+            cardSize,
+            titleAlign,
+            columns = gridColumns,
+            modifier = modifier
+        )
+        return
+    }
     when (displayFormat) {
         DisplayFormat.GRID -> ItemGrid(
             filteredItems,
@@ -418,15 +438,29 @@ private fun ItemGrid(
     cardSize: CardSize,
     titleAlign: TextAlign?,
     modifier: Modifier = Modifier,
-    maxItemsInEachRow: Int = Int.MAX_VALUE
-) {
+    maxItemsInEachRow: Int = Int.MAX_VALUE,
+    /** A fixed column count, with the cards sized to fill the width instead of by [cardSize]. */
+    columns: Int? = null,
+) = BoxWithConstraints {
     val firstChildFocusRequester = remember { FocusRequester() }
     var firstChildPositioned by remember { mutableStateOf(false) }
+    // Fixed columns get the search grid's wider spacing
+    val horizontalSpacing = if (columns != null) 23.dp else 20.dp
+    val verticalSpacing = if (columns != null) 43.dp else 16.dp
+    // Worked out in whole pixels, rounded down: the gaps and cards each round to pixels on their
+    // own, and a row that comes out even a pixel too wide wraps its last card onto the next line.
+    val columnWidth = columns?.let {
+        with(LocalDensity.current) {
+            val available = (maxWidth - startPadding - Overscan.horizontalPadding).toPx().toInt()
+            val gaps = horizontalSpacing.roundToPx() * (it - 1)
+            ((available - gaps) / it).toDp()
+        }
+    }
     // TODO: make lazy
     FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        maxItemsInEachRow = maxItemsInEachRow,
+        horizontalArrangement = Arrangement.spacedBy(horizontalSpacing),
+        verticalArrangement = Arrangement.spacedBy(verticalSpacing),
+        maxItemsInEachRow = columns ?: maxItemsInEachRow,
         modifier = modifier
             .fillMaxWidth()
             .focusCapturingGroup {
@@ -440,17 +474,23 @@ private fun ItemGrid(
     ) {
         items.forEachIndexed { index, item ->
             key(item) {
-                CarouselItemCard(
-                    carouselItem = item,
-                    cardHeight = cardSize.cardHeight(item.aspectRatio),
-                    titleAlign = titleAlign,
-                    modifier = Modifier.thenIf(index == 0) {
-                        onGloballyPositioned {
-                            firstChildPositioned = true
+                // Each card sits in a box exactly a column wide, so its own rounding can't
+                // push the row past the width either.
+                Box(Modifier.thenIfNotNull(columnWidth) { width(it) }) {
+                    CarouselItemCard(
+                        carouselItem = item,
+                        // A card's width is its height times its aspect ratio
+                        cardHeight = columnWidth?.let { it / (item.aspectRatio ?: 1f) }
+                            ?: cardSize.cardHeight(item.aspectRatio),
+                        titleAlign = titleAlign,
+                        modifier = Modifier.thenIf(index == 0) {
+                            onGloballyPositioned {
+                                firstChildPositioned = true
+                            }
+                                .focusRequester(firstChildFocusRequester)
                         }
-                            .focusRequester(firstChildFocusRequester)
-                    }
-                )
+                    )
+                }
             }
         }
     }

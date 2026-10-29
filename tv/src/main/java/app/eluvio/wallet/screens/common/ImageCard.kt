@@ -111,6 +111,11 @@ fun ImageCard(
      * precedence over it either way.
      */
     showFocusRing: Boolean = true,
+    /**
+     * Shows the card theme's focused look even while unfocused, for cards that stay lit up some
+     * other way (a selected filter, say). Focus treatment and scale still follow focus alone.
+     */
+    active: Boolean = false,
     /** Called with the loaded image, for cards that size themselves by what they got. */
     onImageSuccess: ((AsyncImagePainter.State.Success) -> Unit)? = null,
     onClick: () -> Unit,
@@ -120,9 +125,10 @@ fun ImageCard(
     val isFocused by interactionSource.collectIsFocusedAsState()
     val cardTheme = LocalCardTheme.current
     val cardShape = cardTheme.cardShape(aspectRatio, shape)
+    val themeActive = isFocused || active
     Surface(
         onClick = onClick,
-        border = cardTheme.clickableSurfaceBorder(),
+        border = cardTheme.clickableSurfaceBorder(active),
         scale = scale,
         shape = ClickableSurfaceDefaults.shape(cardShape),
         interactionSource = interactionSource,
@@ -145,7 +151,7 @@ fun ImageCard(
             animationSpec = tween(durationMillis = DIM_ANIMATION_MILLIS),
             label = "cardDim"
         )
-        val background = cardTheme.cardBackground(focused = isFocused)
+        val background = cardTheme.cardBackground(focused = themeActive)
         if (background != null) {
             // Cross-faded with focus, like the dim, so the two states don't fight each other.
             // It isn't dimmed itself - the theme already says what each state should look like.
@@ -170,7 +176,7 @@ fun ImageCard(
         // Themes can grey out unfocused cards. Animated alongside the dim, so color washes
         // back in as the card lights up.
         val saturation by animateFloatAsState(
-            targetValue = cardTheme.imageSaturation(focused = isFocused),
+            targetValue = cardTheme.imageSaturation(focused = themeActive),
             animationSpec = tween(durationMillis = DIM_ANIMATION_MILLIS),
             label = "cardSaturation"
         )
@@ -228,10 +234,10 @@ fun ImageCard(
  * [AnimatedFocusRing] the Discover tiles use.
  */
 @Composable
-private fun CardThemeEntity?.clickableSurfaceBorder(): ClickableSurfaceBorder {
+private fun CardThemeEntity?.clickableSurfaceBorder(active: Boolean): ClickableSurfaceBorder {
     val theme = this?.takeIf { it.hasBorder } ?: return ClickableSurfaceDefaults.border()
     return ClickableSurfaceDefaults.border(
-        border = Border(theme.cardBorder(focused = false)),
+        border = Border(theme.cardBorder(focused = active)),
         focusedBorder = Border(theme.cardBorder(focused = true)),
     )
 }

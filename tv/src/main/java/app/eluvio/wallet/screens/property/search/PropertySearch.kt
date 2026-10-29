@@ -29,6 +29,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.isSpecified
@@ -52,10 +53,13 @@ import app.eluvio.wallet.screens.common.SearchBox
 import app.eluvio.wallet.screens.common.SearchFilterChip
 import app.eluvio.wallet.screens.common.spacer
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState
+import app.eluvio.wallet.screens.property.rows.CarouselSection
 import app.eluvio.wallet.screens.property.sections
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.carousel_36
+import app.eluvio.wallet.theme.label_24
 import app.eluvio.wallet.util.compose.LocalCardTheme
+import app.eluvio.wallet.util.compose.thenIf
 import app.eluvio.wallet.util.subscribeToState
 import kotlinx.collections.immutable.persistentListOf
 
@@ -119,7 +123,16 @@ private fun PropertySearch(
                 )
             }
         } else {
-            sections(state.searchResults)
+            val singleSection =
+                state.searchResults.singleOrNull() as? DynamicPageLayoutState.Section.Carousel
+            if (singleSection != null) {
+                // A lone result section fills the page as a fixed 4-column grid
+                item(contentType = "results_grid") {
+                    CarouselSection(singleSection, preferredTopPadding = 0.dp, gridColumns = 4)
+                }
+            } else {
+                sections(state.searchResults)
+            }
         }
     }
 }
@@ -173,13 +186,23 @@ private fun FiltersRow(
     onClick: (SearchFilter.Value) -> Unit,
     label: String? = null
 ) {
+    // Image filters carry their name below the image, so centering on the whole card would sit
+    // the label low - it's centered on the image instead.
+    val isImageRow = filter.style == SearchFilter.Style.IMAGE
     Row(
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = if (isImageRow) Alignment.Top else Alignment.CenterVertically,
         modifier = Modifier.horizontalScroll(rememberScrollState())
     ) {
         Spacer(Modifier.width(Overscan.horizontalPadding))
         if (label != null) {
-            Text(label, style = MaterialTheme.typography.carousel_36)
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.thenIf(isImageRow) {
+                    height(FilterImageHeight + filterBorderInset(filter.cardTheme) * 2)
+                }
+            ) {
+                Text(label, style = MaterialTheme.typography.carousel_36)
+            }
             Spacer(Modifier.width(16.dp))
         }
         val filterPadding = 16.dp
@@ -207,14 +230,18 @@ private fun FiltersRow(
 }
 
 /** The height every filter image card is laid out at. Width follows the image's own shape. */
-private val FilterImageHeight = 56.dp
+private val FilterImageHeight = 67.dp
 
-/** How far an unselected, unfocused filter is dimmed. */
-private const val UnselectedFilterAlpha = 0.3f
+/**
+ * A theme draws its border straddling the card's bounds. Reserving half the stroke around the card
+ * keeps it from being sliced off wherever the shape meets its box - the top and bottom of a
+ * circle, say.
+ */
+private fun filterBorderInset(cardTheme: CardThemeEntity?) = ((cardTheme?.borderWidth ?: 0) / 2f).dp
 
 /**
  * A filter value rendered as an image card, themed by the Property's card theme like any section
- * item. Unselected cards sit dimmed until focused, matching the web's inactive filters.
+ * item, with its name below. A selected card wears the theme's focused look; only focus scales it.
  */
 @Composable
 private fun FilterImageCard(
@@ -229,15 +256,9 @@ private fun FilterImageCard(
     // box falls back to: a null ratio would lay the card out square but stop the theme
     // circularizing it, so every card would start as a rounded rect and pop into a circle.
     var aspectRatio by remember(filterValue.imageUrl) { mutableStateOf(AspectRatio.SQUARE) }
-    Box(
-        modifier = Modifier
-            .onFocusChanged { focused = it.hasFocus }
-            // Dimming introduces a graphics layer, which clips drawing to its bounds. A theme
-            // draws its border straddling the card's bounds, so half the stroke lands outside
-            // them and would be sliced off wherever the shape meets its box - the top and bottom
-            // of a circle, say. Reserving half the stroke around the card keeps it whole.
-            .alpha(if (selected || focused) 1f else UnselectedFilterAlpha)
-            .padding(((cardTheme?.borderWidth ?: 0) / 2f).dp)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.onFocusChanged { focused = it.hasFocus }
     ) {
         CompositionLocalProvider(LocalCardTheme provides cardTheme) {
             ImageCard(
@@ -248,20 +269,29 @@ private fun FilterImageCard(
                 // treatment (sheen, scrim, sweeping ring) applies to it.
                 respondToFocus = false,
                 showFocusRing = false,
-                // A filter says "inactive" with the alpha above, so the card's own unfocused dim
-                // has nothing left to do - it would only darken a selected filter that doesn't
-                // hold focus, and it traces the card's box rather than the circular artwork
-                // filter images tend to be, which reads as a halo around the image.
+                active = selected,
+                // Filters are never dimmed. The card's own unfocused dim would also trace the
+                // card's box rather than the circular artwork filter images tend to be, which
+                // reads as a halo around the image.
                 dimWhileUnfocused = false,
                 onImageSuccess = {
                     it.painter.intrinsicSize.toAspectRatio()?.let { ratio -> aspectRatio = ratio }
                 },
                 onClick = { onClick(filterValue) },
                 modifier = Modifier
+                    .padding(filterBorderInset(cardTheme))
                     .height(FilterImageHeight)
                     .aspectRatio(aspectRatio)
             )
         }
+        Spacer(Modifier.height(5.dp))
+        Text(
+            filterValue.value,
+            style = MaterialTheme.typography.label_24.copy(fontWeight = FontWeight.SemiBold),
+            maxLines = 1,
+            // Hidden rather than removed, so the row's height doesn't jump with focus
+            modifier = Modifier.alpha(if (focused || selected) 1f else 0f)
+        )
     }
 }
 

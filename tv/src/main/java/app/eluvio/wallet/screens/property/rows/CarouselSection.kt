@@ -35,6 +35,8 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -79,8 +81,6 @@ import app.eluvio.wallet.theme.label_24
 import app.eluvio.wallet.util.cast
 import app.eluvio.wallet.util.compose.LocalCardTheme
 import app.eluvio.wallet.util.compose.cardTitleAlign
-import app.eluvio.wallet.util.compose.focusCapturingGroup
-import app.eluvio.wallet.util.compose.focusCapturingLazyList
 import app.eluvio.wallet.util.compose.focusTrap
 import app.eluvio.wallet.util.compose.fromHex
 import app.eluvio.wallet.util.compose.thenIf
@@ -458,8 +458,10 @@ private fun ItemGrid(
     columns: Int? = null,
     firstItemFocusRequester: FocusRequester? = null,
 ) = BoxWithConstraints {
-    val firstChildFocusRequester = remember { FocusRequester() }
-    var firstChildPositioned by remember { mutableStateOf(false) }
+    // Restores the card focused last when re-entering the grid. See ItemRow for why this isn't
+    // Compose's focusRestorer().
+    var lastFocusedIndex by rememberSaveable { mutableIntStateOf(0) }
+    val restoreFocusRequester = remember { FocusRequester() }
     // Fixed columns get the search grid's wider spacing
     val horizontalSpacing = if (columns != null) 23.dp else 20.dp
     val verticalSpacing = if (columns != null) 43.dp else 16.dp
@@ -479,13 +481,9 @@ private fun ItemGrid(
         maxItemsInEachRow = columns ?: maxItemsInEachRow,
         modifier = modifier
             .fillMaxWidth()
-            .focusCapturingGroup {
-                if (firstChildPositioned) {
-                    firstChildFocusRequester
-                } else {
-                    FocusRequester.Default
-                }
-            }
+            .focusProperties { onEnter = { restoreFocusRequester.requestFocus() } }
+            // Unlike lazy layouts, FlowRow isn't a focus group on its own, and onEnter needs one.
+            .focusGroup()
             .padding(start = startPadding, end = Overscan.horizontalPadding)
     ) {
         items.forEachIndexed { index, item ->
@@ -499,13 +497,14 @@ private fun ItemGrid(
                         cardHeight = columnWidth?.let { it / (item.aspectRatio ?: 1f) }
                             ?: cardSize.cardHeight(item.aspectRatio),
                         titleAlign = titleAlign,
-                        modifier = Modifier.thenIf(index == 0) {
-                            onGloballyPositioned {
-                                firstChildPositioned = true
+                        modifier = Modifier
+                            .onFocusChanged { if (it.isFocused) lastFocusedIndex = index }
+                            .thenIf(index == lastFocusedIndex.coerceAtMost(items.lastIndex)) {
+                                focusRequester(restoreFocusRequester)
                             }
-                                .focusRequester(firstChildFocusRequester)
-                                .thenIfNotNull(firstItemFocusRequester) { focusRequester(it) }
-                        }
+                            .thenIfNotNull(firstItemFocusRequester.takeIf { index == 0 }) {
+                                focusRequester(it)
+                            }
                     )
                 }
             }
@@ -522,21 +521,20 @@ private fun ItemRow(
     firstItemFocusRequester: FocusRequester? = null,
     modifier: Modifier = Modifier
 ) {
-    // The 'key' function prevents from focusRestorer() from breaking when crashing when
-    // filteredItems changes.
-    // From what I could tell, it's kind of like 'remember' but for Composable.
-    // key(items) {
-    // TODO: this [key] clause is causing the screen to flicker on any update to [items].
-    //   as the comment above mentions, this was introduced to fix some issue with section filters,
-    //   but those are disabled. If we ever bring back section filters, we'll have to make sure
-    //   we don't get crashes without this [key] block.
     val scrollState = rememberLazyListState()
-    val childFocusRequesters = remember(items.size) { List(items.size) { FocusRequester() } }
+    // Re-entering the row returns to the card focused last (the first card on first entry).
+    // Compose's focusRestorer() keeps the focused card in the row's node, which is lost when the
+    // page's LazyColumn disposes the row off-screen. Saveable state survives that (the scroll
+    // position above does too), so track the focused card there and restore it ourselves.
+    var lastFocusedIndex by rememberSaveable { mutableIntStateOf(0) }
+    val restoreFocusRequester = remember { FocusRequester() }
     LazyRow(
         state = scrollState,
         horizontalArrangement = Arrangement.spacedBy(20.dp),
         contentPadding = PaddingValues(start = startPadding, end = Overscan.horizontalPadding),
-        modifier = modifier.focusCapturingLazyList(scrollState, childFocusRequesters)
+        // Lazy lists are focus groups already, so onEnter applies. If the card isn't composed,
+        // the entry proceeds as usual.
+        modifier = modifier.focusProperties { onEnter = { restoreFocusRequester.requestFocus() } }
     ) {
         itemsIndexed(items) { index, item ->
             CarouselItemCard(
@@ -544,7 +542,10 @@ private fun ItemRow(
                 cardHeight = cardSize.cardHeight(item.aspectRatio),
                 titleAlign = titleAlign,
                 modifier = Modifier
-                    .focusRequester(childFocusRequesters[index])
+                    .onFocusChanged { if (it.isFocused) lastFocusedIndex = index }
+                    .thenIf(index == lastFocusedIndex.coerceAtMost(items.lastIndex)) {
+                        focusRequester(restoreFocusRequester)
+                    }
                     .thenIfNotNull(firstItemFocusRequester.takeIf { index == 0 }) {
                         focusRequester(it)
                     }
@@ -568,7 +569,7 @@ private fun FilterSelectorRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
         contentPadding = PaddingValues(start = startPadding, end = Overscan.horizontalPadding),
-        modifier = modifier.focusRestorer { firstItemFocusRequester },
+        modifier = modifier.focusRestorer(firstItemFocusRequester),
     ) {
         // TODO: there might not always be an "All" option (e.g. Season 1/2/3 etc)
         item {

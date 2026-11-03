@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,12 +25,14 @@ import app.eluvio.wallet.screens.property.DynamicPageLayoutState
 import app.eluvio.wallet.screens.property.DynamicPageLayoutState.HeroAction
 import app.eluvio.wallet.theme.EluvioThemePreview
 import app.eluvio.wallet.theme.button_28
+import app.eluvio.wallet.util.compose.thenIfNotNull
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 fun HeroActionsSection(
     item: DynamicPageLayoutState.Section.HeroActions,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    firstItemFocusRequester: FocusRequester? = null,
 ) {
     val navigator = LocalNavigator.current
     Row(
@@ -39,14 +43,24 @@ fun HeroActionsSection(
             bottom = 40.dp
         )
     ) {
-        item.actions.forEach { action ->
-            HeroActionButton(action, onClick = { navigator(action.navigationEvent) })
+        item.actions.forEachIndexed { index, action ->
+            HeroActionButton(
+                action,
+                onClick = { navigator(action.navigationEvent) },
+                modifier = Modifier.thenIfNotNull(firstItemFocusRequester.takeIf { index == 0 }) {
+                    focusRequester(it)
+                },
+            )
         }
     }
 }
 
 @Composable
-private fun HeroActionButton(action: HeroAction, onClick: () -> Unit) {
+private fun HeroActionButton(
+    action: HeroAction,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val shape = RoundedCornerShape(action.cornerRadius)
     TvButton(
         text = action.text,
@@ -73,6 +87,7 @@ private fun HeroActionButton(action: HeroAction, onClick: () -> Unit) {
             ),
         ),
         contentPadding = PaddingValues(horizontal = 28.dp, vertical = 10.dp),
+        modifier = modifier,
     )
 }
 

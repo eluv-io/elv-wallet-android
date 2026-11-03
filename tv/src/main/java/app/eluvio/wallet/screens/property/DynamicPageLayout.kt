@@ -1,6 +1,7 @@
 package app.eluvio.wallet.screens.property
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -31,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
@@ -115,15 +117,16 @@ fun DynamicPageLayout(state: DynamicPageLayoutState) {
     }
 
     val listFocusRequester = remember { FocusRequester() }
+    val firstItemFocusRequester = remember { FocusRequester() }
     val scrollState = rememberLazyListState()
-    TopActionRow(state, scrollState, listFocusRequester)
+    TopActionRow(state, scrollState, listFocusRequester, firstItemFocusRequester)
 
     LazyColumn(
         state = scrollState,
         contentPadding = PaddingValues(bottom = 32.dp),
         modifier = Modifier.focusRequester(listFocusRequester)
     ) {
-        sections(state.sections, firstItemPadding = 50.dp)
+        sections(state.sections, firstItemPadding = 50.dp, firstItemFocusRequester)
     }
 }
 
@@ -137,19 +140,25 @@ fun LazyListScope.sections(
     // E.g. Carousels will add the padding before the content, but still put the Background with no padding, so
     // it will reach the top of the screen if it happens to be the first element in the page.
     firstItemPadding: Dp = 0.dp,
+    // Attached to the first item of the first section that has focusable items.
+    firstItemFocusRequester: FocusRequester? = null,
 ) {
+    val firstFocusableSectionIndex = sections.indexOfFirst { it.hasFocusableItems() }
     sections.forEachIndexed { index, section ->
         item(contentType = section::class) {
             val preferredTopPadding = if (index == 0) firstItemPadding else 0.dp
             // For now, only CarouselSection can override the top padding, so we just pass it
             // as a modifier for other sections.
             val modifier = Modifier.padding(top = preferredTopPadding)
+            val sectionFirstItemFocusRequester =
+                firstItemFocusRequester.takeIf { index == firstFocusableSectionIndex }
             when (section) {
                 is DynamicPageLayoutState.Section.Banner -> BannerSection(item = section, modifier)
 
                 is DynamicPageLayoutState.Section.Carousel -> CarouselSection(
                     item = section,
                     preferredTopPadding,
+                    firstItemFocusRequester = sectionFirstItemFocusRequester,
                 )
 
                 is DynamicPageLayoutState.Section.Description -> DescriptionSection(
@@ -161,7 +170,8 @@ fun LazyListScope.sections(
 
                 is DynamicPageLayoutState.Section.HeroActions -> HeroActionsSection(
                     item = section,
-                    modifier
+                    modifier,
+                    firstItemFocusRequester = sectionFirstItemFocusRequester,
                 )
 
                 is DynamicPageLayoutState.Section.SectionHeader -> SectionHeader(item = section, modifier)
@@ -170,11 +180,19 @@ fun LazyListScope.sections(
     }
 }
 
+/** Mirrors the sections that render something focusable (see [CarouselSection]'s early return). */
+private fun DynamicPageLayoutState.Section.hasFocusableItems(): Boolean = when (this) {
+    is DynamicPageLayoutState.Section.Carousel -> displaySettings != null && items.isNotEmpty()
+    is DynamicPageLayoutState.Section.HeroActions -> actions.isNotEmpty()
+    else -> false
+}
+
 @Composable
 private fun TopActionRow(
     state: DynamicPageLayoutState,
     listScrollState: LazyListState,
     listFocusRequester: FocusRequester,
+    firstItemFocusRequester: FocusRequester,
 ) {
     val actionButtons = buildList<@Composable () -> Unit> {
         if (state.propertyLinks.size > 1) {
@@ -210,22 +228,33 @@ private fun TopActionRow(
             .padding(top = 37.dp, end = 47.dp)
             .zIndex(100f) // float above everything else
             .offset { IntOffset(0, -offset) }
-            .focusProperties { down = listFocusRequester }
             .onFocusChanged {
                 if (it.hasFocus) {
+                    // When search button gains focus, make sure list is scrolled to the top
+                    scope.launch {
+                        listScrollState.animateScrollToItem(0)
+                    }
+                }
+            }
+            .focusProperties {
+                onEnter = {
                     if (firstFocus) {
-                        // Prevent Search button from getting focus before other page elements
+                        // Nothing is focused when the page opens, so the first D-pad press lands
+                        // here (topmost). Send it to the first section's first item instead.
+                        // This has to redirect the focus move in-flight: moving focus from
+                        // onFocusChanged instead makes the original move fail, and the View
+                        // system then re-runs the key press from the new focus, skipping a row.
                         Log.d("Skipping TopActionRow focus, moving down.")
                         firstFocus = false
-                        listFocusRequester.requestFocus()
-                    } else {
-                        // When search button gains focus, make sure list is scrolled to the top
-                        scope.launch {
-                            listScrollState.animateScrollToItem(0)
+                        if (!firstItemFocusRequester.requestFocus(FocusDirection.Enter)) {
+                            // First item isn't composed; let Compose pick from the list.
+                            listFocusRequester.requestFocus()
                         }
                     }
                 }
-            },
+            }
+            .focusGroup()
+            .focusProperties { down = listFocusRequester },
     ) {
         if (actionButtons.isEmpty()) {
             // Dummy element to capture focus at the top of the page

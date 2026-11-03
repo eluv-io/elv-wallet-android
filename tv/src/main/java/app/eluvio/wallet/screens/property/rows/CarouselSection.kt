@@ -101,13 +101,21 @@ fun CarouselSection(
      * with the cards sized to fill the width.
      */
     gridColumns: Int? = null,
+    /** Attached to the first card, so the page can send focus straight to it. */
+    firstItemFocusRequester: FocusRequester? = null,
 ) {
     val display = item.displaySettings
     if (display == null || item.items.isEmpty()) {
         return
     }
     CompositionLocalProvider(LocalCardTheme provides item.cardTheme) {
-        CarouselSectionContent(item, display, preferredTopPadding, gridColumns)
+        CarouselSectionContent(
+            item,
+            display,
+            preferredTopPadding,
+            gridColumns,
+            firstItemFocusRequester
+        )
     }
 }
 
@@ -118,6 +126,7 @@ private fun CarouselSectionContent(
     display: DisplaySettings,
     preferredTopPadding: Dp,
     gridColumns: Int?,
+    firstItemFocusRequester: FocusRequester?,
 ) {
     // Individual cards resolve their own height, but we need an approximation for the parts of the
     // section that are laid out next to the cards, rather than as part of the card row.
@@ -236,6 +245,7 @@ private fun CarouselSectionContent(
                         display.cardSize,
                         titleAlign = display.cardTitleAlign,
                         gridColumns = gridColumns,
+                        firstItemFocusRequester = firstItemFocusRequester,
                         modifier = exitFocusModifier
                             .onGloballyPositioned { logoTopPaddingPx = it.boundsInParent().top }
                     )
@@ -254,6 +264,7 @@ private fun SectionItems(
     cardSize: CardSize,
     titleAlign: TextAlign?,
     gridColumns: Int? = null,
+    firstItemFocusRequester: FocusRequester? = null,
     modifier: Modifier = Modifier
 ) {
     if (gridColumns != null) {
@@ -263,6 +274,7 @@ private fun SectionItems(
             cardSize,
             titleAlign,
             columns = gridColumns,
+            firstItemFocusRequester = firstItemFocusRequester,
             modifier = modifier
         )
         return
@@ -273,6 +285,7 @@ private fun SectionItems(
             startPadding,
             cardSize,
             titleAlign,
+            firstItemFocusRequester = firstItemFocusRequester,
             modifier = modifier
         )
 
@@ -284,6 +297,7 @@ private fun SectionItems(
             cardSize,
             titleAlign,
             maxItemsInEachRow = 1,
+            firstItemFocusRequester = firstItemFocusRequester,
             modifier = modifier
         )
 
@@ -294,6 +308,7 @@ private fun SectionItems(
             startPadding,
             cardSize,
             titleAlign,
+            firstItemFocusRequester = firstItemFocusRequester,
             modifier = modifier
         )
     }
@@ -441,6 +456,7 @@ private fun ItemGrid(
     maxItemsInEachRow: Int = Int.MAX_VALUE,
     /** A fixed column count, with the cards sized to fill the width instead of by [cardSize]. */
     columns: Int? = null,
+    firstItemFocusRequester: FocusRequester? = null,
 ) = BoxWithConstraints {
     val firstChildFocusRequester = remember { FocusRequester() }
     var firstChildPositioned by remember { mutableStateOf(false) }
@@ -488,6 +504,7 @@ private fun ItemGrid(
                                 firstChildPositioned = true
                             }
                                 .focusRequester(firstChildFocusRequester)
+                                .thenIfNotNull(firstItemFocusRequester) { focusRequester(it) }
                         }
                     )
                 }
@@ -502,6 +519,7 @@ private fun ItemRow(
     startPadding: Dp,
     cardSize: CardSize,
     titleAlign: TextAlign?,
+    firstItemFocusRequester: FocusRequester? = null,
     modifier: Modifier = Modifier
 ) {
     // The 'key' function prevents from focusRestorer() from breaking when crashing when
@@ -525,7 +543,11 @@ private fun ItemRow(
                 carouselItem = item,
                 cardHeight = cardSize.cardHeight(item.aspectRatio),
                 titleAlign = titleAlign,
-                modifier = Modifier.focusRequester(childFocusRequesters[index])
+                modifier = Modifier
+                    .focusRequester(childFocusRequesters[index])
+                    .thenIfNotNull(firstItemFocusRequester.takeIf { index == 0 }) {
+                        focusRequester(it)
+                    }
             )
         }
     }

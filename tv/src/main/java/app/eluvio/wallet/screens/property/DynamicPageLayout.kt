@@ -1,7 +1,6 @@
 package app.eluvio.wallet.screens.property
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -83,7 +82,6 @@ import app.eluvio.wallet.util.compose.icons.MyItemsStack
 import app.eluvio.wallet.util.compose.icons.Profile
 import app.eluvio.wallet.util.compose.icons.Search
 import app.eluvio.wallet.util.compose.icons.Switcher
-import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.toHtmlAnnotated
 import coil3.compose.AsyncImage
 import kotlinx.collections.immutable.persistentListOf
@@ -119,12 +117,29 @@ fun DynamicPageLayout(state: DynamicPageLayoutState) {
     val listFocusRequester = remember { FocusRequester() }
     val firstItemFocusRequester = remember { FocusRequester() }
     val scrollState = rememberLazyListState()
-    TopActionRow(state, scrollState, listFocusRequester, firstItemFocusRequester)
+    // Nothing is focused when the page opens. Until the first D-pad press, the top action buttons
+    // can't take focus, so that press enters the list, which sends it to the first item.
+    var firstFocus by rememberSaveable { mutableStateOf(true) }
+    TopActionRow(state, scrollState, listFocusRequester, canFocus = !firstFocus)
 
     LazyColumn(
         state = scrollState,
         contentPadding = PaddingValues(bottom = 32.dp),
-        modifier = Modifier.focusRequester(listFocusRequester)
+        modifier = Modifier
+            .focusRequester(listFocusRequester)
+            // Lazy lists are focus groups, so onEnter applies here. It has to redirect the focus
+            // move in-flight: moving focus from onFocusChanged instead makes the original move
+            // fail, and the View system then re-runs the key press from the new focus, skipping
+            // a row.
+            .focusProperties {
+                onEnter = {
+                    if (firstFocus) {
+                        firstFocus = false
+                        // If the first item isn't composed, the entry proceeds as usual.
+                        firstItemFocusRequester.requestFocus(FocusDirection.Enter)
+                    }
+                }
+            }
     ) {
         sections(state.sections, firstItemPadding = 50.dp, firstItemFocusRequester)
     }
@@ -192,7 +207,7 @@ private fun TopActionRow(
     state: DynamicPageLayoutState,
     listScrollState: LazyListState,
     listFocusRequester: FocusRequester,
-    firstItemFocusRequester: FocusRequester,
+    canFocus: Boolean,
 ) {
     val actionButtons = buildList<@Composable () -> Unit> {
         if (state.propertyLinks.size > 1) {
@@ -208,7 +223,6 @@ private fun TopActionRow(
         state.searchNavigationEvent
             ?.let { add @Composable { SearchButton(it) } }
     }
-    var firstFocus by rememberSaveable { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
     val offset by remember(listScrollState) {
         derivedStateOf {
@@ -228,6 +242,10 @@ private fun TopActionRow(
             .padding(top = 37.dp, end = 47.dp)
             .zIndex(100f) // float above everything else
             .offset { IntOffset(0, -offset) }
+            .focusProperties {
+                this.canFocus = canFocus
+                down = listFocusRequester
+            }
             .onFocusChanged {
                 if (it.hasFocus) {
                     // When search button gains focus, make sure list is scrolled to the top
@@ -235,26 +253,7 @@ private fun TopActionRow(
                         listScrollState.animateScrollToItem(0)
                     }
                 }
-            }
-            .focusProperties {
-                onEnter = {
-                    if (firstFocus) {
-                        // Nothing is focused when the page opens, so the first D-pad press lands
-                        // here (topmost). Send it to the first section's first item instead.
-                        // This has to redirect the focus move in-flight: moving focus from
-                        // onFocusChanged instead makes the original move fail, and the View
-                        // system then re-runs the key press from the new focus, skipping a row.
-                        Log.d("Skipping TopActionRow focus, moving down.")
-                        firstFocus = false
-                        if (!firstItemFocusRequester.requestFocus(FocusDirection.Enter)) {
-                            // First item isn't composed; let Compose pick from the list.
-                            listFocusRequester.requestFocus()
-                        }
-                    }
-                }
-            }
-            .focusGroup()
-            .focusProperties { down = listFocusRequester },
+            },
     ) {
         if (actionButtons.isEmpty()) {
             // Dummy element to capture focus at the top of the page

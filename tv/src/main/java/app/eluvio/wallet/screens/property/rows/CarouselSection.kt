@@ -158,9 +158,21 @@ private fun CarouselSectionContent(
             if (showLogo) {
                 Logo(display, logoTopPaddingPx, approximateCardHeight)
             }
+            val itemsFocusRequester = remember { FocusRequester() }
             Column(
                 Modifier
                     .focusTrap(FocusDirection.Left, FocusDirection.Right)
+                    .focusProperties {
+                        // Entering the section moving Down goes straight to its cards (which
+                        // restore the last focused one). Otherwise whether the title row's
+                        // View All button catches the press depends on its horizontal position
+                        // relative to the previous focus; this way it's only reachable with Up.
+                        onEnter = {
+                            if (requestedFocusDirection == FocusDirection.Down) {
+                                itemsFocusRequester.requestFocus()
+                            }
+                        }
+                    }
                     .focusGroup() // Required to make focusRestorer() work down the line
             ) {
                 // Whether or not to add padding to the start of the row.
@@ -247,6 +259,7 @@ private fun CarouselSectionContent(
                         gridColumns = gridColumns,
                         firstItemFocusRequester = firstItemFocusRequester,
                         modifier = exitFocusModifier
+                            .focusRequester(itemsFocusRequester)
                             .onGloballyPositioned { logoTopPaddingPx = it.boundsInParent().top }
                     )
                 }

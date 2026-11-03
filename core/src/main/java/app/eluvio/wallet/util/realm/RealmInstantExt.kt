@@ -1,6 +1,6 @@
 package app.eluvio.wallet.util.realm
 
-import io.realm.kotlin.types.RealmInstant
+import io.github.xilinjia.krdb.types.RealmInstant
 import java.util.Date
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds

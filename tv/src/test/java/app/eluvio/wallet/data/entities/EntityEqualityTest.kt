@@ -2,11 +2,11 @@ package app.eluvio.wallet.data.entities
 
 
 import app.eluvio.wallet.testing.RealmTestRule
-import io.realm.kotlin.ext.realmDictionaryOf
-import io.realm.kotlin.ext.realmListOf
-import io.realm.kotlin.ext.toRealmList
-import io.realm.kotlin.types.RealmInstant
-import io.realm.kotlin.types.TypedRealmObject
+import io.github.xilinjia.krdb.ext.realmDictionaryOf
+import io.github.xilinjia.krdb.ext.realmListOf
+import io.github.xilinjia.krdb.ext.toRealmList
+import io.github.xilinjia.krdb.types.RealmInstant
+import io.github.xilinjia.krdb.types.TypedRealmObject
 import org.junit.Test
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
@@ -120,16 +120,16 @@ class EntityEqualityTest {
             "java.lang.Boolean", "boolean" -> lastValue.toString().toBoolean().not()
             "java.util.Date" -> Date(Random.nextLong())
             "java.util.List" -> listOf(1)
-            "io.realm.kotlin.types.RealmList" -> {
+            "io.github.xilinjia.krdb.types.RealmList" -> {
                 // generic types are erased at runtime, so we can make a list of any type we want
                 realmListOf<Any>(1).toList().toRealmList()
             }
 
-            "io.realm.kotlin.types.RealmDictionary" -> {
+            "io.github.xilinjia.krdb.types.RealmDictionary" -> {
                 realmDictionaryOf<Any>("foo" to "bar")
             }
 
-            "io.realm.kotlin.types.RealmInstant" -> {
+            "io.github.xilinjia.krdb.types.RealmInstant" -> {
                 RealmInstant.now()
             }
             // Ignored classes

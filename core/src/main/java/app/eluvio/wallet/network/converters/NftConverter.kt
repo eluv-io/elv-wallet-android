@@ -19,8 +19,8 @@ import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.realm.toRealmDictionaryOrEmpty
 import app.eluvio.wallet.util.realm.toRealmInstant
 import app.eluvio.wallet.util.realm.toRealmListOrEmpty
-import io.realm.kotlin.ext.toRealmList
-import io.realm.kotlin.types.RealmDictionary
+import io.github.xilinjia.krdb.ext.toRealmList
+import io.github.xilinjia.krdb.types.RealmDictionary
 
 fun List<NftDto>.toNfts(): List<NftEntity> {
     return mapNotNull { dto ->

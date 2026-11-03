@@ -6,8 +6,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
-import io.realm.kotlin.types.EmbeddedRealmObject
-import io.realm.kotlin.types.TypedRealmObject
+import io.github.xilinjia.krdb.types.EmbeddedRealmObject
+import io.github.xilinjia.krdb.types.TypedRealmObject
 import kotlin.reflect.KClass
 
 class PropertyLoginInfoRealmEntity : EmbeddedRealmObject {

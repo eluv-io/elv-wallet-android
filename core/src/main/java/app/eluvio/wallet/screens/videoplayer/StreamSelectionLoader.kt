@@ -9,7 +9,7 @@ import app.eluvio.wallet.util.logging.Log
 import app.eluvio.wallet.util.realm.saveTo
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.kotlin.zipWith
-import io.realm.kotlin.Realm
+import io.github.xilinjia.krdb.Realm
 import javax.inject.Inject
 
 class StreamSelectionLoader @Inject constructor(

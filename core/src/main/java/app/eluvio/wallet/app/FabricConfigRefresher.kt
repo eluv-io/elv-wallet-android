@@ -7,8 +7,8 @@ import app.eluvio.wallet.data.stores.FabricConfigStore
 import app.eluvio.wallet.network.dto.FabricConfiguration
 import app.eluvio.wallet.util.logging.Log
 import io.reactivex.rxjava3.disposables.Disposable
-import io.realm.kotlin.Realm
-import io.realm.kotlin.ext.query
+import io.github.xilinjia.krdb.Realm
+import io.github.xilinjia.krdb.ext.query
 import kotlinx.coroutines.rx3.rxCompletable
 import javax.inject.Inject
 

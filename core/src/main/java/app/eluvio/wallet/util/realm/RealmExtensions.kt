@@ -7,12 +7,12 @@ import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.schedulers.Schedulers
-import io.realm.kotlin.Realm
-import io.realm.kotlin.UpdatePolicy
-import io.realm.kotlin.delete
-import io.realm.kotlin.ext.copyFromRealm
-import io.realm.kotlin.query.RealmQuery
-import io.realm.kotlin.types.RealmObject
+import io.github.xilinjia.krdb.Realm
+import io.github.xilinjia.krdb.UpdatePolicy
+import io.github.xilinjia.krdb.delete
+import io.github.xilinjia.krdb.ext.copyFromRealm
+import io.github.xilinjia.krdb.query.RealmQuery
+import io.github.xilinjia.krdb.types.RealmObject
 import kotlinx.coroutines.rx3.rxCompletable
 import kotlinx.coroutines.rx3.rxFlowable
 

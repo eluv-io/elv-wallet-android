@@ -72,7 +72,7 @@ import app.eluvio.wallet.util.subscribeToState
 import app.eluvio.wallet.util.toAnnotatedString
 import app.eluvio.wallet.util.toHtmlSpan
 import coil3.compose.AsyncImage
-import io.realm.kotlin.ext.realmListOf
+import io.github.xilinjia.krdb.ext.realmListOf
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import app.eluvio.wallet.screens.redeemdialog.RedeemDialogNavArgs

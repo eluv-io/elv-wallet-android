@@ -17,8 +17,8 @@ import app.eluvio.wallet.util.rx.mapNotNull
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.kotlin.zipWith
-import io.realm.kotlin.Realm
-import io.realm.kotlin.ext.query
+import io.github.xilinjia.krdb.Realm
+import io.github.xilinjia.krdb.ext.query
 import javax.inject.Inject
 
 class PropertySearchStore @Inject constructor(

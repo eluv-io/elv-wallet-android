@@ -13,7 +13,7 @@ import app.eluvio.wallet.util.realm.saveTo
 import app.eluvio.wallet.util.rx.mapNotNull
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.kotlin.zipWith
-import io.realm.kotlin.Realm
+import io.github.xilinjia.krdb.Realm
 import javax.inject.Inject
 
 /**

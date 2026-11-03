@@ -2,8 +2,8 @@ package app.eluvio.wallet.data.entities.v2.display
 
 import app.eluvio.wallet.data.entities.v2.MediaPropertyEntity
 import app.eluvio.wallet.testing.RealmTestRule
-import io.realm.kotlin.ext.query
-import io.realm.kotlin.ext.realmDictionaryOf
+import io.github.xilinjia.krdb.ext.query
+import io.github.xilinjia.krdb.ext.realmDictionaryOf
 import org.junit.Rule
 import org.junit.Test
 import kotlin.test.assertEquals

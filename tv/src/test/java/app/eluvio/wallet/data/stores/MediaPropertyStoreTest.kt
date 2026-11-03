@@ -10,7 +10,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.reactivex.rxjava3.core.Single
-import io.realm.kotlin.ext.query
+import io.github.xilinjia.krdb.ext.query
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test

@@ -1,10 +1,10 @@
 package app.eluvio.wallet.testing
 
-import io.realm.kotlin.Realm
-import io.realm.kotlin.RealmConfiguration
-import io.realm.kotlin.types.EmbeddedRealmObject
-import io.realm.kotlin.types.RealmObject
-import io.realm.kotlin.types.TypedRealmObject
+import io.github.xilinjia.krdb.Realm
+import io.github.xilinjia.krdb.RealmConfiguration
+import io.github.xilinjia.krdb.types.EmbeddedRealmObject
+import io.github.xilinjia.krdb.types.RealmObject
+import io.github.xilinjia.krdb.types.TypedRealmObject
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import org.reflections.Reflections

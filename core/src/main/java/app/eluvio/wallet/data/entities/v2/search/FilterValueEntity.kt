@@ -1,7 +1,7 @@
 package app.eluvio.wallet.data.entities.v2.search
 
 import app.eluvio.wallet.data.entities.FabricUrlEntity
-import io.realm.kotlin.types.EmbeddedRealmObject
+import io.github.xilinjia.krdb.types.EmbeddedRealmObject
 
 class FilterValueEntity : EmbeddedRealmObject {
     companion object {

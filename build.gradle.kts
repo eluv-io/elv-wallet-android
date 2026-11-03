@@ -3,7 +3,6 @@
 plugins {
     alias(libs.plugins.com.android.application) apply false
     alias(libs.plugins.com.android.library) apply false
-    alias(libs.plugins.org.jetbrains.kotlin.android) apply false
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.realm) apply false
@@ -19,6 +18,9 @@ plugins {
 buildscript {
     dependencies{
         classpath(libs.gradle.secrets)
+        // AGP 9 has a runtime dependency on KGP 2.2.10 (built-in Kotlin); pin ours explicitly.
+        classpath(libs.kotlin.gradle.plugin)
+        classpath(libs.ksp.gradle.plugin)
     }
 }
 

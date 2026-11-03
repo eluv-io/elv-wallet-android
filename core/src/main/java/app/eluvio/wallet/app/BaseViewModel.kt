@@ -14,7 +14,7 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import io.reactivex.rxjava3.subjects.BehaviorSubject
 import io.reactivex.rxjava3.subjects.PublishSubject
-import io.realm.kotlin.types.BaseRealmObject
+import io.github.xilinjia.krdb.types.BaseRealmObject
 import kotlin.reflect.full.memberProperties
 
 private const val STATE_KEY = "viewmodel_state"

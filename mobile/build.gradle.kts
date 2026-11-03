@@ -1,7 +1,6 @@
 @Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.com.android.application)
-    alias(libs.plugins.org.jetbrains.kotlin.android)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.parcelize)
@@ -23,7 +22,7 @@ if (file("google-services.json").exists()) {
 
 android {
     namespace = "app.eluvio.mobile"
-    compileSdk = 36
+    compileSdk = 37
     defaultConfig {
         applicationId = "app.eluvio.mobile"
         minSdk = 23
@@ -71,9 +70,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = "17"
     }
 
     buildFeatures {

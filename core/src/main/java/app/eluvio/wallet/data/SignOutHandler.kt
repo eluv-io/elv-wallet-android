@@ -14,7 +14,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Completable
-import io.realm.kotlin.Realm
+import io.github.xilinjia.krdb.Realm
 import javax.inject.Inject
 
 interface SignOutHandler {

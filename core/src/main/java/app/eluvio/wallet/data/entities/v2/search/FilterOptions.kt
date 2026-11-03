@@ -2,9 +2,9 @@ package app.eluvio.wallet.data.entities.v2.search
 
 import app.eluvio.wallet.data.FabricUrl
 import app.eluvio.wallet.data.entities.FabricUrlEntity
-import io.realm.kotlin.ext.realmListOf
-import io.realm.kotlin.types.EmbeddedRealmObject
-import io.realm.kotlin.types.RealmList
+import io.github.xilinjia.krdb.ext.realmListOf
+import io.github.xilinjia.krdb.types.EmbeddedRealmObject
+import io.github.xilinjia.krdb.types.RealmList
 
 /**
  * Consolidates primary and secondary filter options into a single interface so we can more easily

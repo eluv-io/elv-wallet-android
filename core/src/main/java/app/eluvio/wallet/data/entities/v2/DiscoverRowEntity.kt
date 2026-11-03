@@ -5,10 +5,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.ElementsIntoSet
-import io.realm.kotlin.ext.realmListOf
-import io.realm.kotlin.types.RealmObject
-import io.realm.kotlin.types.TypedRealmObject
-import io.realm.kotlin.types.annotations.PrimaryKey
+import io.github.xilinjia.krdb.ext.realmListOf
+import io.github.xilinjia.krdb.types.RealmObject
+import io.github.xilinjia.krdb.types.TypedRealmObject
+import io.github.xilinjia.krdb.types.annotations.PrimaryKey
 import kotlin.reflect.KClass
 
 /**

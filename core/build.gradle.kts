@@ -1,7 +1,6 @@
 @Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.com.android.library)
-    alias(libs.plugins.org.jetbrains.kotlin.android)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.realm)
@@ -13,7 +12,7 @@ plugins {
 
 android {
     namespace = "app.eluvio.wallet.core"
-    compileSdk = 36
+    compileSdk = 37
     defaultConfig {
         minSdk = 23
 
@@ -32,9 +31,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = "17"
     }
 
     buildFeatures {

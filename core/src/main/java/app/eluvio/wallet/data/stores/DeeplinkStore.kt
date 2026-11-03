@@ -13,8 +13,8 @@ import app.eluvio.wallet.util.sharedprefs.boolean
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Maybe
-import io.realm.kotlin.Realm
-import io.realm.kotlin.ext.query
+import io.github.xilinjia.krdb.Realm
+import io.github.xilinjia.krdb.ext.query
 import javax.inject.Inject
 
 class DeeplinkStore @Inject constructor(

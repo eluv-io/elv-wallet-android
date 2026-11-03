@@ -65,8 +65,8 @@ import app.eluvio.wallet.util.compose.LocalCardTheme
 import app.eluvio.wallet.util.compose.cardShape
 import app.eluvio.wallet.util.compose.isCircular
 import app.eluvio.wallet.util.compose.requestInitialFocus
-import io.realm.kotlin.ext.realmListOf
-import io.realm.kotlin.types.RealmInstant
+import io.github.xilinjia.krdb.ext.realmListOf
+import io.github.xilinjia.krdb.types.RealmInstant
 import kotlinx.coroutines.delay
 
 typealias MediaClickHandler = (MediaEntity, PermissionContext?) -> Unit

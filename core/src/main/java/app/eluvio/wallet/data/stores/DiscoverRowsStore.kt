@@ -13,9 +13,9 @@ import app.eluvio.wallet.util.realm.saveAsync
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.kotlin.zipWith
-import io.realm.kotlin.Realm
-import io.realm.kotlin.ext.query
-import io.realm.kotlin.ext.toRealmList
+import io.github.xilinjia.krdb.Realm
+import io.github.xilinjia.krdb.ext.query
+import io.github.xilinjia.krdb.ext.toRealmList
 import javax.inject.Inject
 
 /**

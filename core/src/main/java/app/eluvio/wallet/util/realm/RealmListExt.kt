@@ -1,11 +1,11 @@
 package app.eluvio.wallet.util.realm
 
-import io.realm.kotlin.ext.realmDictionaryOf
-import io.realm.kotlin.ext.realmListOf
-import io.realm.kotlin.ext.toRealmDictionary
-import io.realm.kotlin.ext.toRealmList
-import io.realm.kotlin.types.RealmDictionary
-import io.realm.kotlin.types.RealmList
+import io.github.xilinjia.krdb.ext.realmDictionaryOf
+import io.github.xilinjia.krdb.ext.realmListOf
+import io.github.xilinjia.krdb.ext.toRealmDictionary
+import io.github.xilinjia.krdb.ext.toRealmList
+import io.github.xilinjia.krdb.types.RealmDictionary
+import io.github.xilinjia.krdb.types.RealmList
 
 /**
  * Same as [toRealmList], but converts [null] lists to an empty RealmList.

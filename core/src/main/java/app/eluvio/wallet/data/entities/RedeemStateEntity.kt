@@ -7,10 +7,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
-import io.realm.kotlin.types.EmbeddedRealmObject
-import io.realm.kotlin.types.RealmInstant
-import io.realm.kotlin.types.TypedRealmObject
-import io.realm.kotlin.types.annotations.Ignore
+import io.github.xilinjia.krdb.types.EmbeddedRealmObject
+import io.github.xilinjia.krdb.types.RealmInstant
+import io.github.xilinjia.krdb.types.TypedRealmObject
+import io.github.xilinjia.krdb.types.annotations.Ignore
 import kotlin.reflect.KClass
 
 class RedeemStateEntity : EmbeddedRealmObject {

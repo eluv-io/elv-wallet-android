@@ -1,9 +1,9 @@
 package app.eluvio.wallet.data.entities.v2.search
 
 import app.eluvio.wallet.data.entities.v2.PropertySearchFiltersEntity
-import io.realm.kotlin.ext.realmListOf
-import io.realm.kotlin.types.EmbeddedRealmObject
-import io.realm.kotlin.types.RealmList
+import io.github.xilinjia.krdb.ext.realmListOf
+import io.github.xilinjia.krdb.types.EmbeddedRealmObject
+import io.github.xilinjia.krdb.types.RealmList
 
 /**
  * A filter attribute that is very similar to the corresponding DTO class, but also hard to work with because it

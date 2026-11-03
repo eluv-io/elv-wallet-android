@@ -10,7 +10,7 @@ import app.eluvio.wallet.network.dto.v2.PrimaryFilterOptionsDto
 import app.eluvio.wallet.network.dto.v2.SearchFilterAttributeDto
 import app.eluvio.wallet.network.dto.v2.SecondaryFilterOptionsDto
 import app.eluvio.wallet.util.realm.toRealmListOrEmpty
-import io.realm.kotlin.ext.toRealmDictionary
+import io.github.xilinjia.krdb.ext.toRealmDictionary
 
 fun GetFiltersResponse.toEntity(propId: String, baseUrl: String): PropertySearchFiltersEntity {
     val dto = this

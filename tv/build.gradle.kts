@@ -3,7 +3,6 @@ import org.jetbrains.kotlin.util.prefixIfNot
 @Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.com.android.application)
-    alias(libs.plugins.org.jetbrains.kotlin.android)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.realm)
@@ -26,7 +25,7 @@ if (file("google-services.json").exists()) {
 
 android {
     namespace = "app.eluvio.wallet"
-    compileSdk = 36
+    compileSdk = 37
     val customBuildConfig = CustomBuildConfig.from(project.ext.properties)
     defaultConfig {
         applicationId = customBuildConfig.applicationId
@@ -89,13 +88,12 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
 
     buildFeatures {
         compose = true
         buildConfig = true
+        // Off by default since AGP 9; needed for the app_name resValue above.
+        resValues = true
     }
 
     testOptions {
@@ -109,7 +107,6 @@ dependencies {
     implementation(libs.core.ktx)
     implementation(libs.androidx.leanback)
 
-    implementation(libs.androidx.tv.foundation)
     implementation(libs.androidx.tv.material)
 
     implementation(libs.androidx.activity.compose)
@@ -156,7 +153,11 @@ dependencies {
 
     implementation(libs.hilt.navigation.compose)
 
-    implementation(libs.qrcode.kotlin.android)
+    implementation(libs.qrcode.kotlin.android) {
+        // Depends on the long-removed kotlin-android-extensions runtime, whose
+        // kotlinx.android.parcel classes now ship in kotlin-parcelize-runtime (Kotlin 2.4+).
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-android-extensions-runtime")
+    }
 
     implementation(libs.androidx.lifecycle.process)
 

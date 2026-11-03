@@ -21,7 +21,7 @@ import app.eluvio.wallet.network.dto.v2.MediaPropertyDto
 import app.eluvio.wallet.network.dto.v2.PropertySelectionDto
 import app.eluvio.wallet.util.realm.toRealmDictionaryOrEmpty
 import app.eluvio.wallet.util.realm.toRealmListOrEmpty
-import io.realm.kotlin.ext.toRealmList
+import io.github.xilinjia.krdb.ext.toRealmList
 
 fun MediaPropertyDto.toEntity(baseUrl: String): MediaPropertyEntity? {
     val dto = this

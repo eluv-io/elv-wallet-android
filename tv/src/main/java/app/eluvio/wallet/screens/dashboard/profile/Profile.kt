@@ -68,6 +68,10 @@ private fun Profile(
             // Left column: Profile + App
             Column(modifier = Modifier.weight(1f)) {
                 Header("PROFILE")
+                state.email?.let {
+                    Spacer(Modifier.height(10.dp))
+                    InfoField("Email: $it")
+                }
                 Spacer(Modifier.height(10.dp))
                 InfoField("Address: ${state.address}")
                 Spacer(Modifier.height(10.dp))
@@ -167,6 +171,7 @@ private fun ProfilePreview() = EluvioThemePreview {
         ProfileViewModel.State(
             address = "0x00f9f89f8f98",
             userId = "ius1f1fd2d8d82e21d",
+            email = "user@example.com",
             network = Environment.Demo,
             fabricNode = "https://host-2-2-2-2.cf.io",
             authNode = "https://host-2-2-2-2.cf.io/as",

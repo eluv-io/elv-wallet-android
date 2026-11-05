@@ -2,6 +2,8 @@ package app.eluvio.wallet.screens.common
 
 import android.content.Context
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -284,47 +286,63 @@ private fun BoxScope.LiveVideoTag(
     liveVideoState: LiveVideoState,
     circular: Boolean = false,
 ) {
-    // A circle has no bottom-end corner to pin the tag to, so center it horizontally instead.
-    // Still bottom-aligned vertically, same as every other card.
-    val alignment = if (circular) Alignment.BottomCenter else Alignment.BottomEnd
+    // A circle has no top-end corner to pin the tag to, so center it horizontally instead.
+    // Still top-aligned vertically, same as every other card.
+    val alignment = if (circular) Alignment.TopCenter else Alignment.TopEnd
     when {
         liveVideoState.ended -> {
             // Maybe never even displayed in the UI in the first place?
         }
 
+        // Both pills have a fixed height rather than vertical padding: Figma trims the text box
+        // to its cap height, which Compose can't, so padding around the full line box would
+        // make them taller than the design.
         liveVideoState.streamStarted -> {
-            Text(
-                "LIVE",
-                style = MaterialTheme.typography.button_24.copy(
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold
-                ),
-                textAlign = TextAlign.Center,
-                color = Color.White,
+            Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .padding(15.dp)
-                    .background(Color.Red, shape = RoundedCornerShape(2.dp))
                     .align(alignment)
-                    .padding(horizontal = 5.dp, vertical = 3.dp)
-            )
+                    .height(10.8.dp)
+                    .background(Color(0xFFE11D2A), shape = RoundedCornerShape(3.24.dp))
+                    .padding(horizontal = 4.32.dp)
+            ) {
+                Text(
+                    "LIVE",
+                    style = MaterialTheme.typography.button_24.copy(
+                        fontSize = 8.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    maxLines = 1,
+                    color = Color.White,
+                )
+            }
         }
 
         else /* Upcoming */ -> {
-            val startTime = liveVideoState.startDateTimeString
-            Text(
-                "UPCOMING\n$startTime",
-                style = MaterialTheme.typography.button_24.copy(
-                    fontSize = 7.sp,
-                    fontWeight = FontWeight.Medium
-                ),
-                textAlign = TextAlign.Center,
-                color = Color(0xFFB3B3B3),
+            val shape = RoundedCornerShape(3.dp)
+            val glow = Color.White.copy(alpha = 0.18f)
+            Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .padding(15.dp)
-                    .background(Color(0xFF272727), shape = RoundedCornerShape(2.dp))
                     .align(alignment)
-                    .padding(horizontal = 6.dp, vertical = 1.dp)
-            )
+                    .height(13.dp)
+                    .shadow(elevation = 4.dp, shape = shape, ambientColor = glow, spotColor = glow)
+                    .border(Dp.Hairline, glow, shape)
+                    .background(Color.Black.copy(alpha = 0.7f), shape)
+                    .padding(horizontal = 4.dp)
+            ) {
+                Text(
+                    liveVideoState.startDateTimeString ?: "UPCOMING",
+                    style = MaterialTheme.typography.button_24.copy(
+                        fontSize = 8.sp,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    maxLines = 1,
+                    color = Color.White,
+                )
+            }
         }
     }
 }

@@ -137,27 +137,25 @@ fun MediaItemCard(
             focusedOverlay = if (circular) restingOverlay else {
                 {
                     val padding = if (aspectRatio == AspectRatio.WIDE) 12.dp else 8.dp
-                    if (showPurchaseOptions) {
-                        val text = if (BuildConfig.DISABLE_PURCHASE_PROMPTS) {
-                            "You don't have access to this media"
-                        } else {
-                            "View purchase options"
-                        }
-                        Text(
-                            text = text.uppercase(),
-                            style = MaterialTheme.typography.button_24,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .padding(horizontal = padding)
-                        )
-                    }
                     Column(
                         Modifier
                             .align(Alignment.BottomStart)
                             .padding(padding)
                     ) {
+                        // Sits just above the metadata, sharing its left edge.
+                        if (showPurchaseOptions) {
+                            val text = if (BuildConfig.DISABLE_PURCHASE_PROMPTS) {
+                                "You don't have access to this media"
+                            } else {
+                                "View purchase options"
+                            }
+                            Text(
+                                text = text.uppercase(),
+                                style = MaterialTheme.typography.button_24,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            )
+                        }
                         MetadataTexts(displaySettings)
                     }
                     progressBar()

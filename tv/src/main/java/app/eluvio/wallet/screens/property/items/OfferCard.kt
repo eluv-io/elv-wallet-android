@@ -30,7 +30,8 @@ import app.eluvio.wallet.theme.redeemTagSurface
 fun OfferCard(
     item: DynamicPageLayoutState.CarouselItem.RedeemableOffer,
     cardHeight: Dp,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     // It's possible to layer this Text on top of the card (with explicit zIndex modifiers, see:
     // https://issuetracker.google.com/issues/291642442), but then it won't scale right when
@@ -94,7 +95,7 @@ fun OfferCard(
         // Offer cards are always square.
         aspectRatio = AspectRatio.SQUARE,
         onClick = onClick,
-        modifier = Modifier.size(cardHeight),
+        modifier = modifier.size(cardHeight),
         focusedOverlay = {
             offerTitle()
             rewardOverlay()

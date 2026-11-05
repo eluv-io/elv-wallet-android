@@ -146,14 +146,16 @@ fun CarouselItemCard(
         is CarouselItem.RedeemableOffer -> OfferCard(
             carouselItem,
             cardHeight,
-            onClick
+            onClick,
+            modifier
         )
 
         is CarouselItem.PageLink -> PageLinkCard(
             carouselItem,
             cardHeight,
             titleAlign,
-            onClick
+            onClick,
+            modifier
         )
 
         is CarouselItem.ExternalLink -> DisplaySettingsCard(
@@ -161,6 +163,7 @@ fun CarouselItemCard(
             cardHeight = cardHeight,
             titleAlign = titleAlign,
             onClick = onClick,
+            modifier = modifier,
         )
 
         is CarouselItem.ItemPurchase -> DisplaySettingsCard(
@@ -168,6 +171,7 @@ fun CarouselItemCard(
             cardHeight = cardHeight,
             titleAlign = titleAlign,
             onClick = onClick,
+            modifier = modifier,
         )
 
         is CarouselItem.SearchPageLink -> DisplaySettingsCard(
@@ -175,6 +179,7 @@ fun CarouselItemCard(
             cardHeight = cardHeight,
             titleAlign = titleAlign,
             onClick = onClick,
+            modifier = modifier,
         )
 
         is CarouselItem.BannerWrapper -> BannerItem(

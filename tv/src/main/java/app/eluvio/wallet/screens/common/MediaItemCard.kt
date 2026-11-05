@@ -136,7 +136,7 @@ fun MediaItemCard(
             alwaysDim = showPurchaseOptions,
             focusedOverlay = if (circular) restingOverlay else {
                 {
-                    val padding = if (aspectRatio == AspectRatio.WIDE) 18.dp else 12.dp
+                    val padding = if (aspectRatio == AspectRatio.WIDE) 12.dp else 8.dp
                     if (showPurchaseOptions) {
                         val text = if (BuildConfig.DISABLE_PURCHASE_PROMPTS) {
                             "You don't have access to this media"
@@ -239,7 +239,7 @@ private fun DisabledCard(
         alwaysDim = true,
         focusedOverlay = if (circular) restingOverlay else {
             {
-                val padding = if (aspectRatio == AspectRatio.WIDE) 18.dp else 12.dp
+                val padding = if (aspectRatio == AspectRatio.WIDE) 12.dp else 8.dp
                 Text(
                     "Could not access media.",
                     textAlign = TextAlign.Center,
@@ -301,7 +301,7 @@ private fun BoxScope.LiveVideoTag(
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .padding(15.dp)
+                    .padding(6.dp)
                     .align(alignment)
                     .height(10.8.dp)
                     .background(Color(0xFFE11D2A), shape = RoundedCornerShape(3.24.dp))
@@ -325,7 +325,7 @@ private fun BoxScope.LiveVideoTag(
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .padding(15.dp)
+                    .padding(6.dp)
                     .align(alignment)
                     .height(13.dp)
                     .shadow(elevation = 4.dp, shape = shape, ambientColor = glow, spotColor = glow)

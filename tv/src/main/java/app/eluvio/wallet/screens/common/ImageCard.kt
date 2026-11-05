@@ -69,8 +69,9 @@ private val SheenBrush = Brush.verticalGradient(
 /** ...and darkens the bottom third, which is where [ImageCard]'s overlays put their text. */
 private val FocusScrimBrush = Brush.verticalGradient(
     0f to Color.Transparent,
-    0.62f to Color.Black(alpha = 0.6f),
-    1f to Color.Black(alpha = 0.92f),
+    0.3f to Color.Black(alpha = 0.4f),
+    0.62f to Color.Black(alpha = 0.82f),
+    1f to Color.Black(alpha = 0.95f),
 )
 private const val FOCUS_SCRIM_HEIGHT = 0.64f
 

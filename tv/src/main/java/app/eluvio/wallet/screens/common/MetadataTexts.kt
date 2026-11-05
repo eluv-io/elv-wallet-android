@@ -46,7 +46,7 @@ fun ColumnScope.MetadataTexts(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.label_24.copy(fontSize = 8.sp),
-            color = Color(0xFFA5A6A8),
+            color = Color(0xFFB3B3B3),
             modifier = Modifier.padding(bottom = 6.dp)
         )
     }

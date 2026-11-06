@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
@@ -67,11 +68,17 @@ import app.eluvio.wallet.util.compose.LocalCardTheme
 import app.eluvio.wallet.util.compose.cardShape
 import app.eluvio.wallet.util.compose.isCircular
 import app.eluvio.wallet.util.compose.requestInitialFocus
+import app.eluvio.wallet.util.compose.thenIf
 import io.github.xilinjia.krdb.ext.realmListOf
 import io.github.xilinjia.krdb.types.RealmInstant
 import kotlinx.coroutines.delay
 
 typealias MediaClickHandler = (MediaEntity, PermissionContext?) -> Unit
+
+private val UnauthorizedTextScrim = Brush.verticalGradient(
+    0f to Color.Transparent,
+    1f to Color.Black.copy(alpha = 0.8f),
+)
 
 @Composable
 fun MediaItemCard(
@@ -140,7 +147,13 @@ fun MediaItemCard(
                     Column(
                         Modifier
                             .align(Alignment.BottomStart)
-                            .padding(padding)
+                            // Inaccessible content darkens from the first text line down to
+                            // the card's bottom edge, on top of its flat dim, so the CTA and
+                            // metadata read. No top padding, so it starts right at that line.
+                            .thenIf(showPurchaseOptions) {
+                                fillMaxWidth().background(UnauthorizedTextScrim)
+                            }
+                            .padding(start = padding, end = padding, bottom = padding)
                     ) {
                         // Sits just above the metadata, sharing its left edge.
                         if (showPurchaseOptions) {

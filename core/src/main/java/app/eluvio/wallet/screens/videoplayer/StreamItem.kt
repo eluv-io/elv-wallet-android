@@ -22,6 +22,8 @@ sealed class StreamItem {
         override val id: String,
         override val title: String,
         override val image: FabricUrl?,
+        /** Kept so selecting it can route like a card tap (upcoming, purchase, etc). */
+        val media: MediaEntity,
     ) : StreamItem() {
         companion object {
             fun from(entity: MediaEntity): MediaItem {
@@ -29,6 +31,7 @@ sealed class StreamItem {
                     id = entity.id,
                     title = entity.name,
                     image = SimpleFabricUrl(entity.image, entity.imageHash),
+                    media = entity,
                 )
             }
         }

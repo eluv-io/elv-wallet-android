@@ -223,7 +223,16 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
 
         streamSelectionPane = findViewById(R.id.video_player_stream_selection_pane)
         streamSelectionPane?.setOnStreamSelectedListener { stream ->
-            switchToStream(stream)
+            when (stream) {
+                is StreamItem.MediaItem -> {
+                    if (!openMediaItem(stream.media)) {
+                        streamSelectionPane?.visibility = View.GONE
+                        playerView?.controllerAutoShow = true
+                    }
+                }
+
+                is StreamItem.AdditionalView -> switchToStream(stream)
+            }
         }
 
         upNextPane = findViewById<UpNextPane>(R.id.video_player_up_next_pane)?.apply {
@@ -769,37 +778,48 @@ class VideoPlayerActivity : FragmentActivity(), Player.Listener {
     }
 
     /**
-     * Takes the viewer to the offered item. Autoplay hands back items they aren't entitled to and
-     * events that haven't started, so this routes through the same resolver a card tap uses, and
-     * hands anything the player can't open itself back to whoever launched it.
+     * Takes the viewer to the offered item. Leaves them on the finished video if it has nowhere
+     * to go, rather than closing the player out from under them.
      */
     private fun playUpNext(next: MediaEntity) {
         upNextPane?.hide()
         offeredUpNextItem = null
-        val propertyId = navArgs.propertyId ?: return
+        if (!openMediaItem(next)) {
+            declineUpNext()
+        }
+    }
+
+    /**
+     * Autoplay and the stream selector both hand back items the viewer isn't entitled to and
+     * events that haven't started, so this routes through the same resolver a card tap uses, and
+     * hands anything the player can't open itself back to whoever launched it.
+     *
+     * Returns false when [media] has nowhere to go.
+     */
+    private fun openMediaItem(media: MediaEntity): Boolean {
+        val propertyId = navArgs.propertyId ?: return false
         val permissionContext = PermissionContext(
             propertyId = propertyId,
             pageId = navArgs.pageId,
             sectionId = navArgs.sectionId,
-            mediaItemId = next.id,
+            mediaItemId = media.id,
             mediaListId = navArgs.mediaListId,
         )
-        when (val target = next.onClickTarget(permissionContext)) {
+        when (val target = media.onClickTarget(permissionContext)) {
             is VideoPlayerArgs -> {
-                Log.d("Up next playing ${next.id}")
-                switchToStream(StreamItem.MediaItem.from(next))
+                Log.d("Playing ${media.id}")
+                switchToStream(StreamItem.MediaItem.from(media))
             }
 
             is PurchasePromptNavArgs -> exitTo(VideoPlayerExit.Purchase(target))
             is UpcomingVideoNavArgs -> exitTo(VideoPlayerExit.Upcoming(target))
 
             else -> {
-                // Nothing we can open from here. Leave the viewer on the finished video rather
-                // than closing the player out from under them.
-                Log.w("Up next item ${next.id} has nowhere to go: $target")
-                declineUpNext()
+                Log.w("Media item ${media.id} has nowhere to go: $target")
+                return false
             }
         }
+        return true
     }
 
     /** Closes the player and asks whoever launched it to open [exit] in its place. */

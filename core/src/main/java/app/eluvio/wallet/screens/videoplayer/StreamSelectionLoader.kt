@@ -1,5 +1,6 @@
 package app.eluvio.wallet.screens.videoplayer
 
+import app.eluvio.wallet.data.entities.unprefixedMediaId
 import app.eluvio.wallet.data.stores.ContentStore
 import app.eluvio.wallet.di.ApiProvider
 import app.eluvio.wallet.network.api.mwv2.MediaWalletV2Api
@@ -39,7 +40,7 @@ class StreamSelectionLoader @Inject constructor(
                         .map { list ->
                             list.map { StreamItem.MediaItem.from(it) }
                                 // Filter out current media item from sidebar results
-                                .filter { it.id != mediaItemId }
+                                .filter { it.id != mediaItemId.unprefixedMediaId }
                         }
                         .onErrorReturn { e ->
                             Log.e("Error loading streams from API", e)

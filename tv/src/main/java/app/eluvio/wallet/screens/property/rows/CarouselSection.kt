@@ -475,7 +475,8 @@ private fun ItemGrid(
     firstItemFocusRequester: FocusRequester? = null,
 ) = BoxWithConstraints {
     // Restores the card focused last when re-entering the grid. See ItemRow for why this isn't
-    // Compose's focusRestorer().
+    // Compose's focusRestorer(). Cards are tracked by hasFocus, not isFocused: some (e.g. page
+    // links) put the modifier on a wrapper around their focusable part.
     var lastFocusedIndex by rememberSaveable { mutableIntStateOf(0) }
     val restoreFocusRequester = remember { FocusRequester() }
     // Fixed columns get the search grid's wider spacing
@@ -514,7 +515,7 @@ private fun ItemGrid(
                             ?: cardSize.cardHeight(item.aspectRatio),
                         titleAlign = titleAlign,
                         modifier = Modifier
-                            .onFocusChanged { if (it.isFocused) lastFocusedIndex = index }
+                            .onFocusChanged { if (it.hasFocus) lastFocusedIndex = index }
                             .thenIf(index == lastFocusedIndex.coerceAtMost(items.lastIndex)) {
                                 focusRequester(restoreFocusRequester)
                             }
@@ -558,7 +559,7 @@ private fun ItemRow(
                 cardHeight = cardSize.cardHeight(item.aspectRatio),
                 titleAlign = titleAlign,
                 modifier = Modifier
-                    .onFocusChanged { if (it.isFocused) lastFocusedIndex = index }
+                    .onFocusChanged { if (it.hasFocus) lastFocusedIndex = index }
                     .thenIf(index == lastFocusedIndex.coerceAtMost(items.lastIndex)) {
                         focusRequester(restoreFocusRequester)
                     }

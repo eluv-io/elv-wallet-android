@@ -346,8 +346,11 @@ private fun Logo(displaySettings: DisplaySettings, topPaddingPx: Float, cardHeig
     Surface(
         onClick = {/* no click action, just here to capture focus */ },
         modifier = Modifier
-            // Doesn't have to be accurate, but Surface should start below the top of card row
-            .padding(top = cardHeight)
+            // Halfway down the card row: Up/Down from other rows still find it, but it's never
+            // below (or above) this row's own cards, so their Down/Up can't land on it. At the
+            // cards' bottom edge, Down from the first card picked it over the row below, and it
+            // threw focus straight back into this row.
+            .padding(top = with(LocalDensity.current) { topPaddingPx.toDp() } + cardHeight / 2)
             // Doubles as the padding for the Logo/text. (size of 0.dp is never focusable)
             .size(width = Overscan.horizontalPadding, height = 1.dp)
             // Invisible, but still focusable
